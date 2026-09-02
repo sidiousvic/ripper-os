@@ -2,9 +2,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { FileBlob, SpreadsheetFile } from "@oai/artifact-tool";
 
-const [gymversePath, macroFactorPath, outputPath] = process.argv.slice(2).filter((value) => value !== "--");
-if (!gymversePath || !macroFactorPath || !outputPath) {
-  throw new Error("Usage: export_training_web_data.mjs <gymverse.xlsx> <macrofactor.xlsx> <output.json>");
+const [macroFactorPath, outputPath] = process.argv.slice(2).filter((value) => value !== "--");
+if (!macroFactorPath || !outputPath) {
+  throw new Error("Usage: refresh-training-data.mjs <macrofactor.xlsx> <output.json>");
 }
 
 const DAY = 86_400_000;
@@ -27,7 +27,6 @@ const dateFromKey = (value) => new Date(`${value}T00:00:00Z`);
 const numOrNull = (value) => typeof value === "number" && Number.isFinite(value) ? value : null;
 const num = (value) => numOrNull(value) ?? 0;
 const cleanMetric = (value) => String(value ?? "").replace(/ \((kg|sets|reps|sec)\)$/i, "").trim();
-const headersOf = (header) => Object.fromEntries(header.map((value, index) => [String(value), index]));
 const rowsFrom = (workbook, name) => workbook.worksheets.getItem(name).getUsedRange(true).values;
 const sortByDate = (a, b) => a.date.localeCompare(b.date);
 
@@ -66,63 +65,9 @@ const defaultMetric = (name, records) => {
   return "totalSets";
 };
 
-const gymverse = await SpreadsheetFile.importXlsx(await FileBlob.load(gymversePath));
 const macroFactor = await SpreadsheetFile.importXlsx(await FileBlob.load(macroFactorPath));
-
-const gymSessionRows = rowsFrom(gymverse, "Sessions");
-const gymSessionHeaders = headersOf(gymSessionRows[0]);
-const gymExerciseRows = rowsFrom(gymverse, "Exercise Daily");
-const gymExerciseHeaders = headersOf(gymExerciseRows[0]);
-const gymSetRows = rowsFrom(gymverse, "Sets");
-const gymSetHeaders = headersOf(gymSetRows[0]);
-
-const gymBestReps = new Map();
-for (const row of gymSetRows.slice(1)) {
-  const date = dateKey(row[gymSetHeaders.Date]);
-  const exercise = canonicalExercise(row[gymSetHeaders["Exercise Canonical"]]);
-  const reps = num(row[gymSetHeaders.Reps]);
-  if (!date || !exercise || !reps) continue;
-  const key = `${date}|${exercise}`;
-  gymBestReps.set(key, Math.max(gymBestReps.get(key) ?? 0, reps));
-}
-
 const exerciseRecords = [];
-const gymRepsByDate = new Map();
-for (const row of gymExerciseRows.slice(1)) {
-  const date = dateKey(row[gymExerciseHeaders.Date]);
-  const exercise = canonicalExercise(row[gymExerciseHeaders.Exercise]);
-  if (!date || !exercise) continue;
-  const totalReps = num(row[gymExerciseHeaders["Total Reps"]]);
-  gymRepsByDate.set(date, (gymRepsByDate.get(date) ?? 0) + totalReps);
-  const heaviestKg = numOrNull(row[gymExerciseHeaders["Heaviest Weight (kg)"]]);
-  const bestSetReps = gymBestReps.get(`${date}|${exercise}`) ?? null;
-  exerciseRecords.push({
-    date,
-    source: "Gymverse",
-    exercise,
-    family: exerciseFamily(exercise),
-    totalSets: numOrNull(row[gymExerciseHeaders["Total Sets"]]),
-    totalReps: totalReps || null,
-    bestSetReps,
-    heaviestKg,
-    totalVolumeKg: numOrNull(row[gymExerciseHeaders["Total Load Volume (kg)"]]),
-    e1rmKg: heaviestKg && bestSetReps ? round(heaviestKg * (1 + bestSetReps / 30), 1) : null,
-    durationSec: numOrNull(row[gymExerciseHeaders["Total Duration (sec)"]]),
-  });
-}
-
-const sessions = gymSessionRows.slice(1).map((row) => {
-  const date = dateKey(row[gymSessionHeaders.Date]);
-  return {
-    date,
-    source: "Gymverse",
-    workout: String(row[gymSessionHeaders.Workout] ?? "Workout"),
-    durationMin: num(row[gymSessionHeaders["Duration (sec)"]]) ? round(num(row[gymSessionHeaders["Duration (sec)"]]) / 60, 1) : null,
-    totalSets: numOrNull(row[gymSessionHeaders.Sets]),
-    totalReps: gymRepsByDate.get(date) ?? null,
-    volumeKg: numOrNull(row[gymSessionHeaders["Calculated Load Volume (kg)"]]),
-  };
-}).filter((row) => row.date);
+const sessions = [];
 
 const macroExerciseMap = new Map();
 const mergeMacroMetric = (sheetName, field) => {
@@ -241,14 +186,7 @@ for (let cursor = new Date(firstMonday); cursor <= lastMonday; cursor = new Date
   }
 }
 
-const gymMuscleRows = rowsFrom(gymverse, "Muscle Daily");
-const gymMuscleHeaders = headersOf(gymMuscleRows[0]);
-const muscleRecords = gymMuscleRows.slice(1).map((row) => ({
-  date: dateKey(row[gymMuscleHeaders.Date]),
-  source: "Gymverse",
-  muscle: String(row[gymMuscleHeaders.Muscle] ?? ""),
-  sets: num(row[gymMuscleHeaders["Set Equivalent"]]),
-})).filter((row) => row.date && row.muscle && row.sets);
+const muscleRecords = [];
 
 const macroMuscleRows = rowsFrom(macroFactor, "Muscle Groups - Sets");
 const macroMuscleHeaders = macroMuscleRows[0].map(cleanMetric);

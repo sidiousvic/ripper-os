@@ -2,13 +2,12 @@
 
 Ripper OS is a static React dashboard that turns workout history into progress, consistency, muscle-balance, and next-step views.
 
-The site is intentionally data-light: it publishes the calculated training summary, not raw account or nutrition data. The included dataset combines a fixed Gymverse history with the latest all-time MacroFactor training export.
+The site is intentionally data-light: it publishes the calculated training summary, not raw account or nutrition data. The included dataset is generated from an all-time MacroFactor training export.
 
 ## Requirements
 
 - Node.js 22.13 or newer
 - An all-time MacroFactor `.xlsx` export
-- The fixed Gymverse workbook, if you want to preserve the historical Gymverse portion of the dashboard
 
 Install dependencies with:
 
@@ -48,11 +47,10 @@ Nutrition, food, account, email, settings, and unrelated workbook tabs are ignor
 
 ## Refresh the dataset
 
-From the project directory, pass the fixed Gymverse workbook, the newest all-time MacroFactor export, and the output JSON path:
+From the project directory, pass the newest all-time MacroFactor export and the output JSON path:
 
 ```bash
 npm run refresh:data -- \
-  "/path/to/Gymverse-Training-History-Digitized.xlsx" \
   "/path/to/latest-MacroFactor-export.xlsx" \
   "app/training-data.json"
 ```
@@ -64,7 +62,7 @@ npm run lint
 npm run build
 ```
 
-The refresh script normalizes exercise aliases, merges daily metrics, calculates summaries and rankings, and writes the static file consumed by the dashboard. It does not modify either source workbook.
+The refresh script normalizes exercise aliases, merges daily metrics, calculates summaries and rankings, and writes the static file consumed by the dashboard. It does not modify the source workbook.
 
 ## Development
 
