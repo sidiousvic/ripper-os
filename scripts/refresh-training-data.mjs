@@ -303,14 +303,13 @@ const exercises = [...exerciseMap.entries()].map(([name, records]) => {
     family: exerciseFamily(name),
     defaultMetric: metric,
     availableMetrics,
-    sources: [...new Set(records.map((record) => record.source))],
     firstDate: records[0].date,
     lastDate: records.at(-1).date,
     sessions: new Set(records.map((record) => record.date)).size,
     totalSets: round(records.reduce((sum, record) => sum + num(record.totalSets), 0)),
     totalReps: round(records.reduce((sum, record) => sum + num(record.totalReps), 0)),
     totalVolumeKg: round(records.reduce((sum, record) => sum + num(record.totalVolumeKg), 0)),
-    progress: records,
+    progress: records.map((record) => Object.fromEntries(Object.entries(record).filter(([key]) => key !== "source"))),
   };
 }).sort((a, b) => b.totalSets - a.totalSets || a.name.localeCompare(b.name));
 
@@ -332,14 +331,6 @@ const progressChange = (exerciseName, metric) => {
   };
 };
 
-const eraStats = ["Gymverse", "MacroFactor"].map((source) => {
-  const eraSessions = sessions.filter((session) => session.source === source);
-  const eraFirst = eraSessions[0].date;
-  const eraLast = eraSessions.at(-1).date;
-  const weeks = (dateFromKey(eraLast) - dateFromKey(eraFirst) + DAY) / (7 * DAY);
-  return { source, sessions: eraSessions.length, firstDate: eraFirst, lastDate: eraLast, sessionsPerWeek: round(eraSessions.length / weeks) };
-});
-
 const completeMonths = monthly.filter((item) => item.coverage === "complete");
 const busiestMonths = [...completeMonths].sort((a, b) => b.sessions - a.sessions || a.month.localeCompare(b.month)).slice(0, 5);
 const quietestMonths = [...completeMonths].sort((a, b) => a.sessions - b.sessions || a.month.localeCompare(b.month)).slice(0, 5);
@@ -356,7 +347,6 @@ const output = {
     exerciseCount: exercises.length,
     longestActiveWeekStreak: longestWeekStreak,
   },
-  eras: eraStats,
   monthly,
   busiestMonths,
   quietestMonths,
@@ -374,8 +364,8 @@ const output = {
   ].filter(Boolean),
   methodology: {
     strength: "Weighted exercise progress defaults to the heaviest recorded load. Bodyweight movements default to best-set reps. Estimated 1RM is shown when present or derivable.",
-    muscles: "Muscle balance uses MacroFactor-style set equivalents. These are exposure signals, not medical conclusions or proof of overtraining.",
-    caveat: "Some MacroFactor exercises may include bodyweight in resistance. Sudden cross-app load jumps should be interpreted only after confirming the exercise setup.",
+    muscles: "Muscle balance uses muscle-group set equivalents. These are exposure signals, not medical conclusions or proof of overtraining.",
+    caveat: "Some movements may include bodyweight in the recorded resistance. Sudden load jumps should be interpreted only after confirming the exercise setup.",
   },
 };
 

@@ -1,14 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import {
   Bar,
   CartesianGrid,
   ComposedChart,
-  Legend,
   Line,
   LineChart,
-  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -34,7 +33,6 @@ import data from "./training-data.json";
 type MetricKey = "heaviestKg" | "e1rmKg" | "bestSetReps" | "totalVolumeKg" | "totalReps" | "totalSets" | "durationSec";
 type ProgressRecord = {
   date: string;
-  source: "Gymverse" | "MacroFactor";
   heaviestKg: number | null;
   e1rmKg: number | null;
   bestSetReps: number | null;
@@ -48,7 +46,6 @@ type Exercise = {
   family: string;
   defaultMetric: MetricKey;
   availableMetrics: MetricKey[];
-  sources: string[];
   firstDate: string;
   lastDate: string;
   sessions: number;
@@ -173,10 +170,13 @@ export default function Home() {
   }), [search, family]);
 
   const selectedSeries = metricSeries(selectedExercise, selectedMetric);
-  const selectedChartData = selectedSeries.map((record) => ({
+  const latestWindowStart = new Date(new Date(`${data.coverage.lastDate}T00:00:00Z`).valueOf() - (27 * 86_400_000)).toISOString().slice(0, 10);
+  const recentFirstIndex = selectedSeries.findIndex((record) => record.date >= latestWindowStart);
+  const recentBridgeIndex = recentFirstIndex > 0 ? recentFirstIndex - 1 : recentFirstIndex;
+  const selectedChartData = selectedSeries.map((record, index) => ({
     ...record,
-    gymverse: record.source === "Gymverse" ? record.value : null,
-    macroFactor: record.source === "MacroFactor" ? record.value : null,
+    historyValue: recentBridgeIndex === -1 || index <= recentBridgeIndex ? record.value : null,
+    recentValue: recentBridgeIndex >= 0 && index >= recentBridgeIndex ? record.value : null,
   }));
   const selectedFirst = selectedSeries[0]?.value ?? 0;
   const selectedLatest = selectedSeries.at(-1)?.value ?? 0;
@@ -186,14 +186,13 @@ export default function Home() {
 
   const monthlyChart = data.monthly.map((item) => ({ ...item, label: formatMonth(item.month) }));
   const maxRecentMuscle = Math.max(...data.muscles.map((muscle) => muscle.recentWeekly), 1);
-  const cadenceDelta = ((data.eras[1].sessionsPerWeek / data.eras[0].sessionsPerWeek) - 1) * 100;
 
   return (
     <main>
       <header className="topbar">
-        <a className="brand" href="#top" aria-label="Training Journey home">
-          <span className="brand-mark"><Dumbbell size={19} /></span>
-          <span>Training Journey</span>
+        <a className="brand" href="#top" aria-label="Ripper OS home">
+          <span className="brand-mark"><Image src="/brand/ripper-os-logo.png" alt="" width={38} height={38} priority /></span>
+          <span>Ripper OS</span>
         </a>
         <nav aria-label="Dashboard sections">
           <a href="#progress">Progress</a>
@@ -206,35 +205,11 @@ export default function Home() {
 
       <section className="hero shell" id="top">
         <div className="hero-copy">
-          <div className="status-label"><Sparkles size={15} /> Gymverse + MacroFactor, unified</div>
-          <h1>A year and a half,<br /><span>made visible.</span></h1>
-          <p>Your complete strength story—from the first logged set to your latest session—organized into progress, consistency, muscle balance, and the clearest next opportunities.</p>
+          <h1>My training journey.<br /><span>Analyzed.</span></h1>
+          <p>I upload my training data, and Ripper OS organizes it into progress, consistency, muscle balance, highlights, and next opportunities. It&apos;s like Spotify Wrapped for training.</p>
           <div className="hero-actions">
             <a className="button primary" href="#progress">Explore all exercises <ChevronRight size={17} /></a>
             <a className="button secondary" href="#next">See where to go next</a>
-          </div>
-        </div>
-        <div className="hero-visual panel" aria-label="Training journey overview">
-          <div className="hero-visual-top">
-            <div>
-              <p className="eyebrow">Recorded training days</p>
-              <p className="hero-number">{data.coverage.totalSessions}</p>
-            </div>
-            <Delta value={cadenceDelta} />
-          </div>
-          <div className="journey-line" aria-hidden="true">
-            <span className="journey-start" />
-            <span className="journey-switch" />
-            <span className="journey-end" />
-          </div>
-          <div className="journey-labels">
-            <span><b>{formatDate(data.coverage.firstDate, { month: "short", year: "numeric" })}</b> First Gymverse session</span>
-            <span><b>Jun 2026</b> Moved to MacroFactor</span>
-            <span><b>{formatDate(data.coverage.lastDate, { month: "short", year: "numeric" })}</b> Latest export</span>
-          </div>
-          <div className="hero-foot">
-            <span>{data.coverage.journeyDays} days observed</span>
-            <span>{data.coverage.exerciseCount} exercises mapped</span>
           </div>
         </div>
       </section>
@@ -250,7 +225,7 @@ export default function Home() {
         <SectionHeading
           kicker="The headline gains"
           title="Your strongest measurable achievements"
-          description="The cleanest cross-era comparisons use the same exercise and the same primary metric. These four have enough history to tell a compelling story."
+          description="The cleanest comparisons use the same exercise and the same primary metric. These four have enough history to tell a compelling story."
         />
         <div className="achievement-grid">
           {data.achievements.map((achievement, index) => {
@@ -276,7 +251,7 @@ export default function Home() {
         </div>
         <div className="callout">
           <Sparkles size={18} />
-          <p><strong>The bigger achievement is sustained practice.</strong> You logged {data.coverage.totalSessions} sessions and maintained a {data.coverage.longestActiveWeekStreak}-week active streak. Your MacroFactor-era cadence is {data.eras[1].sessionsPerWeek} sessions/week, up from {data.eras[0].sessionsPerWeek} in the Gymverse era.</p>
+          <p><strong>The bigger achievement is sustained practice.</strong> You logged {data.coverage.totalSessions} sessions and maintained a {data.coverage.longestActiveWeekStreak}-week active streak. That consistency is the base behind every measurable strength gain in this archive.</p>
         </div>
       </section>
 
@@ -358,7 +333,7 @@ export default function Home() {
             kicker="Exercise explorer"
             title={`Progress charts for all ${data.coverage.exerciseCount} exercises`}
             description="Search or filter your complete movement library. Weighted movements default to heaviest load; bodyweight exercises default to best-set reps; timed work defaults to duration."
-            action={<span className="data-pill"><CircleDot size={13} /> Both eras connected</span>}
+            action={<span className="data-pill"><CircleDot size={13} /> {data.coverage.exerciseCount} complete histories</span>}
           />
 
           <article className="panel focus-panel" id="exercise-focus">
@@ -366,8 +341,7 @@ export default function Home() {
               <div>
                 <p className="eyebrow">Selected movement · {selectedExercise.family}</p>
                 <h3>{selectedExercise.name}</h3>
-                <div className="source-tags">
-                  {selectedExercise.sources.map((source) => <span className={source === "Gymverse" ? "source gymverse" : "source macro"} key={source}>{source}</span>)}
+                <div className="record-tags">
                   <span>{selectedExercise.sessions} sessions</span>
                   <span>{formatNumber(selectedExercise.totalSets, 0)} sets</span>
                 </div>
@@ -384,6 +358,7 @@ export default function Home() {
               <div><span>All-time peak</span><strong>{formatNumber(selectedPeak)} <small>{selectedMeta.unit}</small></strong></div>
               <div><span>First → latest</span><strong><Delta value={selectedChange} /></strong></div>
             </div>
+            <div className="legend-inline focus-legend"><span><i className="legend-history" /> Complete history</span><span><i className="legend-latest" /> Latest 4 weeks</span></div>
             <div className="chart-area focus-chart">
               {selectedSeries.length > 1 ? (
                 <ResponsiveContainer width="100%" height="100%">
@@ -392,10 +367,8 @@ export default function Home() {
                     <XAxis dataKey="date" tickFormatter={(value) => formatDate(value, { month: "short", year: "2-digit" })} tick={{ fill: "#789080", fontSize: 11 }} axisLine={false} tickLine={false} minTickGap={42} />
                     <YAxis tick={{ fill: "#789080", fontSize: 11 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
                     <Tooltip content={<ChartTooltip unit={selectedMeta.unit} />} cursor={{ stroke: "#31523b", strokeDasharray: "3 3" }} />
-                    <ReferenceLine x="2026-06-10" stroke="#5b7462" strokeDasharray="4 5" label={{ value: "MacroFactor era", position: "insideTopRight", fill: "#789080", fontSize: 11 }} />
-                    <Line type="monotone" dataKey="gymverse" name="Gymverse" stroke="#3fe277" strokeWidth={3} connectNulls dot={{ r: 2.5, fill: "#07100a", strokeWidth: 2 }} activeDot={{ r: 5 }} />
-                    <Line type="monotone" dataKey="macroFactor" name="MacroFactor" stroke="#c7ff4a" strokeWidth={3} connectNulls dot={{ r: 2.5, fill: "#07100a", strokeWidth: 2 }} activeDot={{ r: 5 }} />
-                    <Legend iconType="circle" wrapperStyle={{ color: "#8da295", fontSize: 12, paddingTop: 8 }} />
+                    <Line type="monotone" dataKey="historyValue" name="Complete history" stroke="#3fe277" strokeWidth={3} connectNulls dot={{ r: 2.5, fill: "#07100a", strokeWidth: 2 }} activeDot={{ r: 5 }} />
+                    <Line type="monotone" dataKey="recentValue" name="Latest 4 weeks" stroke="#c7ff4a" strokeWidth={3.5} connectNulls dot={{ r: 3, fill: "#07100a", strokeWidth: 2 }} activeDot={{ r: 5 }} />
                   </LineChart>
                 </ResponsiveContainer>
               ) : <div className="empty-state">Only one measurable point is available for this metric.</div>}
@@ -481,10 +454,10 @@ export default function Home() {
         <SectionHeading
           kicker="Workhorses"
           title="The exercises you practiced most"
-          description="Working sets are the clearest measure of repeated practice across both apps. Click any movement to open its complete progress chart."
+          description="Working sets are the clearest measure of repeated practice. Click any movement to open its complete progress chart."
         />
         <article className="panel leaderboard">
-          <div className="leaderboard-head"><span>#</span><span>Exercise</span><span>Sessions</span><span>Working sets</span><span>Total reps</span><span>Era</span></div>
+          <div className="leaderboard-head"><span>#</span><span>Exercise</span><span>Sessions</span><span>Working sets</span><span>Total reps</span></div>
           {exercises.slice(0, 12).map((exercise, index) => (
             <button className="leaderboard-row" onClick={() => selectExercise(exercise)} key={exercise.name}>
               <span className="rank-number">{index + 1}</span>
@@ -492,7 +465,6 @@ export default function Home() {
               <strong>{exercise.sessions}</strong>
               <strong>{formatNumber(exercise.totalSets, 0)}</strong>
               <strong>{formatNumber(exercise.totalReps, 0)}</strong>
-              <span className={exercise.sources.length === 2 ? "era both" : exercise.sources[0] === "Gymverse" ? "era gymverse" : "era macro"}>{exercise.sources.length === 2 ? "Both" : exercise.sources[0]}</span>
             </button>
           ))}
         </article>
@@ -516,9 +488,12 @@ export default function Home() {
       </section>
 
       <footer className="shell footer">
-        <div className="brand"><span className="brand-mark"><Dumbbell size={18} /></span><span>Training Journey</span></div>
-        <p>Built from your Gymverse screenshots and MacroFactor exercise history. No nutrition data included.</p>
-        <p className="muted">{data.methodology.caveat}</p>
+        <div className="sidiousware-lockup">
+          <Image src="/brand/sidiousware-logo.png" alt="Sidiousware" width={330} height={191} />
+          <span>RIPPER OS // A SIDIOUSWARE SYSTEM</span>
+        </div>
+        <p>Built from exported training history. No nutrition data included.</p>
+        <p className="muted">Some movements may include bodyweight in the recorded resistance. Sudden load jumps should be confirmed against the exercise setup.</p>
       </footer>
     </main>
   );

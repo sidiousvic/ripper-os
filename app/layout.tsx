@@ -3,8 +3,8 @@ import "@fontsource-variable/figtree";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Training Journey — Strength & Consistency Dashboard",
-  description: "A complete Gymverse and MacroFactor training dashboard: progress, consistency, muscle balance, and next opportunities.",
+  title: "Ripper OS — Training Data Analysis",
+  description: "My training journey, analyzed into progress, consistency, muscle balance, highlights, and next opportunities.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
