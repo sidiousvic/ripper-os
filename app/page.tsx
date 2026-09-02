@@ -17,6 +17,7 @@ import {
   ArrowDownRight,
   ArrowUpRight,
   CalendarDays,
+  ChevronLeft,
   ChevronRight,
   CircleDot,
   Dumbbell,
@@ -156,6 +157,7 @@ export default function Home() {
   const [search, setSearch] = useState("");
   const [family, setFamily] = useState("All");
   const [visibleCount, setVisibleCount] = useState(24);
+  const [attendanceYear, setAttendanceYear] = useState(Number(data.coverage.lastDate.slice(0, 4)));
 
   const selectExercise = (exercise: Exercise) => {
     setSelectedExerciseName(exercise.name);
@@ -186,6 +188,17 @@ export default function Home() {
 
   const monthlyChart = data.monthly.map((item) => ({ ...item, label: formatMonth(item.month) }));
   const maxRecentMuscle = Math.max(...data.muscles.map((muscle) => muscle.recentWeekly), 1);
+  const firstAttendanceYear = Number(data.coverage.firstDate.slice(0, 4));
+  const lastAttendanceYear = Number(data.coverage.lastDate.slice(0, 4));
+  const attendanceYears = Array.from({ length: lastAttendanceYear - firstAttendanceYear + 1 }, (_, index) => firstAttendanceYear + index);
+  const attendanceYearIndex = attendanceYears.indexOf(attendanceYear);
+  const attendanceWeeks = data.attendance.map((week) => ({
+    ...week,
+    days: week.days.map((active, index) => {
+      const date = new Date(new Date(`${week.week}T00:00:00Z`).valueOf() + index * 86_400_000).toISOString().slice(0, 10);
+      return { active, date, inYear: date.startsWith(String(attendanceYear)) };
+    }),
+  })).filter((week) => week.days.some((day) => day.inYear));
 
   return (
     <main>
@@ -205,7 +218,7 @@ export default function Home() {
 
       <section className="hero shell" id="top">
         <div className="hero-copy">
-          <h1>My training journey.<br /><span>Analyzed.</span></h1>
+          <h1><b style={{marginBottom: "30px", fontFamily: "BiauKaiHK"}}>RIPPER <span>OS</span></b>.<br />Training. <span>Analyzed.</span></h1>
           <p>I upload my training data, and Ripper OS organizes it into progress, consistency, muscle balance, highlights, and next opportunities. It&apos;s like Spotify Wrapped for training.</p>
           <div className="hero-actions">
             <a className="button primary" href="#progress">Explore all exercises <ChevronRight size={17} /></a>
@@ -271,9 +284,9 @@ export default function Home() {
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={monthlyChart} margin={{ top: 12, right: 4, left: -24, bottom: 0 }}>
                   <CartesianGrid stroke="#1c3425" vertical={false} />
-                  <XAxis dataKey="month" tickFormatter={formatMonth} tick={{ fill: "#789080", fontSize: 11 }} axisLine={false} tickLine={false} interval={2} />
-                  <YAxis yAxisId="sessions" tick={{ fill: "#789080", fontSize: 11 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <YAxis yAxisId="cumulative" orientation="right" tick={{ fill: "#789080", fontSize: 11 }} axisLine={false} tickLine={false} />
+                  <XAxis dataKey="month" tickFormatter={formatMonth} tick={{ fill: "#789080", fontSize: 16 }} axisLine={false} tickLine={false} interval={2} />
+                  <YAxis yAxisId="sessions" tick={{ fill: "#789080", fontSize: 16 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <YAxis yAxisId="cumulative" orientation="right" tick={{ fill: "#789080", fontSize: 16 }} axisLine={false} tickLine={false} />
                   <Tooltip content={<ChartTooltip />} cursor={{ fill: "rgba(67, 255, 126, .04)" }} />
                   <Bar yAxisId="sessions" dataKey="sessions" name="Sessions" fill="#3fe277" radius={[5, 5, 1, 1]} maxBarSize={24} />
                   <Line yAxisId="cumulative" type="monotone" dataKey="cumulative" name="Cumulative" stroke="#c7ff4a" strokeWidth={2.5} dot={false} />
@@ -301,12 +314,19 @@ export default function Home() {
 
         <div className="two-column equal consistency-lower">
           <article className="panel calendar-panel">
-            <div className="panel-heading"><div><p className="eyebrow">Attendance map</p><h3>Every recorded training day</h3></div><span className="muted small">Apr 2025 → Sep 2026</span></div>
+            <div className="panel-heading">
+              <div><p className="eyebrow">Attendance map</p><h3>{attendanceYear} training days</h3></div>
+              <div className="calendar-pager" aria-label="Choose attendance year">
+                <button aria-label="Previous year" disabled={attendanceYearIndex <= 0} onClick={() => setAttendanceYear(attendanceYears[attendanceYearIndex - 1])}><ChevronLeft size={15} /></button>
+                <span>{attendanceYear} · {attendanceYearIndex + 1}/{attendanceYears.length}</span>
+                <button aria-label="Next year" disabled={attendanceYearIndex >= attendanceYears.length - 1} onClick={() => setAttendanceYear(attendanceYears[attendanceYearIndex + 1])}><ChevronRight size={15} /></button>
+              </div>
+            </div>
             <div className="calendar-scroll">
               <div className="calendar-days"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
-              <div className="attendance-grid">
-                {data.attendance.flatMap((week) => week.days.map((active, index) => (
-                  <span key={`${week.week}-${index}`} className={active ? "attendance-cell active" : "attendance-cell"} title={`${formatDate(new Date(new Date(`${week.week}T00:00:00Z`).valueOf() + index * 86_400_000).toISOString().slice(0, 10))}: ${active ? "trained" : "rest"}`} />
+              <div className="attendance-grid" style={{ gridTemplateColumns: `repeat(${attendanceWeeks.length}, minmax(0, 1fr))` }}>
+                {attendanceWeeks.flatMap((week) => week.days.map((day, index) => (
+                  <span key={`${week.week}-${index}`} className={day.inYear ? day.active ? "attendance-cell active" : "attendance-cell" : "attendance-cell outside"} title={day.inYear ? `${formatDate(day.date)}: ${day.active ? "trained" : "rest"}` : undefined} />
                 )))}
               </div>
             </div>
@@ -364,8 +384,8 @@ export default function Home() {
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={selectedChartData} margin={{ top: 20, right: 8, left: -12, bottom: 2 }}>
                     <CartesianGrid stroke="#1c3425" vertical={false} />
-                    <XAxis dataKey="date" tickFormatter={(value) => formatDate(value, { month: "short", year: "2-digit" })} tick={{ fill: "#789080", fontSize: 11 }} axisLine={false} tickLine={false} minTickGap={42} />
-                    <YAxis tick={{ fill: "#789080", fontSize: 11 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
+                    <XAxis dataKey="date" tickFormatter={(value) => formatDate(value, { month: "short", year: "2-digit" })} tick={{ fill: "#789080", fontSize: 16 }} axisLine={false} tickLine={false} minTickGap={42} />
+                    <YAxis tick={{ fill: "#789080", fontSize: 16 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
                     <Tooltip content={<ChartTooltip unit={selectedMeta.unit} />} cursor={{ stroke: "#31523b", strokeDasharray: "3 3" }} />
                     <Line type="monotone" dataKey="historyValue" name="Complete history" stroke="#3fe277" strokeWidth={3} connectNulls dot={{ r: 2.5, fill: "#07100a", strokeWidth: 2 }} activeDot={{ r: 5 }} />
                     <Line type="monotone" dataKey="recentValue" name="Latest 4 weeks" stroke="#c7ff4a" strokeWidth={3.5} connectNulls dot={{ r: 3, fill: "#07100a", strokeWidth: 2 }} activeDot={{ r: 5 }} />
@@ -490,10 +510,9 @@ export default function Home() {
       <footer className="shell footer">
         <div className="sidiousware-lockup">
           <Image src="/brand/sidiousware-logo.png" alt="Sidiousware" width={330} height={191} />
-          <span>RIPPER OS // A SIDIOUSWARE SYSTEM</span>
         </div>
-        <p>Built from exported training history. No nutrition data included.</p>
-        <p className="muted">Some movements may include bodyweight in the recorded resistance. Sudden load jumps should be confirmed against the exercise setup.</p>
+        <p>Built and distributed by SIDIOUSWARE Inc.</p>
+        <p className="muted">Movements may include bodyweight in the recorded resistance. Sudden load jumps should be confirmed against the exercise setup.</p>
       </footer>
     </main>
   );
