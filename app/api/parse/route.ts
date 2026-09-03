@@ -10,7 +10,7 @@ const key = (v: unknown) => { const d = v instanceof Date ? v : typeof v === "nu
 const clean = (v: unknown) => String(v ?? "").replace(/ \((kg|sets|reps|sec)\)$/i, "").trim();
 const family = (name: string) => { const s = name.toLowerCase(); if (s.includes("raise") || s.includes("overhead press")) return "Shoulders"; if (s.includes("bench") || s.includes("push") || s.includes("fly")) return "Chest"; if (s.includes("dip") || s.includes("triceps")) return "Triceps"; if (s.includes("pull") || s.includes("chin") || s.includes("row")) return "Back"; if (s.includes("curl") && !s.includes("leg curl")) return "Biceps"; if (s.includes("squat") || s.includes("lunge") || s.includes("leg extension")) return "Quads"; if (s.includes("deadlift") || s.includes("swing") || s.includes("hip thrust") || s.includes("leg curl")) return "Posterior chain"; if (s.includes("calf")) return "Calves"; if (s.includes("crunch") || s.includes("plank")) return "Core"; return "Other"; };
 const aliases = new Map([["Wide Grip Pull Up", "Wide Grip Pull-Up"], ["Bench Dips", "Bench Dip"], ["Jumping Rope", "Jump Rope"]]);
-const canonical = (v: unknown) => aliases.get(clean(v)) ?? clean(v);
+const canonical = (v: unknown) => { const name = clean(v).split(" ∈ ")[0].trim(); return aliases.get(name) ?? name; };
 
 export async function POST(request: Request) {
   const form = await request.formData(); const file = form.get("file");

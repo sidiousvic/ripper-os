@@ -58,7 +58,7 @@ type Exercise = {
   progress: ProgressRecord[];
 };
 type Recommendation = { title: string; summary: string; evidence: string[]; actions: string[]; priority: "high" | "medium" | "low"; caveat: string };
-type AiInsight = { sustainedPractice: string; nextYearRule: string };
+type AiInsight = { sustainedPractice: string; nextYearRule: string; sectionInsights: Record<string, string> };
 
 let data = demoData;
 let exercises = data.exercises as Exercise[];
@@ -139,6 +139,11 @@ function SectionHeading({ kicker, title, description, action }: { kicker: string
       {action}
     </div>
   );
+}
+
+function SectionInsight({ text }: { text?: string }) {
+  if (!text) return null;
+  return <div className="callout ai-insight section-insight"><Sparkles size={17} /><p><strong>AI insight</strong> {text}</p></div>;
 }
 
 function ChartTooltip({ active, payload, label, unit = "" }: { active?: boolean; payload?: Array<{ name?: string; value?: number; color?: string; dataKey?: string }>; label?: string; unit?: string }) {
@@ -252,7 +257,7 @@ export default function Home() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error ?? "Recommendation generation failed.");
       setRecommendations(payload.recommendations);
-      setAiInsight({ sustainedPractice: payload.sustainedPractice, nextYearRule: payload.nextYearRule });
+      setAiInsight({ sustainedPractice: payload.sustainedPractice, nextYearRule: payload.nextYearRule, sectionInsights: payload.sectionInsights ?? {} });
       setRecommendationState("Recommendations updated from this dataset.");
     } catch (error) {
       setRecommendationState(error instanceof Error ? error.message : "Recommendation generation failed.");
@@ -331,7 +336,6 @@ export default function Home() {
           {uploadState && <p className="upload-status" role="status">{uploadState}</p>}
           <div className="hero-actions" aria-label="Dashboard navigation">
             <a className="button primary" href="#progress">Explore all exercises <ChevronRight size={17} /></a>
-            <a className="button secondary" href="#next">See where to go next</a>
             {hasUploadedData && <button className="button secondary" onClick={generateRecommendations}><Sparkles size={16} /> Generate AI insights</button>}
           </div>
         </div>
@@ -348,8 +352,9 @@ export default function Home() {
         <SectionHeading
           kicker="The headline gains"
           title="Your strongest measurable achievements"
-          description="The cleanest comparisons use the same exercise and the same primary metric. These four have enough history to tell a compelling story."
+            description="The cleanest comparisons use the same exercise and the same primary metric. These four have enough history to tell a compelling story."
         />
+        <SectionInsight text={aiInsight?.sectionInsights.highlights} />
         <div className="achievement-grid">
           {data.achievements.map((achievement, index) => {
             const unit = metricMeta[achievement.metric as MetricKey].unit;
@@ -384,6 +389,7 @@ export default function Home() {
           title="The months that built the year"
           description="Partial opening and current months are visible in the chart but excluded from the busiest and quietest rankings."
         />
+        <SectionInsight text={aiInsight?.sectionInsights.consistency} />
         <div className="two-column wide-left">
           <article className="panel chart-panel">
             <div className="panel-heading">
@@ -436,7 +442,7 @@ export default function Home() {
               <div className="calendar-days"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
               <div className="attendance-grid" style={{ gridTemplateColumns: `repeat(${attendanceWeeks.length}, minmax(0, 1fr))` }}>
                 {attendanceWeeks.flatMap((week) => week.days.map((day, index) => (
-                  <span key={`${week.week}-${index}`} className={day.inYear ? day.active ? "attendance-cell active" : "attendance-cell" : "attendance-cell outside"} title={day.inYear ? `${formatDate(day.date)}: ${day.active ? "trained" : "rest"}` : undefined} />
+                  <span key={`${week.week}-${index}`} className={day.inYear ? day.active ? "attendance-cell active" : "attendance-cell" : "attendance-cell outside"} title={`${formatDate(day.date)}: ${day.active ? "trained" : "rest"}`} aria-label={`${formatDate(day.date)}: ${day.active ? "trained" : "rest"}`} />
                 )))}
               </div>
             </div>
@@ -465,6 +471,7 @@ export default function Home() {
             description="Search or filter your complete movement library. Weighted movements default to heaviest load; bodyweight exercises default to best-set reps; timed work defaults to duration."
             action={<span className="data-pill"><CircleDot size={13} /> {data.coverage.exerciseCount} complete histories</span>}
           />
+          <SectionInsight text={aiInsight?.sectionInsights.progress} />
 
           <article className="panel focus-panel" id="exercise-focus">
             <div className="focus-top">
@@ -543,6 +550,7 @@ export default function Home() {
           title="Your program changed shape"
           description={`Early window: ${formatDate(data.muscleWindows.early[0], { month: "short", year: "numeric" })}–${formatDate(data.muscleWindows.early[1], { month: "short", year: "numeric" })}. Recent window: ${formatDate(data.muscleWindows.recent[0], { month: "short", year: "numeric" })}–${formatDate(data.muscleWindows.recent[1], { month: "short", year: "numeric" })}. Values are set-equivalents per week.`}
         />
+        <SectionInsight text={aiInsight?.sectionInsights.muscles} />
         <div className="two-column equal">
           <article className="panel muscle-bars-panel">
             <div className="panel-heading"><div><p className="eyebrow">Early vs recent</p><h3>Weekly exposure by muscle</h3></div><div className="legend-inline"><span><i className="legend-early" /> Early</span><span><i className="legend-recent" /> Recent</span></div></div>
@@ -586,6 +594,7 @@ export default function Home() {
           title="The exercises you practiced most"
           description="Working sets are the clearest measure of repeated practice. Click any movement to open its complete progress chart."
         />
+        <SectionInsight text={aiInsight?.sectionInsights.history} />
         <article className="panel leaderboard">
           <div className="leaderboard-head"><span>#</span><span>Exercise</span><span>Sessions</span><span>Working sets</span><span>Total reps</span></div>
           {exercises.slice(0, 12).map((exercise, index) => (
@@ -624,7 +633,7 @@ export default function Home() {
           <p className="eyebrow accent">Optional AI delight</p>
           <h2 id="connect-title">Connect OpenAI</h2>
           <p>Charts and upload processing work without an OpenAI account. Add an OpenAI API key only if you want personalized recommendations.</p>
-          <input className="connect-key-input" type="password" value={keyDraft} onChange={(event) => setKeyDraft(event.target.value)} placeholder="sk-…" autoFocus aria-label="OpenAI API key" />
+          <input className="connect-key-input" type="text" value={keyDraft} onChange={(event) => setKeyDraft(event.target.value)} placeholder="sk-…" autoFocus autoComplete="off" spellCheck={false} aria-label="OpenAI API key" />
           <p className="muted small">This key is kept in memory for this session only. It is never saved to browser storage. API usage is billed separately from ChatGPT.</p>
           <div className="connect-actions"><button className="button secondary" onClick={() => { setOpenAIKey(""); setKeyDraft(""); setConnectOpen(false); }}>Disconnect</button><button className="button primary" onClick={() => { setOpenAIKey(keyDraft.trim()); setConnectOpen(false); }}>Connect</button></div>
         </section>
