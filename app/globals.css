@@ -1,7 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&display=swap');
+
 :root {
-  --font-body: "Figtree", Arial, sans-serif;
-  --font-display: "Figtree", Arial, sans-serif;
-  --font-button: "Figtree", Arial, sans-serif;
+  --font-body: "Figtree", "Figtree Variable", Arial, sans-serif;
+  --font-display: "Figtree", "Figtree Variable", Arial, sans-serif;
+  --font-button: "Figtree", "Figtree Variable", Arial, sans-serif;
   --font-identity: "BiauKaiHK", Georgia, serif;
   --scale-identity-x: 1.2;
   --bg: #020603;
