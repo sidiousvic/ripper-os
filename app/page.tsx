@@ -264,7 +264,7 @@ export default function Home() {
       <section className="hero shell" id="top">
         <div className="hero-copy">
           <h1><b style={{marginBottom: "30px", fontFamily: "BiauKaiHK"}}>RIPPER <span>OS</span></b>.<br />Training. <span>Analyzed.</span></h1>
-          <p>I upload my training data, and Ripper OS organizes it into progress, consistency, muscle balance, highlights, and next opportunities. It&apos;s like Spotify Wrapped for training.</p>
+          <p>Upload your training data and Ripper OS organizes it into progress, consistency, muscle balance, highlights, and next opportunities. It&apos;s like Spotify Wrapped for training.</p>
           <label className="button upload-button">Upload MacroFactor export
             <input type="file" accept=".xlsx" onChange={handleUpload} />
           </label>
