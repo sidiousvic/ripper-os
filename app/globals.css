@@ -33,6 +33,14 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: "Bullvone";
+  src: url("/fonts/bullvone.otf") format("opentype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -330,6 +338,10 @@ button {
 .hero h1 > b {
   display: inline-block;
   font-size: 1.18em;
+}
+
+.hero h1 .hero-training {
+  font-family: "Bullvone", Georgia, serif;
 }
 
 .hero-copy > p {
