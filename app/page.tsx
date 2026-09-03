@@ -20,6 +20,7 @@ import {
   ChevronLeft,
   ChevronRight,
   CircleDot,
+  Check,
   Dumbbell,
   Flame,
   Gauge,
@@ -164,6 +165,7 @@ export default function Home() {
   const [family, setFamily] = useState("All");
   const [visibleCount, setVisibleCount] = useState(24);
   const [attendanceYear, setAttendanceYear] = useState(Number(data.coverage.lastDate.slice(0, 4)));
+  const hasUploadedData = data !== demoData;
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -265,11 +267,14 @@ export default function Home() {
         <div className="hero-copy">
           <h1><b style={{marginBottom: "30px", fontFamily: "BiauKaiHK"}}>RIPPER <span>OS</span></b>.<br />Training. <span>Analyzed.</span></h1>
           <p>Upload your training data and Ripper OS organizes it into progress, consistency, muscle balance, highlights, and next opportunities. It&apos;s like Spotify Wrapped for training.</p>
-          <label className="button upload-button">Upload MacroFactor export
-            <input type="file" accept=".xlsx" onChange={handleUpload} />
-          </label>
+          <div className="hero-config" aria-label="Configuration">
+            <p className="eyebrow accent">Configuration</p>
+            <label className="button upload-button">{hasUploadedData ? <Check size={17} aria-hidden="true" /> : <CircleDot size={17} aria-hidden="true" />}{hasUploadedData ? "MacroFactor export uploaded" : "Upload MacroFactor export"}
+              <input type="file" accept=".xlsx" onChange={handleUpload} />
+            </label>
+          </div>
           {uploadState && <p className="upload-status" role="status">{uploadState}</p>}
-          <div className="hero-actions">
+          <div className="hero-actions" aria-label="Dashboard navigation">
             <a className="button primary" href="#progress">Explore all exercises <ChevronRight size={17} /></a>
             <a className="button secondary" href="#next">See where to go next</a>
           </div>
