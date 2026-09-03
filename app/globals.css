@@ -90,6 +90,8 @@ button,
 
 .upload-button { display: inline-flex; align-items: center; justify-content: center; cursor: pointer; }
 .upload-button input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.upload-button > svg { position: static; }
+.upload-button:has(> svg) { padding-inline: 21px; }
 .upload-status { color: var(--lime); font-size: 16px; margin: 12px 0 0; }
 
 button,
@@ -566,7 +568,7 @@ button {
 .section-heading p:not(.eyebrow) {
   max-width: 680px;
   margin-top: 14px;
-  color: var(--muted);
+  color: #b7c8bc;
   font-size: 15px;
   line-height: 1.65;
 }
