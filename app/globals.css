@@ -2025,6 +2025,10 @@ h1, h2, h3, h4,
   letter-spacing: normal;
 }
 
+h2 {
+  font-family: "Bullvone", Georgia, serif;
+}
+
 .brand > span:last-child {
   font-family: var(--font-identity);
   transform: scaleX(var(--scale-identity-x));
