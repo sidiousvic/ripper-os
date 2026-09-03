@@ -328,7 +328,7 @@ export default function Home() {
           <a href="#next">Insights</a>
           <a href="/about">About</a>
         </nav>
-        <button className="data-pill donate-button" type="button" disabled>Donate</button>
+        <a className="data-pill donate-button" href="https://donate.stripe.com/bJe8wQ18J4so1wSdrKfjG00" target="_blank" rel="noreferrer">Donate</a>
       </header>
 
       <section className="hero shell" id="top">
