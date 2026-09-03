@@ -689,6 +689,7 @@ button {
 
 .callout {
   display: flex;
+  min-width: 0;
   align-items: flex-start;
   gap: 12px;
   margin-top: 16px;
@@ -715,8 +716,10 @@ button {
 
 .callout p {
   flex: 1;
+  min-width: 0;
   width: auto;
   transform: none;
+  overflow-wrap: anywhere;
 }
 
 .ai-insight {
@@ -1665,6 +1668,7 @@ button {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
   gap: 14px;
+  margin-top: 24px;
 }
 
 .next-card {
