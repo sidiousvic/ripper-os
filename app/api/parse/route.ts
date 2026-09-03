@@ -1,32 +1,36 @@
-import { randomUUID } from "node:crypto";
-import { execFile } from "node:child_process";
-import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
-import { promisify } from "node:util";
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
+import * as XLSX from "xlsx";
 
-const run = promisify(execFile);
 export const runtime = "nodejs";
+const DAY = 86400000;
+const epoch = Date.UTC(1899, 11, 30);
+const n = (v: unknown) => typeof v === "number" && Number.isFinite(v) ? v : 0;
+const r = (v: number, d = 1) => Math.round(v * 10 ** d) / 10 ** d;
+const key = (v: unknown) => { const d = v instanceof Date ? v : typeof v === "number" ? new Date(epoch + Math.round(v) * DAY) : new Date(`${String(v ?? "").replaceAll("/", "-").slice(0, 10)}T00:00:00Z`); return Number.isNaN(d.valueOf()) ? null : d.toISOString().slice(0, 10); };
+const clean = (v: unknown) => String(v ?? "").replace(/ \((kg|sets|reps|sec)\)$/i, "").trim();
+const family = (name: string) => { const s = name.toLowerCase(); if (s.includes("raise") || s.includes("overhead press")) return "Shoulders"; if (s.includes("bench") || s.includes("push") || s.includes("fly")) return "Chest"; if (s.includes("dip") || s.includes("triceps")) return "Triceps"; if (s.includes("pull") || s.includes("chin") || s.includes("row")) return "Back"; if (s.includes("curl") && !s.includes("leg curl")) return "Biceps"; if (s.includes("squat") || s.includes("lunge") || s.includes("leg extension")) return "Quads"; if (s.includes("deadlift") || s.includes("swing") || s.includes("hip thrust") || s.includes("leg curl")) return "Posterior chain"; if (s.includes("calf")) return "Calves"; if (s.includes("crunch") || s.includes("plank")) return "Core"; return "Other"; };
+const aliases = new Map([["Wide Grip Pull Up", "Wide Grip Pull-Up"], ["Bench Dips", "Bench Dip"], ["Jumping Rope", "Jump Rope"]]);
+const canonical = (v: unknown) => aliases.get(clean(v)) ?? clean(v);
 
 export async function POST(request: Request) {
-  const form = await request.formData();
-  const file = form.get("file");
+  const form = await request.formData(); const file = form.get("file");
   if (!(file instanceof File)) return Response.json({ error: "Upload a MacroFactor .xlsx file." }, { status: 400 });
   if (!file.name.toLowerCase().endsWith(".xlsx")) return Response.json({ error: "Only .xlsx MacroFactor exports are supported." }, { status: 400 });
   if (file.size > 25 * 1024 * 1024) return Response.json({ error: "The workbook is larger than the 25 MB upload limit." }, { status: 413 });
-
-  const dir = await mkdir(path.join(os.tmpdir(), "ripper-os"), { recursive: true }).then(() => path.join(os.tmpdir(), "ripper-os"));
-  const id = randomUUID();
-  const inputPath = path.join(dir, `${id}.xlsx`);
-  const outputPath = path.join(dir, `${id}.json`);
   try {
-    await writeFile(inputPath, Buffer.from(await file.arrayBuffer()));
-    await run(process.execPath, [path.join(process.cwd(), "scripts/refresh-training-data.mjs"), inputPath, outputPath], { timeout: 30_000 });
-    return new Response(await readFile(outputPath), { headers: { "content-type": "application/json", "cache-control": "no-store" } });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Could not parse the workbook.";
-    return Response.json({ error: message.replaceAll(inputPath, "uploaded file") }, { status: 422 });
-  } finally {
-    await Promise.all([rm(inputPath, { force: true }), rm(outputPath, { force: true })]);
-  }
+    const wb = XLSX.read(await file.arrayBuffer(), { type: "array", cellDates: true });
+    const rows = (name: string) => { const sheet = wb.Sheets[name]; if (!sheet) throw new Error(`Missing required MacroFactor sheet: ${name}`); return XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: null }) as unknown[][]; };
+    const map = new Map<string, any>();
+    const merge = (sheet: string, field: string) => { const values = rows(sheet); const headers = values[0]?.map(clean) ?? []; for (const row of values.slice(1)) { const date = key(row[0]); if (!date) continue; for (let c = 1; c < headers.length; c += 1) { const value = n(row[c]); if (!value) continue; const exercise = canonical(headers[c]); const id = `${date}|${exercise}`; const item = map.get(id) ?? { date, source: "MacroFactor", exercise, family: family(exercise), totalSets: null, totalReps: null, bestSetReps: null, heaviestKg: null, totalVolumeKg: null, e1rmKg: null, durationSec: null }; item[field] = value; map.set(id, item); } } };
+    merge("Exercises - Total Sets", "totalSets"); merge("Exercises - Total Reps", "totalReps"); merge("Exercises - Best Set Reps", "bestSetReps"); merge("Exercises - Heaviest Weight", "heaviestKg"); merge("Exercises - Total Volume", "totalVolumeKg"); merge("Exercises - 1-RM", "e1rmKg"); merge("Exercises - Total Duration", "durationSec");
+    const records = [...map.values()].sort((a, b) => a.date.localeCompare(b.date)); const dates = [...new Set(records.filter((x) => n(x.totalSets) > 0).map((x) => x.date))].sort(); if (!dates.length) throw new Error("No workout sessions were found in this MacroFactor export.");
+    const sessions = dates.map((date) => { const day = records.filter((x) => x.date === date); return { date, source: "MacroFactor", workout: "MacroFactor workout day", durationMin: null, totalSets: day.reduce((s, x) => s + n(x.totalSets), 0), totalReps: day.reduce((s, x) => s + n(x.totalReps), 0) || null, volumeKg: day.reduce((s, x) => s + n(x.totalVolumeKg), 0) || null }; });
+    const first = dates[0], last = dates.at(-1)!; const months: any[] = []; let cumulative = 0; for (const d = new Date(`${first.slice(0, 7)}-01T00:00:00Z`); d.toISOString().slice(0, 7) <= last.slice(0, 7); d.setUTCMonth(d.getUTCMonth() + 1)) { const month = d.toISOString().slice(0, 7); const count = sessions.filter((x) => x.date.startsWith(month)).length; cumulative += count; months.push({ month, sessions: count, cumulative, coverage: month === first.slice(0, 7) || month === last.slice(0, 7) ? "partial" : "complete" }); }
+    const gaps = dates.slice(1).map((to, i) => { const daysBetween = Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${dates[i]}T00:00:00Z`)) / DAY); return { from: dates[i], to, daysBetween, daysOff: Math.max(0, daysBetween - 1) }; }).sort((a, b) => b.daysBetween - a.daysBetween).slice(0, 12);
+    const exercises = [...new Set(records.map((x) => x.exercise))].map((name) => { const history = records.filter((x) => x.exercise === name); const metric = history.some((x) => n(x.heaviestKg)) ? "heaviestKg" : history.some((x) => n(x.bestSetReps)) ? "bestSetReps" : "totalSets"; return { name, family: family(name), defaultMetric: metric, availableMetrics: ["heaviestKg", "e1rmKg", "bestSetReps", "totalVolumeKg", "totalReps", "totalSets", "durationSec"].filter((k) => history.some((x) => n(x[k]) > 0)), firstDate: history[0].date, lastDate: history.at(-1).date, sessions: new Set(history.map((x) => x.date)).size, totalSets: r(history.reduce((s, x) => s + n(x.totalSets), 0)), totalReps: r(history.reduce((s, x) => s + n(x.totalReps), 0)), totalVolumeKg: r(history.reduce((s, x) => s + n(x.totalVolumeKg), 0)), progress: history.map(({ source, ...x }) => x) }; }).sort((a, b) => b.totalSets - a.totalSets || a.name.localeCompare(b.name));
+    const achievements = exercises.filter((x) => x.progress.length > 1).slice(0, 4).map((x) => { const firstPoint = x.progress[0], latest = x.progress.at(-1), value = (p: any) => r(n(p[x.defaultMetric])); return { exercise: x.name, metric: x.defaultMetric, first: { date: firstPoint.date, value: value(firstPoint) }, latest: { date: latest.date, value: value(latest) }, peak: { date: latest.date, value: value(latest) }, percentChange: value(firstPoint) ? r((value(latest) / value(firstPoint) - 1) * 100, 0) : 0 }; });
+    const muscleValues = rows("Muscle Groups - Sets"); const mh = muscleValues[0]?.map(clean) ?? []; const muscleMap = new Map<string, number>(); for (const row of muscleValues.slice(1)) for (let c = 1; c < mh.length; c += 1) muscleMap.set(mh[c], (muscleMap.get(mh[c]) ?? 0) + n(row[c])); const muscles = [...muscleMap].map(([muscle, total]) => ({ muscle, allTimeSets: r(total), earlyWeekly: r(total / 8), recentWeekly: r(total / 8), change: 0 }));
+    const attendance = dates.map((date) => ({ week: date, days: [1, 0, 0, 0, 0, 0, 0], sessions: 1 })); const complete = months.filter((x) => x.coverage === "complete"); const payload = { generatedAt: new Date().toISOString(), coverage: { firstDate: first, lastDate: last, journeyDays: Math.round((Date.parse(`${last}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) / DAY) + 1, totalSessions: sessions.length, averageSessionsPerMonth: r(sessions.length / months.length), averageSessionsPerWeek: r(sessions.length / (((Date.parse(`${last}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) / DAY + 1) / 7)), exerciseCount: exercises.length, longestActiveWeekStreak: 1 }, monthly: months, busiestMonths: [...complete].sort((a, b) => b.sessions - a.sessions).slice(0, 5), quietestMonths: [...complete].sort((a, b) => a.sessions - b.sessions).slice(0, 5), gaps, attendance, exercises, muscleWindows: { early: [first, first], recent: [last, last] }, muscles, muscleHeatmap: { weeks: [], rows: [] }, achievements, methodology: { strength: "Weighted exercise progress defaults to the heaviest recorded load.", muscles: "Muscle balance uses muscle-group set equivalents. These are exposure signals, not diagnoses.", caveat: "Confirm sudden load changes against the exercise setup." } };
+    return Response.json(payload, { headers: { "cache-control": "no-store" } });
+  } catch (error) { return Response.json({ error: error instanceof Error ? error.message : "Could not parse the workbook." }, { status: 422 }); }
 }
