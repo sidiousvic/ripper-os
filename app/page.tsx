@@ -173,6 +173,7 @@ export default function Home() {
   const [keyDraft, setKeyDraft] = useState("");
   const [aiConsentOpen, setAiConsentOpen] = useState(false);
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
+  const [recommendationError, setRecommendationError] = useState("");
   const [selectedExerciseName, setSelectedExerciseName] = useState("Dumbbell Fly");
   const selectedExercise = exercises.find((exercise) => exercise.name === selectedExerciseName) ?? exercises[0] ?? emptyExercise;
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>(selectedExercise.defaultMetric);
@@ -220,6 +221,7 @@ export default function Home() {
       setUploadState(`Loaded ${file.name}`);
       setRecommendations([]);
       setAiInsight(null);
+      setRecommendationError("");
       redraw((value) => value + 1);
     } catch (error) {
       setUploadState(error instanceof Error ? error.message : "Could not parse the workbook.");
@@ -234,6 +236,7 @@ export default function Home() {
     exercises = data.exercises as Exercise[];
     setRecommendations([]);
     setAiInsight(null);
+    setRecommendationError("");
     setUploadState("");
     setRecommendationState("");
     setSelectedExerciseName("");
@@ -248,6 +251,7 @@ export default function Home() {
 
   const requestRecommendations = async () => {
     setAiConsentOpen(false);
+    setRecommendationError("");
     setRecommendationState("Generating recommendations…");
     try {
       const summary = { coverage: data.coverage, muscles: data.muscles, gaps: data.gaps, achievements: data.achievements, busiestMonths: data.busiestMonths, quietestMonths: data.quietestMonths };
@@ -260,7 +264,11 @@ export default function Home() {
       setAiInsight({ sustainedPractice: payload.sustainedPractice, nextYearRule: payload.nextYearRule, sectionInsights: payload.sectionInsights ?? {} });
       setRecommendationState("Recommendations updated from this dataset.");
     } catch (error) {
-      setRecommendationState(error instanceof Error ? error.message : "Recommendation generation failed.");
+      const message = error instanceof Error ? error.message : "Recommendation generation failed.";
+      setRecommendationState("");
+      setRecommendationError(/limit|429|few minutes/i.test(message)
+        ? "Recommendations are temporarily rate-limited to protect your connected API key. Please wait a few minutes, then try again."
+        : "Recommendations could not be generated right now. Check your OpenAI connection and try again.");
     }
   };
 
@@ -645,6 +653,15 @@ export default function Home() {
           <h2 id="ai-consent-title">Generate recommendations?</h2>
           <p>Only calculated summary metrics are sent for this request. Raw workbook rows stay in this browser. OpenAI API usage may incur charges and is billed separately from ChatGPT.</p>
           <div className="connect-actions"><button className="button secondary" onClick={() => setAiConsentOpen(false)}>Cancel</button><button className="button primary" onClick={requestRecommendations}>Generate</button></div>
+        </section>
+      </div>}
+
+      {recommendationError && <div className="connect-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setRecommendationError(""); }}>
+        <section className="connect-dialog panel" role="alertdialog" aria-modal="true" aria-labelledby="recommendation-error-title">
+          <p className="eyebrow accent">Power Ripper OS with AI</p>
+          <h2 id="recommendation-error-title">Recommendations unavailable</h2>
+          <p>{recommendationError}</p>
+          <div className="connect-actions"><button className="button secondary" onClick={() => setRecommendationError("")}>Close</button><button className="button ai-action" onClick={() => { setRecommendationError(""); generateRecommendations(); }}>Try again</button></div>
         </section>
       </div>}
 
