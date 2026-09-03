@@ -227,7 +227,7 @@ export default function Home() {
       setSelectedExerciseName(exercises[0]?.name ?? "");
       setSelectedMetric(exercises[0]?.defaultMetric ?? "totalSets");
       setAttendanceYear(Number(data.coverage.lastDate.slice(0, 4)));
-      setUploadState(`Loaded ${file.name}`);
+      setUploadState("");
       setRecommendations([]);
       setAiInsight(null);
       setRecommendationError("");
@@ -353,7 +353,7 @@ export default function Home() {
             </label>
             <button className="button upload-button" onClick={() => { setKeyDraft(openAIKey); setConnectOpen(true); }}><KeyRound size={17} aria-hidden="true" />{openAIKey ? "OpenAI connected" : "Connect OpenAI"}</button>
             {hasUploadedData && <button className="button upload-button" onClick={() => setClearConfirmOpen(true)}><Trash2 size={17} aria-hidden="true" />Clear uploaded data</button>}
-            {lastExportName && <span className="data-pill last-export-pill" title={lastExportAt ? `Uploaded ${new Date(lastExportAt).toLocaleString()}` : undefined}>Last export · {lastExportName}</span>}
+            {lastExportName && <span className="data-pill last-export-pill" title={lastExportAt ? `Uploaded ${new Date(lastExportAt).toLocaleString()}` : undefined}>Loaded {lastExportName} · {lastExportAt ? new Date(lastExportAt).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : ""}</span>}
           </div>
           {uploadState && <p className="upload-status" role="status">{uploadState}</p>}
           <div className="hero-actions" aria-label="Dashboard navigation">
