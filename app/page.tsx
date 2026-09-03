@@ -356,7 +356,7 @@ export default function Home() {
           </div>
           {uploadState && <p className="upload-status" role="status">{uploadState}</p>}
           <div className="hero-actions" aria-label="Dashboard navigation">
-            <a className="button primary" href="#progress">Explore all exercises <ChevronRight size={17} /></a>
+            {hasUploadedData && <a className="button primary" href="#progress">Explore all exercises <ChevronRight size={17} /></a>}
             {hasUploadedData && <button className="button ai-action" onClick={generateRecommendations}><Sparkles size={16} /> Generate AI insights</button>}
           </div>
         </div>
