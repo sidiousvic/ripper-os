@@ -7,7 +7,7 @@ The site is intentionally data-light. It publishes the calculated training summa
 ## Requirements
 
 - Node.js 22.13 or newer
-- An all-time MacroFactor `.xlsx` export
+- An all-time MacroFactor `.xlsx` or workout `.csv` export
 - An OpenAI API key is optional and only required for generated recommendations
 
 Install dependencies with:
@@ -20,7 +20,7 @@ npm install
 
 Export an **all-time** MacroFactor training workbook. Each refresh treats the MacroFactor workbook as a replacement, not an append, so always provide the complete export.
 
-The workbook must contain these sheets. Sheet names are case-sensitive:
+The workbook must contain these sheets. Sheet names are case-sensitive. The app also accepts MacroFactor's row-oriented workout CSV export, with columns such as `Date`, `Exercise`, `Weight (kg)`, `Reps`, and `Workout Duration`.
 
 | Sheet | Layout |
 | --- | --- |

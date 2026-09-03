@@ -277,7 +277,7 @@ export default function Home() {
           <div className="hero-config" aria-label="Configuration">
             <p className="eyebrow accent">Configuration</p>
             <label className="button upload-button">{hasUploadedData ? <Check size={17} aria-hidden="true" /> : <CircleDot size={17} aria-hidden="true" />}{hasUploadedData ? "MacroFactor export uploaded" : "Upload MacroFactor export"}
-              <input type="file" accept=".xlsx" onChange={handleUpload} />
+              <input type="file" accept=".xlsx,.csv" onChange={handleUpload} />
             </label>
             <button className="button upload-button" onClick={() => { setKeyDraft(openAIKey); setConnectOpen(true); }}><KeyRound size={17} aria-hidden="true" />{openAIKey ? "OpenAI connected" : "Connect OpenAI"}</button>
           </div>
