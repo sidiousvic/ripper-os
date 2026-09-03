@@ -342,6 +342,11 @@ button {
 
 .hero h1 .hero-training {
   font-family: "Bullvone", Georgia, serif;
+  color: var(--text);
+}
+
+.hero h1 .hero-training > span {
+  color: var(--green);
 }
 
 .hero-copy > p {
