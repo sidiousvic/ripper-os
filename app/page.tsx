@@ -450,11 +450,11 @@ export default function Home() {
               <div className="calendar-days"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
               <div className="attendance-grid" style={{ gridTemplateColumns: `repeat(${attendanceWeeks.length}, minmax(0, 1fr))` }}>
                 {attendanceWeeks.flatMap((week) => week.days.map((day, index) => (
-                  <span key={`${week.week}-${index}`} className={day.inYear ? day.active ? "attendance-cell active" : "attendance-cell" : "attendance-cell outside"} data-tooltip={`${formatDate(day.date)}: ${day.active ? "trained" : "rest"}`} title={`${formatDate(day.date)}: ${day.active ? "trained" : "rest"}`} aria-label={`${formatDate(day.date)}: ${day.active ? "trained" : "rest"}`} />
+                  <span key={`${week.week}-${index}`} className={day.inYear ? day.active ? `attendance-cell active level-${day.active}` : "attendance-cell" : "attendance-cell outside"} data-tooltip={`${formatDate(day.date)}: ${day.active ? `training load ${day.active}/3` : "rest"}`} title={`${formatDate(day.date)}: ${day.active ? `training load ${day.active}/3` : "rest"}`} aria-label={`${formatDate(day.date)}: ${day.active ? `training load ${day.active}/3` : "rest"}`} />
                 )))}
               </div>
             </div>
-            <div className="calendar-legend"><span>Less</span><i /><i className="mid" /><i className="high" /><span>Training day</span></div>
+            <div className="calendar-legend"><span>Less</span><i /><i className="mid" /><i className="high" /><span>More training</span></div>
           </article>
           <article className="panel gap-panel">
             <div className="panel-heading"><div><p className="eyebrow">Longest pauses</p><h3>Not just #1—the top five gaps</h3></div></div>

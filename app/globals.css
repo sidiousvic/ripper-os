@@ -993,6 +993,14 @@ button {
 
 .attendance-cell.active {
   border-color: #42915a;
+  background: rgba(67, 255, 126, .34);
+}
+
+.attendance-cell.active.level-2 {
+  background: rgba(67, 255, 126, .62);
+}
+
+.attendance-cell.active.level-3 {
   background: var(--green);
 }
 
