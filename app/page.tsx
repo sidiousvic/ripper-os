@@ -63,7 +63,7 @@ type AiInsight = { sustainedPractice: string; nextYearRule: string; sectionInsig
 let data = demoData;
 let exercises = data.exercises as Exercise[];
 const emptyExercise: Exercise = { name: "No exercise selected", family: "—", defaultMetric: "totalSets", availableMetrics: ["totalSets"], firstDate: "1970-01-01", lastDate: "1970-01-01", sessions: 0, totalSets: 0, totalReps: 0, totalVolumeKg: 0, progress: [] };
-const sessionDataKey = "ripper-os-training-data-v2";
+const sessionDataKey = "ripper-os-training-data-v3";
 const metricMeta: Record<MetricKey, { label: string; short: string; unit: string }> = {
   heaviestKg: { label: "Heaviest load", short: "Load", unit: "kg" },
   e1rmKg: { label: "Estimated 1RM", short: "e1RM", unit: "kg" },
@@ -315,7 +315,7 @@ export default function Home() {
         <nav aria-label="Dashboard sections">
           <a href="#progress">Progress</a>
           <a href="#consistency">Consistency</a>
-          <a href="#muscles">Muscles</a>
+          {data.muscles.length > 0 && <a href="#muscles">Muscles</a>}
           <a href="#next">Next steps</a>
         </nav>
         <span className="data-pill"><CircleDot size={13} /> {data.coverage.totalSessions ? `Updated ${formatDate(data.coverage.lastDate, { day: "numeric", month: "short", year: "numeric" })}` : "Awaiting upload"}</span>
