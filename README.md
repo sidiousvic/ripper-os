@@ -8,6 +8,7 @@ The site is intentionally data-light. It publishes the calculated training summa
 
 - Node.js 22.13 or newer
 - An all-time MacroFactor `.xlsx` export
+- An OpenAI API key is optional and only required for generated recommendations
 
 Install dependencies with:
 
@@ -45,7 +46,15 @@ Date        Dumbbell Fly (sets)   Back Squat (sets)
 
 Nutrition, food, account, email, settings, and unrelated workbook tabs are ignored and never copied into the public dataset.
 
-## Refresh the dataset
+## Use your own export in the app
+
+The deployed app and local development server include an **Upload MacroFactor export** button. The workbook is parsed by the app's `/api/parse` endpoint and the resulting summary replaces the demo data for the current session. The original workbook is written to a temporary server file only while it is parsed, then deleted.
+
+The graphs do not require an OpenAI account. After uploading, choose **Generate recommendations** to run the optional AI interpretation. Configure the server with `OPENAI_API_KEY`; never put that key in frontend code or browser storage. You can select a model with `OPENAI_MODEL` (the default is `gpt-5-mini`). The recommendation request contains calculated training summaries, not the raw workbook.
+
+The upload and recommendation endpoints currently require a Node-compatible server runtime. A static-only host can serve the bundled demo dashboard, but it cannot process new workbooks or call OpenAI until its provider's serverless adapter is configured.
+
+## Refresh the checked-in dataset
 
 From the project directory, pass the newest all-time MacroFactor export and the output JSON path:
 
@@ -63,6 +72,8 @@ npm run build
 ```
 
 The refresh script normalizes exercise aliases, merges daily metrics, calculates summaries and rankings, and writes the static file consumed by the dashboard. It does not modify the source workbook.
+
+For a public deployment, keep the checked-in dataset anonymized demo data. Users should upload their own export through the app instead of committing personal training history.
 
 ## Development
 
