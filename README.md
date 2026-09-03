@@ -2,7 +2,7 @@
 
 Ripper OS is a static React dashboard that turns workout history into progress, consistency, muscle-balance, and next-step views.
 
-The site is intentionally data-light. It publishes the calculated training summary, not raw account or nutrition data. The included dataset is generated from an all-time MacroFactor training export.
+The site is intentionally data-light. It publishes the calculated training summary, not raw account or nutrition data. The repository does not include a personal CSV or workbook; users provide their own MacroFactor export through the upload button.
 
 ## Requirements
 
@@ -76,7 +76,7 @@ npm run build
 
 The refresh script normalizes exercise aliases, merges daily metrics, calculates summaries and rankings, and writes the static file consumed by the dashboard. It does not modify the source workbook.
 
-For a public deployment, keep the checked-in dataset anonymized demo data. Users should upload their own export through the app instead of committing personal training history.
+The checked-in dataset is an empty starting state. Users should upload their own export through the app instead of committing personal training history.
 
 ## Development
 

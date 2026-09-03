@@ -157,7 +157,7 @@ function ChartTooltip({ active, payload, label, unit = "" }: { active?: boolean;
 }
 
 export default function Home() {
-  const [, redraw] = useState(0);
+  const [dataVersion, redraw] = useState(0);
   const [uploadState, setUploadState] = useState<string>("");
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [recommendationState, setRecommendationState] = useState<string>("");
@@ -251,11 +251,11 @@ export default function Home() {
     document.getElementById("exercise-focus")?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
-  const families = useMemo(() => ["All", ...Array.from(new Set(exercises.map((exercise) => exercise.family))).sort()], []);
+  const families = useMemo(() => ["All", ...Array.from(new Set(exercises.map((exercise) => exercise.family))).sort()], [dataVersion]);
   const filteredExercises = useMemo(() => exercises.filter((exercise) => {
     const matchesSearch = exercise.name.toLowerCase().includes(search.toLowerCase());
     return matchesSearch && (family === "All" || exercise.family === family);
-  }), [search, family]);
+  }), [search, family, dataVersion]);
 
   const selectedSeries = metricSeries(selectedExercise, selectedMetric);
   const latestWindowStart = new Date(new Date(`${data.coverage.lastDate}T00:00:00Z`).valueOf() - (27 * 86_400_000)).toISOString().slice(0, 10);

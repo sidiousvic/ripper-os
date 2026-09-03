@@ -4,9 +4,9 @@ Product and data-quality follow-ups. Deployment work is intentionally tracked el
 
 ## Validate the real MacroFactor CSV
 
-- Test `/Users/sidiousvic/Downloads/MacroFactor-20260903125636.csv` end to end.
+- Test a real user-provided MacroFactor CSV end to end.
 - Compare session, set, rep, weight, volume, and date totals against MacroFactor.
-- Add a checked-in CSV fixture and regression assertions.
+- Add parser regression assertions without committing private export files.
 - Document which CSV fields cannot provide muscle-group analysis.
 
 ## Uploaded-data persistence
