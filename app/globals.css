@@ -651,6 +651,29 @@ h4 {
   margin-bottom: 4px;
 }
 
+.connect-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, .72);
+  backdrop-filter: blur(8px);
+}
+
+.connect-dialog {
+  width: min(100%, 460px);
+  padding: 28px;
+  box-shadow: var(--shadow-panel-3d), 0 0 42px rgba(63, 226, 119, .16);
+}
+
+.connect-dialog h2 { margin: 6px 0 10px; }
+.connect-dialog > p:not(.eyebrow) { color: var(--muted); }
+.connect-key-input { width: 100%; margin: 20px 0 10px; border: 1px solid var(--line); border-radius: 10px; padding: 13px 14px; color: var(--text); background: rgba(3, 10, 5, .72); }
+.connect-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+.connect-actions .button { min-width: 112px; }
+
 .two-column {
   display: grid;
   gap: 16px;

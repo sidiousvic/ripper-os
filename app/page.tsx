@@ -25,6 +25,7 @@ import {
   Flame,
   Gauge,
   Layers3,
+  KeyRound,
   Search,
   Sparkles,
   Target,
@@ -158,6 +159,9 @@ export default function Home() {
   const [uploadState, setUploadState] = useState<string>("");
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [recommendationState, setRecommendationState] = useState<string>("");
+  const [openAIKey, setOpenAIKey] = useState("");
+  const [connectOpen, setConnectOpen] = useState(false);
+  const [keyDraft, setKeyDraft] = useState("");
   const [selectedExerciseName, setSelectedExerciseName] = useState("Dumbbell Fly");
   const selectedExercise = exercises.find((exercise) => exercise.name === selectedExerciseName) ?? exercises[0];
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>(selectedExercise.defaultMetric);
@@ -196,7 +200,9 @@ export default function Home() {
     setRecommendationState("Generating recommendations…");
     try {
       const summary = { coverage: data.coverage, muscles: data.muscles, gaps: data.gaps, achievements: data.achievements, busiestMonths: data.busiestMonths, quietestMonths: data.quietestMonths };
-      const response = await fetch("/api/recommendations", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(summary) });
+      const headers: HeadersInit = { "content-type": "application/json" };
+      if (openAIKey) headers["x-openai-api-key"] = openAIKey;
+      const response = await fetch("/api/recommendations", { method: "POST", headers, body: JSON.stringify(summary) });
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error ?? "Recommendation generation failed.");
       setRecommendations(payload.recommendations);
@@ -272,6 +278,7 @@ export default function Home() {
             <label className="button upload-button">{hasUploadedData ? <Check size={17} aria-hidden="true" /> : <CircleDot size={17} aria-hidden="true" />}{hasUploadedData ? "MacroFactor export uploaded" : "Upload MacroFactor export"}
               <input type="file" accept=".xlsx" onChange={handleUpload} />
             </label>
+            <button className="button upload-button" onClick={() => { setKeyDraft(openAIKey); setConnectOpen(true); }}><KeyRound size={17} aria-hidden="true" />{openAIKey ? "OpenAI connected" : "Connect OpenAI"}</button>
           </div>
           {uploadState && <p className="upload-status" role="status">{uploadState}</p>}
           <div className="hero-actions" aria-label="Dashboard navigation">
@@ -567,6 +574,17 @@ export default function Home() {
           <div className="principle panel"><div className="principle-icon"><Dumbbell size={25} /></div><div><p className="eyebrow accent">A simple next-year rule</p><h3>Keep six anchor movements stable long enough to measure.</h3><p>Choose one horizontal press, one vertical press, one vertical pull, one row, one knee-dominant lift, and one hip hinge. Track load, reps, and reps-in-reserve consistently; rotate accessories around them.</p></div></div>
         </div>
       </section>
+
+      {connectOpen && <div className="connect-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setConnectOpen(false); }}>
+        <section className="connect-dialog panel" role="dialog" aria-modal="true" aria-labelledby="connect-title">
+          <p className="eyebrow accent">Optional AI delight</p>
+          <h2 id="connect-title">Connect OpenAI</h2>
+          <p>Charts and upload processing work without an OpenAI account. Add an OpenAI API key only if you want personalized recommendations.</p>
+          <input className="connect-key-input" type="password" value={keyDraft} onChange={(event) => setKeyDraft(event.target.value)} placeholder="sk-…" autoFocus aria-label="OpenAI API key" />
+          <p className="muted small">This key is kept in memory for this session only. It is never saved to browser storage. API usage is billed separately from ChatGPT.</p>
+          <div className="connect-actions"><button className="button secondary" onClick={() => { setOpenAIKey(""); setKeyDraft(""); setConnectOpen(false); }}>Disconnect</button><button className="button primary" onClick={() => { setOpenAIKey(keyDraft.trim()); setConnectOpen(false); }}>Connect</button></div>
+        </section>
+      </div>}
 
       <footer className="shell footer">
         <div className="sidiousware-lockup">
