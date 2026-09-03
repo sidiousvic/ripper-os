@@ -1,6 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&family=Montaga&display=swap');
 
-:root {
-  --font-body: "BiauKaiHK", Georgia, serif;
+  :root {
+    --font-body: "Montaga", Georgia, serif;
   --font-display: "BiauKaiHK", Georgia, serif;
   --font-button: "BiauKaiHK", Georgia, serif;
   --font-identity: "BiauKaiHK", Georgia, serif;
@@ -410,13 +411,13 @@ button {
 .button.ai-action {
   color: #07130a;
   background: #c7f04a;
-  box-shadow: 0 10px 22px rgba(0, 0, 0, .38), 0 0 18px rgba(199, 240, 74, .22);
+  box-shadow: var(--shadow-control);
 }
 
 .button.ai-action:hover {
   color: #07130a;
   background: #dcfa68;
-  box-shadow: 0 13px 28px rgba(0, 0, 0, .42), 0 0 24px rgba(199, 240, 74, .34);
+  box-shadow: var(--shadow-control);
 }
 
 .button.secondary:hover {
@@ -551,7 +552,7 @@ button {
 }
 
 .section-heading > div {
-  max-width: 735px;
+  max-width: min(1100px, 100%);
 }
 
 .section-heading h2 {
@@ -1582,7 +1583,7 @@ button {
   margin-top: 100px;
   border-top: 1px solid var(--line);
   padding-block: 110px 105px;
-  background: rgba(9, 21, 13, .86);
+  background: rgba(9, 21, 13, .9);
   backdrop-filter: blur(3px);
 }
 
@@ -1647,7 +1648,7 @@ button {
   color: var(--muted);
   font-size: 14px;
   line-height: 1.5;
-  background: rgba(4, 13, 8, .34);
+  background: rgba(4, 13, 8, .8);
   box-shadow: var(--shadow-control);
 }
 
