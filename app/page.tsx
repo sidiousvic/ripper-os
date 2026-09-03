@@ -674,7 +674,7 @@ export default function Home() {
         </section>
       </div>}
 
-      {recommendationState.startsWith("Generating") && <div className="ai-loading-toast" role="status" aria-live="polite"><Sparkles size={18} /><div><p className="eyebrow accent">AI insight</p><p>Generating recommendations…</p></div></div>}
+      {recommendationState.startsWith("Generating") && <div className="ai-loading-toast" role="status" aria-live="polite"><Sparkles size={18} /><div><p className="eyebrow accent">AI INSIGHTS</p><p>Generating recommendations…</p></div></div>}
 
       <footer className="shell footer">
         <div className="sidiousware-lockup">

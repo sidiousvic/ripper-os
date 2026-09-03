@@ -1038,6 +1038,12 @@ button {
   background: rgba(5, 18, 10, .9);
   box-shadow: 0 16px 42px rgba(0, 0, 0, .42), 0 0 22px rgba(67, 255, 126, .12);
   backdrop-filter: blur(16px);
+  animation: ai-loading-pulse 2.2s ease-in-out infinite;
+}
+
+@keyframes ai-loading-pulse {
+  0%, 100% { border-color: rgba(199, 240, 74, .28); box-shadow: var(--shadow-control), 0 0 12px rgba(199, 240, 74, .08); }
+  50% { border-color: rgba(199, 240, 74, .9); box-shadow: var(--shadow-control), 0 0 28px rgba(199, 240, 74, .34); }
 }
 
 .ai-loading-toast .eyebrow { margin: 0 0 3px; }
