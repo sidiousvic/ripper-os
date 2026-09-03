@@ -629,6 +629,15 @@ h4 {
   transform: none;
 }
 
+.ai-insight {
+  border-color: rgba(199, 255, 74, .24);
+  background: linear-gradient(110deg, rgba(34, 74, 43, .72), rgba(10, 23, 14, .78));
+}
+
+.ai-insight .eyebrow {
+  margin-bottom: 4px;
+}
+
 .two-column {
   display: grid;
   gap: 16px;
