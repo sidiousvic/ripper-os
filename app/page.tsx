@@ -324,7 +324,7 @@ export default function Home() {
           <a href="#progress">Progress</a>
           <a href="#consistency">Consistency</a>
           {data.muscles.length > 0 && <a href="#muscles">Muscles</a>}
-          <a href="#next">Next steps</a>
+          <a href="#next">Insights</a>
         </nav>
         <button className="data-pill donate-button" type="button" disabled>Donate</button>
       </header>
@@ -454,7 +454,7 @@ export default function Home() {
                 )))}
               </div>
             </div>
-            <div className="calendar-legend"><span>Less</span><i /><i className="mid" /><i className="high" /><span>More training</span></div>
+            <div className="calendar-legend"><span>Less load</span><i /><i className="mid" /><i className="high" /><span>More load</span></div>
           </article>
           <article className="panel gap-panel">
             <div className="panel-heading"><div><p className="eyebrow">Longest pauses</p><h3>Not just #1—the top five gaps</h3></div></div>
@@ -622,7 +622,7 @@ export default function Home() {
           <SectionHeading
             kicker="Where to go next"
             title="The clearest opportunities in the data"
-            description="These are programming prompts, not diagnoses. Generate an optional AI interpretation after uploading your MacroFactor export. Only calculated summary metrics are sent; raw workbook rows are not."
+            description="Generate an AI interpretation after uploading your MacroFactor export. Only calculated summary metrics are sent; raw workbook rows are not. These are programming prompts, not diagnoses."
             action={<button className="button ai-action" onClick={generateRecommendations}><Sparkles size={16} /> Generate recommendations</button>}
           />
           {recommendations.length > 0 && <div className="callout ai-insight" aria-live="polite"><Sparkles size={20} /><div><p className="eyebrow accent">AI insight</p><p>These recommendations were generated from the currently loaded MacroFactor summary. They are programming prompts, not diagnoses.</p></div></div>}
