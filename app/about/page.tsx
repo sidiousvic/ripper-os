@@ -2,52 +2,27 @@ import Link from "next/link";
 import "../globals.css";
 
 export default function AboutPage() {
-  return (
-    <main>
-      <header className="topbar">
-        <Link className="brand" href="/" aria-label="Ripper OS home">
-          <span className="brand-mark"><img src="/brand/ripper-os-logo.png" alt="" width="38" height="38" /></span>
-          <span>Ripper OS</span>
-        </Link>
-        <nav aria-label="About navigation"><Link href="/">Back to dashboard</Link></nav>
-        <span className="data-pill">About</span>
-      </header>
-
-      <section className="section shell about-intro">
-        <div className="about-copy">
-          <p className="eyebrow accent">About Ripper OS</p>
-          <h1>Understand your training data.</h1>
-          <p>Ripper OS turns a MacroFactor workout export into a clear, private training review: progress, consistency, exercise history, and practical opportunities.</p>
-        </div>
-      </section>
-
-      <section className="section shell about-grid">
-        <article className="panel about-card">
-          <p className="eyebrow accent">What this is</p>
-          <h2>A personal training archive</h2>
-          <p>Upload the latest MacroFactor Workouts CSV and the app calculates the summaries behind the dashboard. Your plotted data works without AI.</p>
-        </article>
-        <article className="panel about-card">
-          <p className="eyebrow accent">How it works</p>
-          <h2>Upload. Analyze. Explore.</h2>
-          <p>The file is parsed in the app, grouped by date and exercise, then transformed into charts and comparison metrics. Raw workout rows are not sent to OpenAI; only calculated summaries are used for optional insights.</p>
-        </article>
-      </section>
-
-      <section className="section shell about-section">
-        <div className="section-heading"><div><p className="eyebrow accent">Prepare your data</p><h2>MacroFactor Workouts CSV schema</h2><p>Export your workouts from MacroFactor as CSV. Keep the header names intact so Ripper OS can recognize each field.</p></div></div>
-        <div className="panel schema-card">
-          <div className="schema-row schema-head"><strong>Column</strong><strong>Required</strong><strong>Used for</strong></div>
-          <div className="schema-row"><code>Date</code><span>Yes</span><span>Session dates and attendance</span></div>
-          <div className="schema-row"><code>Exercise</code><span>Yes</span><span>Exercise history and progress charts</span></div>
-          <div className="schema-row"><code>Weight (kg)</code><span>Recommended</span><span>Load and volume calculations</span></div>
-          <div className="schema-row"><code>Reps</code><span>Recommended</span><span>Set, rep, and volume calculations</span></div>
-          <div className="schema-row"><code>Workout Duration</code><span>Optional</span><span>Session duration when present</span></div>
-        </div>
-        <p className="muted about-note">MacroFactor may include additional columns such as Workout ID, Workout, Set Type, Notes, Distance, or Duration. They are preserved by the export but are not required for the current analysis. CSV exports do not include muscle-group set data, so muscle balance views appear when that data is available in a compatible workbook export.</p>
-      </section>
-
-      <footer className="shell footer"><p>Built and distributed by SIDIOUSWARE.</p><p className="muted">MIT sidiousvic All Rights Reserved.</p></footer>
-    </main>
-  );
+  return <main>
+    <header className="topbar"><Link className="brand" href="/" aria-label="Ripper OS home"><span className="brand-mark"><img src="/brand/ripper-os-logo.png" alt="" width="38" height="38" /></span><span>Ripper OS</span></Link><nav><Link href="/">Back to dashboard</Link></nav><span className="data-pill">About</span></header>
+    <section className="section shell about-intro"><div className="about-copy"><p className="eyebrow accent">User guide</p><h1>Power Ripper OS with your training data.</h1><p>Ripper OS turns a MacroFactor Workouts export into a readable record of what you practiced, how consistently you trained, and where the clearest next opportunities are.</p></div></section>
+    <section className="section shell about-prose">
+      <h2>What Ripper OS does</h2>
+      <p>Ripper OS reads your workout history in your browser. It groups rows by date and exercise, then calculates sessions, sets, reps, load, volume, progress histories, attendance, gaps, and training-load intensity. The dashboard helps you see the story in your archive instead of scanning a spreadsheet.</p>
+      <p>The upload is the first layer. Charts and exercise exploration work without an OpenAI account. If you connect an API key, the second layer asks OpenAI to turn the calculated summary into plain-language insights and practical programming prompts. Raw workbook rows are not sent to OpenAI.</p>
+      <h2>How to export from MacroFactor</h2>
+      <ol><li>Open MacroFactor and tap <strong>More</strong>.</li><li>Under <strong>Data Management</strong>, tap <strong>Data Export</strong>.</li><li>Choose <strong>Granular Export</strong> for workout detail. Select workout log or exercise data, then tap <strong>Export</strong>.</li><li>With <strong>Quick Export</strong>, choose a time period and include MacroFactor Workouts data.</li><li>Save the spreadsheet, then upload the CSV or XLSX file in Ripper OS. CSV is the simplest format.</li></ol>
+      <p>MacroFactor may offer Exercises, Muscle Groups, Gym Profiles, nutrition, and other datasets. Ripper OS currently uses workout rows. CSV provides exercise progress and attendance; muscle-group views require a compatible workbook export containing muscle data.</p>
+      <h2>MacroFactor Workouts CSV schema</h2>
+      <p>Keep the original header names. One row represents a recorded set or workout entry.</p>
+      <div className="schema-card schema-inline"><p><code>Date</code> — required; the workout date.</p><p><code>Exercise</code> — required; the exercise name.</p><p><code>Weight (kg)</code> — recommended; load used for load and volume.</p><p><code>Reps</code> — recommended; repetitions for the set.</p><p><code>Workout Duration</code> — optional; session duration when present.</p></div>
+      <p>Extra columns such as Workout ID, Workout, Set Type, Notes, Distance, or Duration are allowed but not required.</p>
+      <h2>Using the dashboard</h2>
+      <ol><li>Upload your export; the check mark confirms it loaded.</li><li>Use Progress to search every exercise and open its chart.</li><li>Use Consistency for monthly sessions, gaps, and attendance. Brighter squares mean higher daily load relative to that upload.</li><li>Use Highlights, Muscles, and Workhorses when those sections have enough data. Empty sections are intentionally hidden.</li><li>Use Insights to request AI-generated summaries.</li></ol>
+      <h2>Connecting OpenAI</h2>
+      <p>OpenAI access is optional. Select <strong>Connect OpenAI</strong>, paste an API key, and connect. The key stays in memory for the current browser session and is not saved to local storage. API usage is billed by OpenAI separately from ChatGPT, so review your API billing limits.</p>
+      <p>To create a key, sign in at <a href="https://platform.openai.com/" target="_blank" rel="noreferrer">platform.openai.com</a>, open API keys, create a secret key, copy it once, and paste it into Ripper OS. Never share the key or commit it to GitHub. Without OpenAI, charts still work.</p>
+      <h2>Privacy and limitations</h2><p>Your uploaded analysis stays in this browser session and can be cleared. Ripper OS is a training-data visualization tool, not medical advice. Comparisons are only as reliable as the names, units, and logging consistency in the export.</p>
+    </section>
+    <footer className="shell footer"><p>Built and distributed by SIDIOUSWARE.</p><p className="muted">MIT sidiousvic All Rights Reserved.</p></footer>
+  </main>;
 }

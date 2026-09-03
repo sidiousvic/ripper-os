@@ -604,6 +604,17 @@ button {
 .schema-head { color: var(--text); background: rgba(67, 255, 126, .08); }
 .schema-row code { color: var(--lime); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .about-note { max-width: 900px; margin-top: 18px; line-height: 1.6; }
+.about-prose { max-width: 920px; }
+.about-prose h2 { margin-top: 58px; font-size: clamp(30px, 4vw, 46px); }
+.about-prose p, .about-prose li { max-width: 760px; color: #b7c8bc; line-height: 1.75; }
+.about-prose p { margin-top: 16px; }
+.about-prose ol { max-width: 760px; margin: 18px 0 0; padding-left: 24px; }
+.about-prose li { padding-left: 6px; margin-top: 10px; }
+.about-prose strong { color: var(--text); }
+.about-prose a { color: var(--lime); text-decoration: underline; text-underline-offset: 3px; }
+.schema-inline { max-width: 760px; margin-top: 22px; }
+.schema-inline p { margin: 0; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.schema-inline p:last-child { border-bottom: 0; }
 
 @media (max-width: 700px) {
   .about-grid { grid-template-columns: 1fr; }
