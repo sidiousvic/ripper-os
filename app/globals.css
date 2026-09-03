@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&family=Montaga&display=swap');
 
   :root {
-    --font-body: "Montaga", Georgia, serif;
+  --font-body: "Montaga", Georgia, serif;
   --font-display: "BiauKaiHK", Georgia, serif;
   --font-button: "BiauKaiHK", Georgia, serif;
   --font-identity: "BiauKaiHK", Georgia, serif;
@@ -683,7 +683,7 @@ button {
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgba(0, 0, 0, .72);
+  background: rgba(0, 0, 0, .99);
   backdrop-filter: blur(8px);
 }
 
