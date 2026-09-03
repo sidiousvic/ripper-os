@@ -204,7 +204,9 @@ export default function Home() {
       if (!response.ok) throw new Error(payload.error ?? "Could not parse the workbook.");
       data = payload;
       exercises = data.exercises as Exercise[];
-      sessionStorage.setItem(sessionDataKey, JSON.stringify(payload));
+      const serialized = JSON.stringify(payload);
+      if (serialized.length <= 4_000_000) sessionStorage.setItem(sessionDataKey, serialized);
+      else setUploadState(`Loaded ${file.name}; this dataset is too large for session persistence.`);
       setSelectedExerciseName(exercises[0]?.name ?? "");
       setSelectedMetric(exercises[0]?.defaultMetric ?? "totalSets");
       setAttendanceYear(Number(data.coverage.lastDate.slice(0, 4)));
@@ -220,6 +222,7 @@ export default function Home() {
   };
 
   const clearUploadedData = () => {
+    if (!window.confirm("Clear the uploaded training data from this browser session?")) return;
     sessionStorage.removeItem(sessionDataKey);
     data = demoData;
     exercises = data.exercises as Exercise[];
