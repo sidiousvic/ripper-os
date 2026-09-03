@@ -1905,17 +1905,32 @@ h1, h2, h3, h4,
 }
 
 .hero h1 {
-  width: auto;
-  max-width: 100%;
+  width: min(84%, 960px);
+  max-width: 960px;
   font-family: var(--font-identity);
   transform: scaleX(var(--scale-identity-x));
   transform-origin: center;
   letter-spacing: .02em;
+  overflow-wrap: normal;
+  text-wrap: balance;
+}
+
+.hero h1 b,
+.hero h1 span {
+  overflow-wrap: normal;
 }
 
 .hero-actions .button,
 button, .button {
   font-family: var(--font-body);
+}
+
+@media (max-width: 760px) {
+  .hero h1 {
+    width: 92%;
+    font-size: clamp(38px, 11vw, 58px);
+    line-height: .98;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
