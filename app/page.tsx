@@ -62,6 +62,7 @@ type Recommendation = { title: string; summary: string; evidence: string[]; acti
 let data = demoData;
 let exercises = data.exercises as Exercise[];
 const emptyExercise: Exercise = { name: "No exercise selected", family: "—", defaultMetric: "totalSets", availableMetrics: ["totalSets"], firstDate: "1970-01-01", lastDate: "1970-01-01", sessions: 0, totalSets: 0, totalReps: 0, totalVolumeKg: 0, progress: [] };
+const sessionDataKey = "ripper-os-training-data-v2";
 const metricMeta: Record<MetricKey, { label: string; short: string; unit: string }> = {
   heaviestKg: { label: "Heaviest load", short: "Load", unit: "kg" },
   e1rmKg: { label: "Estimated 1RM", short: "e1RM", unit: "kg" },
@@ -176,7 +177,8 @@ export default function Home() {
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     try {
-      const saved = sessionStorage.getItem("ripper-os-training-data");
+      sessionStorage.removeItem("ripper-os-training-data");
+      const saved = sessionStorage.getItem(sessionDataKey);
       if (!saved) return;
       data = JSON.parse(saved);
       exercises = data.exercises as Exercise[];
@@ -184,7 +186,7 @@ export default function Home() {
       setSelectedMetric(exercises[0]?.defaultMetric ?? "totalSets");
       setAttendanceYear(Number(data.coverage.lastDate.slice(0, 4)));
       redraw((value) => value + 1);
-    } catch { sessionStorage.removeItem("ripper-os-training-data"); }
+    } catch { sessionStorage.removeItem(sessionDataKey); }
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
 
@@ -200,7 +202,7 @@ export default function Home() {
       if (!response.ok) throw new Error(payload.error ?? "Could not parse the workbook.");
       data = payload;
       exercises = data.exercises as Exercise[];
-      sessionStorage.setItem("ripper-os-training-data", JSON.stringify(payload));
+      sessionStorage.setItem(sessionDataKey, JSON.stringify(payload));
       setSelectedExerciseName(exercises[0]?.name ?? "");
       setSelectedMetric(exercises[0]?.defaultMetric ?? "totalSets");
       setAttendanceYear(Number(data.coverage.lastDate.slice(0, 4)));
@@ -215,7 +217,7 @@ export default function Home() {
   };
 
   const clearUploadedData = () => {
-    sessionStorage.removeItem("ripper-os-training-data");
+    sessionStorage.removeItem(sessionDataKey);
     data = demoData;
     exercises = data.exercises as Exercise[];
     setRecommendations([]);
