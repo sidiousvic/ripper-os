@@ -60,6 +60,7 @@ type Exercise = {
 };
 type Recommendation = { title: string; summary: string; evidence: string[]; actions: string[]; priority: "high" | "medium" | "low"; caveat: string };
 type AiInsight = { sustainedPractice: string; nextYearRule: string; sectionInsights: Record<string, string> };
+type UploadPayload = typeof demoData & { error?: string; recommendations?: Recommendation[]; sustainedPractice?: string; nextYearRule?: string; sectionInsights?: Record<string, string> };
 
 let data = demoData;
 let exercises = data.exercises as Exercise[];
@@ -215,7 +216,7 @@ export default function Home() {
     form.append("file", file);
     try {
       const response = await fetch("/api/parse", { method: "POST", body: form });
-      const payload = await response.json();
+      const payload = await response.json() as unknown as UploadPayload;
       if (!response.ok) throw new Error(payload.error ?? "Could not parse the workbook.");
       data = payload;
       exercises = data.exercises as Exercise[];
@@ -269,12 +270,12 @@ export default function Home() {
       const headers: HeadersInit = { "content-type": "application/json" };
       if (openAIKey) headers["x-openai-api-key"] = openAIKey;
       const response = await fetch("/api/recommendations", { method: "POST", headers, body: JSON.stringify(summary) });
-      const payload = await response.json();
+      const payload = await response.json() as unknown as UploadPayload;
       if (!response.ok) throw new Error(payload.error ?? "Recommendation generation failed.");
-      setRecommendations(payload.recommendations);
-      setAiInsight({ sustainedPractice: payload.sustainedPractice, nextYearRule: payload.nextYearRule, sectionInsights: payload.sectionInsights ?? {} });
+      setRecommendations(payload.recommendations ?? []);
+      setAiInsight({ sustainedPractice: payload.sustainedPractice ?? "", nextYearRule: payload.nextYearRule ?? "", sectionInsights: payload.sectionInsights ?? {} });
       const saved = localStorage.getItem(sessionDataKey);
-      if (saved) localStorage.setItem(sessionDataKey, JSON.stringify({ ...JSON.parse(saved), recommendations: payload.recommendations, aiInsight: { sustainedPractice: payload.sustainedPractice, nextYearRule: payload.nextYearRule, sectionInsights: payload.sectionInsights ?? {} } }));
+      if (saved) localStorage.setItem(sessionDataKey, JSON.stringify({ ...JSON.parse(saved), recommendations: payload.recommendations ?? [], aiInsight: { sustainedPractice: payload.sustainedPractice ?? "", nextYearRule: payload.nextYearRule ?? "", sectionInsights: payload.sectionInsights ?? {} } }));
       setRecommendationState("Recommendations updated from this dataset.");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Recommendation generation failed.";
