@@ -62,6 +62,10 @@ body {
   display: none;
 }
 
+.empty-dashboard .topbar nav {
+  display: none;
+}
+
 .no-achievements,
 .no-muscles {
   display: none;
