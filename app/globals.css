@@ -691,6 +691,11 @@ button {
   margin-bottom: 4px;
 }
 
+.section-insight {
+  width: 100%;
+  margin: -12px 0 30px;
+}
+
 .connect-backdrop {
   position: fixed;
   inset: 0;
