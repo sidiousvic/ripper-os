@@ -258,7 +258,7 @@ h4 {
 
 .data-pill,
 .record-tags span,
-.next-tags i {
+.record-tags span {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -405,6 +405,18 @@ button {
 .button.primary:hover {
   background: #52eb86;
   box-shadow: var(--shadow-control);
+}
+
+.button.ai-action {
+  color: #07130a;
+  background: #c7f04a;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, .38), 0 0 18px rgba(199, 240, 74, .22);
+}
+
+.button.ai-action:hover {
+  color: #07130a;
+  background: #dcfa68;
+  box-shadow: 0 13px 28px rgba(0, 0, 0, .42), 0 0 24px rgba(199, 240, 74, .34);
 }
 
 .button.secondary:hover {
@@ -1625,19 +1637,18 @@ button {
   color: var(--text);
 }
 
-.next-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  margin-top: 17px;
+.next-actions {
+  display: grid;
+  gap: 10px;
+  margin: 20px 0 0;
+  padding: 14px 0 0 19px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
-.next-tags i {
-  border-radius: 999px;
-  padding: 4px 8px;
-  font-size: 12px;
-  font-style: normal;
-}
+.next-actions li::marker { color: var(--green); }
 
 .principle {
   display: grid;
@@ -1724,7 +1735,7 @@ button {
   .leader-name small,
   .leaderboard-row > strong,
   .next-card > p,
-  .next-tags i,
+  .next-actions,
   .principle div > p:last-child,
   .footer
 ) {

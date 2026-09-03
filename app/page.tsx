@@ -336,7 +336,7 @@ export default function Home() {
           {uploadState && <p className="upload-status" role="status">{uploadState}</p>}
           <div className="hero-actions" aria-label="Dashboard navigation">
             <a className="button primary" href="#progress">Explore all exercises <ChevronRight size={17} /></a>
-            {hasUploadedData && <button className="button secondary" onClick={generateRecommendations}><Sparkles size={16} /> Generate AI insights</button>}
+            {hasUploadedData && <button className="button ai-action" onClick={generateRecommendations}><Sparkles size={16} /> Generate AI insights</button>}
           </div>
         </div>
       </section>
@@ -615,12 +615,12 @@ export default function Home() {
             kicker="Where to go next"
             title="The clearest opportunities in the data"
             description="These are programming prompts, not diagnoses. Generate an optional AI interpretation after uploading your MacroFactor export. Only calculated summary metrics are sent; raw workbook rows are not."
-            action={<button className="button secondary" onClick={generateRecommendations}><Sparkles size={16} /> Generate recommendations</button>}
+            action={<button className="button ai-action" onClick={generateRecommendations}><Sparkles size={16} /> Generate recommendations</button>}
           />
           {recommendations.length > 0 && <div className="callout ai-insight" aria-live="polite"><Sparkles size={20} /><div><p className="eyebrow accent">AI insight</p><p>These recommendations were generated from the currently loaded MacroFactor summary. They are programming prompts, not diagnoses.</p></div></div>}
           {recommendationState && !recommendations.length && <div className="callout ai-insight" role="status"><Sparkles size={20} /><div><p className="eyebrow accent">AI insight</p><p>{recommendationState}</p></div></div>}
           <div className="next-grid">
-            {recommendations.map((item, index) => <article className="next-card panel" key={`${item.title}-${index}`}><span>0{index + 1}</span><div className="next-icon"><Target size={21} /></div><h3>{item.title}</h3><p>{item.summary}</p><p className="muted small">{item.evidence.join(" · ")}</p><div className="next-tags">{item.actions.map((action) => <i key={action}>{action}</i>)}</div></article>)}
+            {recommendations.map((item, index) => <article className="next-card panel" key={`${item.title}-${index}`}><span>0{index + 1}</span><div className="next-icon"><Target size={21} /></div><h3>{item.title}</h3><p>{item.summary}</p><p className="muted small">{item.evidence.join(" · ")}</p><ul className="next-actions">{item.actions.map((action) => <li key={action}>{action}</li>)}</ul></article>)}
             {!recommendations.length && data !== demoData && !recommendationState && <div className="callout ai-insight"><Sparkles size={20} /><div><p className="eyebrow accent">AI insight</p><p>Upload complete. Generate recommendations when you want an AI interpretation; your plotted data works without an OpenAI account.</p></div></div>}
             {!recommendations.length && data === demoData && <div className="callout ai-insight"><Sparkles size={20} /><div><p className="eyebrow accent">Ready when you are</p><p>Upload your MacroFactor export to populate the charts. AI recommendations will remain optional.</p></div></div>}
           </div>
