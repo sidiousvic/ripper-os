@@ -13,10 +13,10 @@ export default function AboutPage() {
         <span className="data-pill">About</span>
       </header>
 
-      <section className="hero shell about-hero">
-        <div className="hero-copy">
+      <section className="section shell about-intro">
+        <div className="about-copy">
           <p className="eyebrow accent">About Ripper OS</p>
-          <h1>Training, <span>understood.</span></h1>
+          <h1>Understand your training data.</h1>
           <p>Ripper OS turns a MacroFactor workout export into a clear, private training review: progress, consistency, exercise history, and practical opportunities.</p>
         </div>
       </section>
