@@ -326,6 +326,7 @@ export default function Home() {
           <a href="#consistency">Consistency</a>
           {data.muscles.length > 0 && <a href="#muscles">Muscles</a>}
           <a href="#next">Insights</a>
+          <a href="/about">About</a>
         </nav>
         <button className="data-pill donate-button" type="button" disabled>Donate</button>
       </header>
