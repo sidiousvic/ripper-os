@@ -67,6 +67,10 @@ body {
   font-feature-settings: "ss01" 1, "cv05" 1;
 }
 
+.empty-dashboard .data-dependent {
+  display: none;
+}
+
 button,
 input,
 select {
@@ -1509,6 +1513,8 @@ h4 {
 .next-card {
   position: relative;
   min-height: 300px;
+  min-width: 0;
+  overflow: hidden;
   padding: 23px;
 }
 
@@ -1533,6 +1539,7 @@ h4 {
 .next-card h3 {
   font-size: 19px;
   letter-spacing: .01em;
+  overflow-wrap: anywhere;
 }
 
 .next-card > p {
@@ -1540,6 +1547,8 @@ h4 {
   color: var(--muted);
   font-size: 14px;
   line-height: 1.6;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .next-card > p strong {

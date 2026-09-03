@@ -255,7 +255,7 @@ export default function Home() {
   })).filter((week) => week.days.some((day) => day.inYear));
 
   return (
-    <main>
+    <main className={data.coverage.totalSessions > 0 ? "" : "empty-dashboard"}>
       <header className="topbar">
         <a className="brand" href="#top" aria-label="Ripper OS home">
           <span className="brand-mark"><Image src="/brand/ripper-os-logo.png" alt="" width={38} height={38} priority /></span>
@@ -289,14 +289,14 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="stats shell" aria-label="Key training statistics">
+      <section className="stats shell data-dependent" aria-label="Key training statistics">
         <StatCard icon={<CalendarDays size={20} />} label="Average month" value={`${data.coverage.averageSessionsPerMonth}`} note="sessions per observed month" />
         <StatCard icon={<Gauge size={20} />} label="Weekly rhythm" value={`${data.coverage.averageSessionsPerWeek}×`} note="sessions per week, all time" />
         <StatCard icon={<Flame size={20} />} label="Longest run" value={`${data.coverage.longestActiveWeekStreak} wk`} note="consecutive active weeks" />
         <StatCard icon={<Layers3 size={20} />} label="Exercise library" value={`${data.coverage.exerciseCount}`} note="movements available to explore" />
       </section>
 
-      <section className="section shell" id="highlights">
+      <section className="section shell data-dependent" id="highlights">
         <SectionHeading
           kicker="The headline gains"
           title="Your strongest measurable achievements"
@@ -330,7 +330,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section shell" id="consistency">
+      <section className="section shell data-dependent" id="consistency">
         <SectionHeading
           kicker="Consistency"
           title="The months that built the year"
@@ -409,7 +409,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section explorer-section" id="progress">
+      <section className="section explorer-section data-dependent" id="progress">
         <div className="shell">
           <SectionHeading
             kicker="Exercise explorer"
@@ -489,7 +489,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section shell" id="muscles">
+      <section className="section shell data-dependent" id="muscles">
         <SectionHeading
           kicker="Muscle balance"
           title="Your program changed shape"
@@ -532,7 +532,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section shell" id="history">
+      <section className="section shell data-dependent" id="history">
         <SectionHeading
           kicker="Workhorses"
           title="The exercises you practiced most"
@@ -552,7 +552,7 @@ export default function Home() {
         </article>
       </section>
 
-      <section className="section next-section" id="next">
+      <section className="section next-section data-dependent" id="next">
         <div className="shell">
           <SectionHeading
             kicker="Where to go next"
