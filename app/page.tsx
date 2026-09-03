@@ -302,7 +302,7 @@ export default function Home() {
 
       <section className="hero shell" id="top">
         <div className="hero-copy">
-          <h1><b style={{marginBottom: "30px", fontFamily: "BiauKaiHK"}}>RIPPER <span>OS</span></b>.<br />Training. <span>Analyzed.</span></h1>
+          <h1><b style={{marginBottom: "30px", fontFamily: "BiauKaiHK"}}>RIPPER <span>OS</span></b>.<br />Training, <span>Analyzed.</span></h1>
           <p>Upload your training data and Ripper OS organizes it into progress, consistency, muscle balance, highlights, and next opportunities. It&apos;s like Spotify Wrapped for training.</p>
           <div className="hero-config" aria-label="Configuration">
             <p className="eyebrow accent">Configuration</p>
@@ -617,8 +617,8 @@ export default function Home() {
         <div className="sidiousware-lockup">
           <Image src="/brand/sidiousware-logo.png" alt="Sidiousware" width={330} height={191} />
         </div>
-        <p>Built and distributed by SIDIOUSWARE Inc.</p>
-        <p className="muted">Movements may include bodyweight in the recorded resistance. Sudden load jumps should be confirmed against the exercise setup.</p>
+        <p>Built and distributed by SIDIOUSWARE.</p>
+        <p className="muted">MIT sidiousvic All Rights Reserved.</p>
       </footer>
     </main>
   );
