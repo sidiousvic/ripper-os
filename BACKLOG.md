@@ -4,26 +4,26 @@ Product and data-quality follow-ups. Deployment work is intentionally tracked el
 
 ## Validate the real MacroFactor CSV
 
-- Test a real user-provided MacroFactor CSV end to end.
-- Compare session, set, rep, weight, volume, and date totals against MacroFactor.
+- [x] Test a real user-provided MacroFactor CSV end to end.
+- [x] Compare session, set, rep, weight, volume, and date totals against MacroFactor.
 - Add parser regression assertions without committing private export files.
-- Document which CSV fields cannot provide muscle-group analysis.
+- [x] Document which CSV fields cannot provide muscle-group analysis.
 
 ## Uploaded-data persistence
 
-- Keep the default ephemeral behavior clear to users.
+- [x] Keep the default ephemeral behavior clear to users.
 - Decide whether session persistence should remain the default or become opt-in.
-- Add an explicit “Clear uploaded data” confirmation and storage-size handling.
+- [x] Add an explicit “Clear uploaded data” confirmation and storage-size handling.
 - Consider IndexedDB for larger normalized datasets.
 
 ## OpenAI flow hardening
 
-- Improve API-key failure and retry states.
-- Add model and prompt version metadata to saved insight results.
-- Add cost and privacy messaging before the first request.
+- [x] Improve API-key failure and retry states.
+- [x] Add model and prompt version metadata to insight results.
+- [x] Add cost and privacy messaging before the first request.
 - Replace the in-memory rate limiter with a provider-appropriate limiter for multi-instance hosting.
 - Add structured-response/schema validation tests.
-- Keep raw workbook data out of OpenAI requests.
+- [x] Keep raw workbook data out of OpenAI requests.
 
 ## Testing and release polish
 

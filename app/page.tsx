@@ -166,6 +166,8 @@ export default function Home() {
   const [openAIKey, setOpenAIKey] = useState("");
   const [connectOpen, setConnectOpen] = useState(false);
   const [keyDraft, setKeyDraft] = useState("");
+  const [aiConsentOpen, setAiConsentOpen] = useState(false);
+  const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const [selectedExerciseName, setSelectedExerciseName] = useState("Dumbbell Fly");
   const selectedExercise = exercises.find((exercise) => exercise.name === selectedExerciseName) ?? exercises[0] ?? emptyExercise;
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>(selectedExercise.defaultMetric);
@@ -222,7 +224,6 @@ export default function Home() {
   };
 
   const clearUploadedData = () => {
-    if (!window.confirm("Clear the uploaded training data from this browser session?")) return;
     sessionStorage.removeItem(sessionDataKey);
     data = demoData;
     exercises = data.exercises as Exercise[];
@@ -237,6 +238,11 @@ export default function Home() {
   };
 
   const generateRecommendations = async () => {
+    setAiConsentOpen(true);
+  };
+
+  const requestRecommendations = async () => {
+    setAiConsentOpen(false);
     setRecommendationState("Generating recommendations…");
     try {
       const summary = { coverage: data.coverage, muscles: data.muscles, gaps: data.gaps, achievements: data.achievements, busiestMonths: data.busiestMonths, quietestMonths: data.quietestMonths };
@@ -320,12 +326,13 @@ export default function Home() {
               <input type="file" accept=".xlsx,.csv" onChange={handleUpload} />
             </label>
             <button className="button upload-button" onClick={() => { setKeyDraft(openAIKey); setConnectOpen(true); }}><KeyRound size={17} aria-hidden="true" />{openAIKey ? "OpenAI connected" : "Connect OpenAI"}</button>
-            {hasUploadedData && <button className="button upload-button" onClick={clearUploadedData}>Clear uploaded data</button>}
+            {hasUploadedData && <button className="button upload-button" onClick={() => setClearConfirmOpen(true)}>Clear uploaded data</button>}
           </div>
           {uploadState && <p className="upload-status" role="status">{uploadState}</p>}
           <div className="hero-actions" aria-label="Dashboard navigation">
             <a className="button primary" href="#progress">Explore all exercises <ChevronRight size={17} /></a>
             <a className="button secondary" href="#next">See where to go next</a>
+            {hasUploadedData && <button className="button secondary" onClick={generateRecommendations}><Sparkles size={16} /> Generate AI insights</button>}
           </div>
         </div>
       </section>
@@ -598,7 +605,7 @@ export default function Home() {
           <SectionHeading
             kicker="Where to go next"
             title="The clearest opportunities in the data"
-            description="These are programming prompts, not diagnoses. Generate a personalized interpretation after uploading your MacroFactor export."
+            description="These are programming prompts, not diagnoses. Generate an optional AI interpretation after uploading your MacroFactor export. Only calculated summary metrics are sent; raw workbook rows are not."
             action={<button className="button secondary" onClick={generateRecommendations}><Sparkles size={16} /> Generate recommendations</button>}
           />
           {recommendations.length > 0 && <div className="callout ai-insight" aria-live="polite"><Sparkles size={20} /><div><p className="eyebrow accent">AI insight</p><p>These recommendations were generated from the currently loaded MacroFactor summary. They are programming prompts, not diagnoses.</p></div></div>}
@@ -620,6 +627,24 @@ export default function Home() {
           <input className="connect-key-input" type="password" value={keyDraft} onChange={(event) => setKeyDraft(event.target.value)} placeholder="sk-…" autoFocus aria-label="OpenAI API key" />
           <p className="muted small">This key is kept in memory for this session only. It is never saved to browser storage. API usage is billed separately from ChatGPT.</p>
           <div className="connect-actions"><button className="button secondary" onClick={() => { setOpenAIKey(""); setKeyDraft(""); setConnectOpen(false); }}>Disconnect</button><button className="button primary" onClick={() => { setOpenAIKey(keyDraft.trim()); setConnectOpen(false); }}>Connect</button></div>
+        </section>
+      </div>}
+
+      {aiConsentOpen && <div className="connect-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setAiConsentOpen(false); }}>
+        <section className="connect-dialog panel" role="dialog" aria-modal="true" aria-labelledby="ai-consent-title">
+          <p className="eyebrow accent">Optional AI delight</p>
+          <h2 id="ai-consent-title">Generate recommendations?</h2>
+          <p>Only calculated summary metrics are sent for this request. Raw workbook rows stay in this browser. OpenAI API usage may incur charges and is billed separately from ChatGPT.</p>
+          <div className="connect-actions"><button className="button secondary" onClick={() => setAiConsentOpen(false)}>Cancel</button><button className="button primary" onClick={requestRecommendations}>Generate</button></div>
+        </section>
+      </div>}
+
+      {clearConfirmOpen && <div className="connect-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setClearConfirmOpen(false); }}>
+        <section className="connect-dialog panel" role="dialog" aria-modal="true" aria-labelledby="clear-title">
+          <p className="eyebrow accent">Session data</p>
+          <h2 id="clear-title">Clear uploaded data?</h2>
+          <p>This removes the current MacroFactor summary from this browser session. You can upload it again at any time.</p>
+          <div className="connect-actions"><button className="button secondary" onClick={() => setClearConfirmOpen(false)}>Cancel</button><button className="button primary" onClick={() => { setClearConfirmOpen(false); clearUploadedData(); }}>Clear data</button></div>
         </section>
       </div>}
 

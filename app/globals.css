@@ -330,6 +330,7 @@ button {
   font-size: 18px;
   line-height: 1.65;
   transform-origin: center;
+  text-wrap: initial;
 }
 
 .hero-actions {
