@@ -7,12 +7,13 @@ const promptVersion = "2026-09-03.1";
 
 const internalField = /allTimeSets|recentWeekly|earlyWeekly|percentChange|heaviestKg|bestSetReps|totalVolumeKg|durationSec|e1rmKg|totalReps|totalSets|muscleHeatmap|busiestMonths|quietestMonths/i;
 const requestLog = new Map<string, number[]>();
-const allowed = (request: Request) => {
+const allowed = (request: Request, apiKey: string) => {
   const key = request.headers.get("cf-connecting-ip") ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const identity = `${key}:${apiKey.slice(-10)}`;
   const now = Date.now();
-  const recent = (requestLog.get(key) ?? []).filter((timestamp) => now - timestamp < 10 * 60 * 1000);
+  const recent = (requestLog.get(identity) ?? []).filter((timestamp) => now - timestamp < 10 * 60 * 1000);
   if (recent.length >= 5) return false;
-  recent.push(now); requestLog.set(key, recent); return true;
+  recent.push(now); requestLog.set(identity, recent); return true;
 };
 const text = (value: unknown, max: number, fallback: string) => {
   const result = typeof value === "string" ? value.replace(/\s+/g, " ").trim() : "";
@@ -21,10 +22,10 @@ const text = (value: unknown, max: number, fallback: string) => {
 };
 
 export async function POST(request: Request) {
-  if (!allowed(request)) return Response.json({ error: "Recommendation limit reached. Try again in a few minutes." }, { status: 429 });
   const requestKey = request.headers.get("x-openai-api-key")?.trim();
   const apiKey = requestKey || process.env.OPENAI_API_KEY;
   if (!apiKey) return Response.json({ error: "Connect OpenAI or configure OPENAI_API_KEY on this server." }, { status: 503 });
+  if (!allowed(request, apiKey)) return Response.json({ error: "Recommendation limit reached. Try again in a few minutes." }, { status: 429 });
   let summary: unknown;
   try { summary = await request.json(); } catch { return Response.json({ error: "Request body must be JSON." }, { status: 400 }); }
   if (!summary || typeof summary !== "object" || JSON.stringify(summary).length > 200_000) return Response.json({ error: "The training summary is invalid or too large." }, { status: 413 });

@@ -297,6 +297,12 @@ h4 {
   color: var(--green);
 }
 
+.last-export-pill {
+  max-width: min(100%, 520px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .hero {
   position: relative;
   display: flex;
