@@ -58,6 +58,7 @@ type Exercise = {
   progress: ProgressRecord[];
 };
 type Recommendation = { title: string; summary: string; evidence: string[]; actions: string[]; priority: "high" | "medium" | "low"; caveat: string };
+type AiInsight = { sustainedPractice: string; nextYearRule: string };
 
 let data = demoData;
 let exercises = data.exercises as Exercise[];
@@ -160,6 +161,7 @@ export default function Home() {
   const [dataVersion, redraw] = useState(0);
   const [uploadState, setUploadState] = useState<string>("");
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [aiInsight, setAiInsight] = useState<AiInsight | null>(null);
   const [recommendationState, setRecommendationState] = useState<string>("");
   const [openAIKey, setOpenAIKey] = useState("");
   const [connectOpen, setConnectOpen] = useState(false);
@@ -208,6 +210,7 @@ export default function Home() {
       setAttendanceYear(Number(data.coverage.lastDate.slice(0, 4)));
       setUploadState(`Loaded ${file.name}`);
       setRecommendations([]);
+      setAiInsight(null);
       redraw((value) => value + 1);
     } catch (error) {
       setUploadState(error instanceof Error ? error.message : "Could not parse the workbook.");
@@ -221,6 +224,7 @@ export default function Home() {
     data = demoData;
     exercises = data.exercises as Exercise[];
     setRecommendations([]);
+    setAiInsight(null);
     setUploadState("");
     setRecommendationState("");
     setSelectedExerciseName("");
@@ -239,6 +243,7 @@ export default function Home() {
       const payload = await response.json();
       if (!response.ok) throw new Error(payload.error ?? "Recommendation generation failed.");
       setRecommendations(payload.recommendations);
+      setAiInsight({ sustainedPractice: payload.sustainedPractice, nextYearRule: payload.nextYearRule });
       setRecommendationState("Recommendations updated from this dataset.");
     } catch (error) {
       setRecommendationState(error instanceof Error ? error.message : "Recommendation generation failed.");
@@ -357,10 +362,10 @@ export default function Home() {
             );
           })}
         </div>
-        <div className="callout">
+        {aiInsight && <div className="callout ai-insight">
           <Sparkles size={18} />
-          <p><strong>The bigger achievement is sustained practice.</strong> You logged {data.coverage.totalSessions} sessions and maintained a {data.coverage.longestActiveWeekStreak}-week active streak. That consistency is the base behind every measurable strength gain in this archive.</p>
-        </div>
+          <p><strong>The bigger achievement is sustained practice.</strong> {aiInsight.sustainedPractice}</p>
+        </div>}
       </section>
 
       <section className="section shell data-dependent" id="consistency">
@@ -600,7 +605,7 @@ export default function Home() {
             {!recommendations.length && data !== demoData && !recommendationState && <div className="callout ai-insight"><Sparkles size={20} /><div><p className="eyebrow accent">AI insight</p><p>Upload complete. Generate recommendations when you want an AI interpretation; your plotted data works without an OpenAI account.</p></div></div>}
             {!recommendations.length && data === demoData && <div className="callout ai-insight"><Sparkles size={20} /><div><p className="eyebrow accent">Ready when you are</p><p>Upload your MacroFactor export to populate the charts. AI recommendations will remain optional.</p></div></div>}
           </div>
-          <div className="principle panel"><div className="principle-icon"><Dumbbell size={25} /></div><div><p className="eyebrow accent">A simple next-year rule</p><h3>Keep six anchor movements stable long enough to measure.</h3><p>Choose one horizontal press, one vertical press, one vertical pull, one row, one knee-dominant lift, and one hip hinge. Track load, reps, and reps-in-reserve consistently; rotate accessories around them.</p></div></div>
+          {aiInsight && <div className="principle panel"><div className="principle-icon"><Dumbbell size={25} /></div><div><p className="eyebrow accent">A simple next-year rule</p><h3>{aiInsight.nextYearRule}</h3><p>Generated from the current uploaded training summary.</p></div></div>}
         </div>
       </section>
 
