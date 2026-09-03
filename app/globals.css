@@ -1,11 +1,9 @@
 :root {
-  --font-body: "BiauKaiHK", Georgia, "Times New Roman", serif;
-  --font-display: "Bullvone", Georgia, serif;
-  --font-button: BiauKaiHK;
-  --scale-body-x: 1.2;
-  --scale-body-width: 76.923%;
-  --scale-title-x: 1.2;
-  --scale-title-width: 66.667%;
+  --font-body: "Figtree", Arial, sans-serif;
+  --font-display: "Figtree", Arial, sans-serif;
+  --font-button: "Figtree", Arial, sans-serif;
+  --font-identity: "BiauKaiHK", Georgia, serif;
+  --scale-identity-x: 1.2;
   --bg: #020603;
   --bg-raised: #061009;
   --panel: #0a170e;
@@ -23,14 +21,6 @@
   --shadow-control: inset 0 -10px 15px #000;
   --shadow-panel-3d: inset 0 -18px 28px rgba(0, 0, 0, .72), 0 10px 28px rgba(0, 0, 0, .42), 0 3px 10px rgba(0, 0, 0, .28), 0 0 22px rgba(63, 226, 119, .07);
   --shadow-panel-hover: inset 0 -18px 28px rgba(0, 0, 0, .72), 0 16px 38px rgba(0, 0, 0, .5), 0 6px 16px rgba(0, 0, 0, .3), 0 0 34px rgba(63, 226, 119, .22);
-}
-
-@font-face {
-  font-family: "Bullvone";
-  src: url("/fonts/bullvone.otf") format("opentype");
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
 }
 
 @font-face {
@@ -1865,6 +1855,40 @@ h4 {
   .sidiousware-lockup {
     grid-row: auto;
   }
+}
+
+/* Legibility pass: only the hero identity and brand wordmark use display scaling. */
+h1, h2, h3, h4,
+.eyebrow,
+.rank-title,
+.brand > span:last-child,
+:where(p:not(.eyebrow):not(.stat-value):not(.rank-title)) {
+  width: auto;
+  max-width: 100%;
+  font-family: var(--font-body);
+  transform: none;
+  letter-spacing: normal;
+}
+
+.brand > span:last-child {
+  font-family: var(--font-identity);
+  transform: scaleX(var(--scale-identity-x));
+  transform-origin: left center;
+  letter-spacing: .035em;
+}
+
+.hero h1 {
+  width: auto;
+  max-width: 100%;
+  font-family: var(--font-identity);
+  transform: scaleX(var(--scale-identity-x));
+  transform-origin: center;
+  letter-spacing: .02em;
+}
+
+.hero-actions .button,
+button, .button {
+  font-family: var(--font-body);
 }
 
 @media (prefers-reduced-motion: reduce) {
