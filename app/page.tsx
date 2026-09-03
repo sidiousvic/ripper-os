@@ -29,6 +29,7 @@ import {
   Search,
   Sparkles,
   Target,
+  Trash2,
   TrendingUp,
 } from "lucide-react";
 import demoData from "./training-data.json";
@@ -339,7 +340,7 @@ export default function Home() {
               <input type="file" accept=".xlsx,.csv" onChange={handleUpload} />
             </label>
             <button className="button upload-button" onClick={() => { setKeyDraft(openAIKey); setConnectOpen(true); }}><KeyRound size={17} aria-hidden="true" />{openAIKey ? "OpenAI connected" : "Connect OpenAI"}</button>
-            {hasUploadedData && <button className="button upload-button" onClick={() => setClearConfirmOpen(true)}>Clear uploaded data</button>}
+            {hasUploadedData && <button className="button upload-button" onClick={() => setClearConfirmOpen(true)}><Trash2 size={17} aria-hidden="true" />Clear uploaded data</button>}
           </div>
           {uploadState && <p className="upload-status" role="status">{uploadState}</p>}
           <div className="hero-actions" aria-label="Dashboard navigation">
