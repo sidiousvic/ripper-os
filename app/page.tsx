@@ -61,6 +61,7 @@ type Recommendation = { title: string; summary: string; evidence: string[]; acti
 
 let data = demoData;
 let exercises = data.exercises as Exercise[];
+const emptyExercise: Exercise = { name: "No exercise selected", family: "—", defaultMetric: "totalSets", availableMetrics: ["totalSets"], firstDate: "1970-01-01", lastDate: "1970-01-01", sessions: 0, totalSets: 0, totalReps: 0, totalVolumeKg: 0, progress: [] };
 const metricMeta: Record<MetricKey, { label: string; short: string; unit: string }> = {
   heaviestKg: { label: "Heaviest load", short: "Load", unit: "kg" },
   e1rmKg: { label: "Estimated 1RM", short: "e1RM", unit: "kg" },
@@ -163,7 +164,7 @@ export default function Home() {
   const [connectOpen, setConnectOpen] = useState(false);
   const [keyDraft, setKeyDraft] = useState("");
   const [selectedExerciseName, setSelectedExerciseName] = useState("Dumbbell Fly");
-  const selectedExercise = exercises.find((exercise) => exercise.name === selectedExerciseName) ?? exercises[0];
+  const selectedExercise = exercises.find((exercise) => exercise.name === selectedExerciseName) ?? exercises[0] ?? emptyExercise;
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>(selectedExercise.defaultMetric);
   const [search, setSearch] = useState("");
   const [family, setFamily] = useState("All");
@@ -266,7 +267,7 @@ export default function Home() {
           <a href="#muscles">Muscles</a>
           <a href="#next">Next steps</a>
         </nav>
-        <span className="data-pill"><CircleDot size={13} /> Updated {formatDate(data.coverage.lastDate, { day: "numeric", month: "short", year: "numeric" })}</span>
+        <span className="data-pill"><CircleDot size={13} /> {data.coverage.totalSessions ? `Updated ${formatDate(data.coverage.lastDate, { day: "numeric", month: "short", year: "numeric" })}` : "Awaiting upload"}</span>
       </header>
 
       <section className="hero shell" id="top">
@@ -289,7 +290,7 @@ export default function Home() {
       </section>
 
       <section className="stats shell" aria-label="Key training statistics">
-        <StatCard icon={<CalendarDays size={20} />} label="Average month" value={`${data.coverage.averageSessionsPerMonth}`} note="sessions across 18 observed months" />
+        <StatCard icon={<CalendarDays size={20} />} label="Average month" value={`${data.coverage.averageSessionsPerMonth}`} note="sessions per observed month" />
         <StatCard icon={<Gauge size={20} />} label="Weekly rhythm" value={`${data.coverage.averageSessionsPerWeek}×`} note="sessions per week, all time" />
         <StatCard icon={<Flame size={20} />} label="Longest run" value={`${data.coverage.longestActiveWeekStreak} wk`} note="consecutive active weeks" />
         <StatCard icon={<Layers3 size={20} />} label="Exercise library" value={`${data.coverage.exerciseCount}`} note="movements available to explore" />
@@ -564,12 +565,7 @@ export default function Home() {
           <div className="next-grid">
             {recommendations.map((item, index) => <article className="next-card panel" key={`${item.title}-${index}`}><span>0{index + 1}</span><div className="next-icon"><Target size={21} /></div><h3>{item.title}</h3><p>{item.summary}</p><p className="muted small">{item.evidence.join(" · ")}</p><div className="next-tags">{item.actions.map((action) => <i key={action}>{action}</i>)}</div></article>)}
             {!recommendations.length && data !== demoData && !recommendationState && <div className="callout ai-insight"><Sparkles size={20} /><div><p className="eyebrow accent">AI insight</p><p>Upload complete. Generate recommendations when you want an AI interpretation; your plotted data works without an OpenAI account.</p></div></div>}
-            {!recommendations.length && data === demoData && <>
-            <article className="next-card panel"><span>01</span><div className="next-icon"><Target size={21} /></div><h3>Build a lower-body floor</h3><p>Recent quad exposure is <strong>0.8 sets/week</strong>; calves and tibialis are at <strong>0</strong>. Add two repeatable lower-body anchors and progress them for 8–12 weeks.</p><div className="next-tags"><i>Quads</i><i>Calves</i><i>Tibialis</i></div></article>
-            <article className="next-card panel"><span>02</span><div className="next-icon"><TrendingUp size={21} /></div><h3>Restore chest and lat balance</h3><p>Recent chest exposure is <strong>2.7 sets/week</strong> and lats are <strong>2.3</strong>, well below your earlier pattern. Reintroduce one press and one vertical pull as tracked anchors.</p><div className="next-tags"><i>Chest</i><i>Lats</i></div></article>
-            <article className="next-card panel"><span>03</span><div className="next-icon"><Gauge size={21} /></div><h3>Watch shoulder overlap</h3><p>Front delts lead recent exposure at <strong>11.4 sets/week</strong>. Keep the strong lateral-delt progress, but count pressing overlap before adding more front-delt work.</p><div className="next-tags"><i>Front delts</i><i>Side delts</i><i>Rear delts</i></div></article>
-            <article className="next-card panel"><span>04</span><div className="next-icon"><CalendarDays size={21} /></div><h3>Protect the rhythm</h3><p>Your best sustainable target is <strong>10–12 sessions/month</strong>. Plan deloads or travel weeks so breaks do not accidentally become another 10–14-day gap.</p><div className="next-tags"><i>Cadence</i><i>Recovery</i></div></article>
-            </>}
+            {!recommendations.length && data === demoData && <div className="callout ai-insight"><Sparkles size={20} /><div><p className="eyebrow accent">Ready when you are</p><p>Upload your MacroFactor export to populate the charts. AI recommendations will remain optional.</p></div></div>}
           </div>
           <div className="principle panel"><div className="principle-icon"><Dumbbell size={25} /></div><div><p className="eyebrow accent">A simple next-year rule</p><h3>Keep six anchor movements stable long enough to measure.</h3><p>Choose one horizontal press, one vertical press, one vertical pull, one row, one knee-dominant lift, and one hip hinge. Track load, reps, and reps-in-reserve consistently; rotate accessories around them.</p></div></div>
         </div>
