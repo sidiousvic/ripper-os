@@ -289,6 +289,11 @@ h4 {
   min-height: 620px;
   padding-block: 98px 88px;
   text-align: center;
+  white-space: nowrap;
+}
+
+button {
+  white-space: nowrap;
 }
 
 .hero-copy {
