@@ -630,7 +630,7 @@ export default function Home() {
 
       {connectOpen && <div className="connect-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setConnectOpen(false); }}>
         <section className="connect-dialog panel" role="dialog" aria-modal="true" aria-labelledby="connect-title">
-          <p className="eyebrow accent">Optional AI delight</p>
+          <p className="eyebrow accent">Power Ripper OS with AI</p>
           <h2 id="connect-title">Connect OpenAI</h2>
           <p>Charts and upload processing work without an OpenAI account. Add an OpenAI API key only if you want personalized recommendations.</p>
           <input className="connect-key-input" type="password" value={keyDraft} onChange={(event) => setKeyDraft(event.target.value)} placeholder="sk-…" autoFocus autoComplete="new-password" spellCheck={false} aria-label="OpenAI API key" />
@@ -641,7 +641,7 @@ export default function Home() {
 
       {aiConsentOpen && <div className="connect-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setAiConsentOpen(false); }}>
         <section className="connect-dialog panel" role="dialog" aria-modal="true" aria-labelledby="ai-consent-title">
-          <p className="eyebrow accent">Optional AI delight</p>
+          <p className="eyebrow accent">Power Ripper OS with AI</p>
           <h2 id="ai-consent-title">Generate recommendations?</h2>
           <p>Only calculated summary metrics are sent for this request. Raw workbook rows stay in this browser. OpenAI API usage may incur charges and is billed separately from ChatGPT.</p>
           <div className="connect-actions"><button className="button secondary" onClick={() => setAiConsentOpen(false)}>Cancel</button><button className="button primary" onClick={requestRecommendations}>Generate</button></div>
