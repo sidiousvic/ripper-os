@@ -46,7 +46,7 @@ body {
   margin: 0;
   background-color: var(--bg);
   background-image:
-    linear-gradient(rgba(2, 6, 3, .42), rgba(2, 6, 3, .58)),
+    linear-gradient(rgba(2, 6, 3, .42), rgba(2, 6, 3, .98)),
     url("/brand/sidiousware-background-nologo.png");
   background-position: center;
   background-repeat: no-repeat;
@@ -334,7 +334,7 @@ button {
   width: min(var(--scale-body-width), 554px);
   max-width: none;
   margin: 16px auto 0;
-  color: #fff;
+  color: #9db0a2;
   font-size: 18px;
   line-height: 1.65;
   transform-origin: center;
@@ -396,6 +396,14 @@ button {
   position: absolute;
   right: 17px;
   flex: 0 0 auto;
+}
+
+.upload-button > svg {
+  position: static;
+}
+
+.upload-button:has(> svg) {
+  padding-inline: 21px;
 }
 
 .button:hover {
