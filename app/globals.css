@@ -1358,6 +1358,9 @@ button {
   font-size: 13px;
 }
 
+.sort-select { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; white-space: nowrap; }
+.sort-select select { min-height: 42px; border: 0; border-radius: 999px; padding: 0 14px; color: var(--text); background: var(--panel); box-shadow: var(--shadow-control); }
+
 .search-box input::placeholder {
   color: var(--muted-2);
 }

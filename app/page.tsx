@@ -182,6 +182,7 @@ export default function Home() {
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>(selectedExercise.defaultMetric);
   const [search, setSearch] = useState("");
   const [family, setFamily] = useState("All");
+  const [exerciseSort, setExerciseSort] = useState<"recent" | "used">("recent");
   const [visibleCount, setVisibleCount] = useState(24);
   const [attendanceYear, setAttendanceYear] = useState(Number(data.coverage.lastDate.slice(0, 4)));
   const hasUploadedData = data !== demoData;
@@ -294,7 +295,7 @@ export default function Home() {
   const filteredExercises = useMemo(() => exercises.filter((exercise) => {
     const matchesSearch = exercise.name.toLowerCase().includes(search.toLowerCase());
     return matchesSearch && (family === "All" || exercise.family === family);
-  }), [search, family, dataVersion]);
+  }).sort((a, b) => exerciseSort === "recent" ? b.lastDate.localeCompare(a.lastDate) || b.sessions - a.sessions : b.totalSets - a.totalSets || b.sessions - a.sessions), [search, family, exerciseSort, dataVersion]);
 
   const selectedSeries = metricSeries(selectedExercise, selectedMetric);
   const latestWindowStart = new Date(new Date(`${data.coverage.lastDate}T00:00:00Z`).valueOf() - (27 * 86_400_000)).toISOString().slice(0, 10);
@@ -536,6 +537,7 @@ export default function Home() {
 
           <div className="explorer-toolbar">
             <label className="search-box"><Search size={17} /><input value={search} onChange={(event) => { setSearch(event.target.value); setVisibleCount(24); }} placeholder="Search 76 exercises…" /></label>
+            <label className="sort-select">Order by<select value={exerciseSort} onChange={(event) => setExerciseSort(event.target.value as "recent" | "used")}><option value="recent">Most recent</option><option value="used">Most used</option></select></label>
             <div className="family-filter" aria-label="Filter by exercise family">
               {families.map((item) => <button className={family === item ? "active" : ""} onClick={() => { setFamily(item); setVisibleCount(24); }} key={item}>{item}</button>)}
             </div>
