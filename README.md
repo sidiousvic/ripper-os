@@ -49,8 +49,11 @@ Nutrition, food, account, email, settings, and unrelated workbook tabs are ignor
 ## Use your own export in the app
 
 The deployed app and local development server include an **Upload MacroFactor export** button. The workbook is parsed by the app's `/api/parse` endpoint and the resulting summary replaces the demo data for the current session. The original workbook is written to a temporary server file only while it is parsed, then deleted.
+The normalized result is retained in `sessionStorage` so a refresh in the same browser session keeps the analysis. Use **Clear uploaded data** to remove it.
 
 The graphs do not require an OpenAI account. After uploading, choose **Generate recommendations** to run the optional AI interpretation. Configure the server with `OPENAI_API_KEY`; never put that key in frontend code or browser storage. You can select a model with `OPENAI_MODEL` (the default is `gpt-5-mini`). The recommendation request contains calculated training summaries, not the raw workbook.
+
+MacroFactor CSV exports contain workout and exercise metrics but generally do not include the muscle-group sheet. Muscle-balance views are omitted when that data is unavailable.
 
 The upload and recommendation endpoints currently require a Node-compatible server runtime. A static-only host can serve the bundled demo dashboard, but it cannot process new workbooks or call OpenAI until its provider's serverless adapter is configured.
 

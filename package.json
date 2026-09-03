@@ -10,6 +10,7 @@
     "build": "vinext build",
     "start": "vinext start",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
+    "test": "node scripts/test-data-shape.mjs",
     "refresh:data": "node scripts/refresh-training-data.mjs"
   },
   "dependencies": {

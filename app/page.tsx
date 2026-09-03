@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import {
   Bar,
@@ -172,6 +172,22 @@ export default function Home() {
   const [attendanceYear, setAttendanceYear] = useState(Number(data.coverage.lastDate.slice(0, 4)));
   const hasUploadedData = data !== demoData;
 
+  // The uploaded dataset is an external sessionStorage snapshot; hydrate the interactive view once on mount.
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem("ripper-os-training-data");
+      if (!saved) return;
+      data = JSON.parse(saved);
+      exercises = data.exercises as Exercise[];
+      setSelectedExerciseName(exercises[0]?.name ?? "");
+      setSelectedMetric(exercises[0]?.defaultMetric ?? "totalSets");
+      setAttendanceYear(Number(data.coverage.lastDate.slice(0, 4)));
+      redraw((value) => value + 1);
+    } catch { sessionStorage.removeItem("ripper-os-training-data"); }
+  }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -184,6 +200,7 @@ export default function Home() {
       if (!response.ok) throw new Error(payload.error ?? "Could not parse the workbook.");
       data = payload;
       exercises = data.exercises as Exercise[];
+      sessionStorage.setItem("ripper-os-training-data", JSON.stringify(payload));
       setSelectedExerciseName(exercises[0]?.name ?? "");
       setSelectedMetric(exercises[0]?.defaultMetric ?? "totalSets");
       setAttendanceYear(Number(data.coverage.lastDate.slice(0, 4)));
@@ -195,6 +212,19 @@ export default function Home() {
     } finally {
       event.target.value = "";
     }
+  };
+
+  const clearUploadedData = () => {
+    sessionStorage.removeItem("ripper-os-training-data");
+    data = demoData;
+    exercises = data.exercises as Exercise[];
+    setRecommendations([]);
+    setUploadState("");
+    setRecommendationState("");
+    setSelectedExerciseName("");
+    setSelectedMetric("totalSets");
+    setAttendanceYear(Number(data.coverage.lastDate.slice(0, 4)));
+    redraw((value) => value + 1);
   };
 
   const generateRecommendations = async () => {
@@ -280,6 +310,7 @@ export default function Home() {
               <input type="file" accept=".xlsx,.csv" onChange={handleUpload} />
             </label>
             <button className="button upload-button" onClick={() => { setKeyDraft(openAIKey); setConnectOpen(true); }}><KeyRound size={17} aria-hidden="true" />{openAIKey ? "OpenAI connected" : "Connect OpenAI"}</button>
+            {hasUploadedData && <button className="button upload-button" onClick={clearUploadedData}>Clear uploaded data</button>}
           </div>
           {uploadState && <p className="upload-status" role="status">{uploadState}</p>}
           <div className="hero-actions" aria-label="Dashboard navigation">
@@ -296,7 +327,7 @@ export default function Home() {
         <StatCard icon={<Layers3 size={20} />} label="Exercise library" value={`${data.coverage.exerciseCount}`} note="movements available to explore" />
       </section>
 
-      <section className="section shell data-dependent" id="highlights">
+      <section className={`section shell data-dependent ${data.achievements.length ? "" : "no-achievements"}`} id="highlights">
         <SectionHeading
           kicker="The headline gains"
           title="Your strongest measurable achievements"
@@ -489,7 +520,7 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="section shell data-dependent" id="muscles">
+      <section className={`section shell data-dependent ${data.muscles.length ? "" : "no-muscles"}`} id="muscles">
         <SectionHeading
           kicker="Muscle balance"
           title="Your program changed shape"

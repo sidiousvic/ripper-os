@@ -71,6 +71,11 @@ body {
   display: none;
 }
 
+.no-achievements,
+.no-muscles {
+  display: none;
+}
+
 button,
 input,
 select {
