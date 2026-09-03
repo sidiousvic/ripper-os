@@ -577,7 +577,7 @@ export default function Home() {
               ))}
             </div>
           </article>
-          <article className="panel heatmap-panel">
+          {data.muscleHeatmap.weeks.length > 0 && <article className="panel heatmap-panel">
             <div className="panel-heading"><div><p className="eyebrow">Last 13 weeks</p><h3>Muscle exposure heatmap</h3></div><span className="muted small">set-equivalents</span></div>
             <div className="muscle-heatmap-scroll">
               <div className="muscle-heatmap">
@@ -594,7 +594,7 @@ export default function Home() {
               </div>
             </div>
             <p className="footnote">Set exposure helps spot programming imbalances, but it does not diagnose overtraining or recovery status.</p>
-          </article>
+          </article>}
         </div>
       </section>
 

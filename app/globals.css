@@ -1420,6 +1420,7 @@ button {
   height: 62px;
   margin-top: 8px;
   margin-bottom: -12px;
+  white-space: normal;
   overflow-wrap: anywhere;
   font-size: 16px;
   line-height: 1.3;
