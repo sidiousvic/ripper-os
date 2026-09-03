@@ -890,11 +890,13 @@ button {
   gap: 11px;
   margin-top: 29px;
   padding-bottom: 8px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .calendar-panel {
   min-width: 0;
+  position: relative;
+  z-index: 2;
 }
 
 .calendar-panel .panel-heading {
@@ -920,6 +922,8 @@ button {
   gap: clamp(1px, .25vw, 3px);
   width: 100%;
   min-width: 0;
+  position: relative;
+  z-index: 3;
 }
 
 .attendance-cell {
@@ -957,6 +961,20 @@ button {
 
 .attendance-cell[data-tooltip]:hover::after,
 .attendance-cell[data-tooltip]:focus-visible::after { opacity: 1; }
+
+.attendance-cell:hover,
+.attendance-cell:focus-visible { z-index: 50; }
+
+.attendance-cell:nth-child(-n + 7)[data-tooltip]::after {
+  left: 0;
+  transform: none;
+}
+
+.attendance-cell:nth-last-child(-n + 7)[data-tooltip]::after {
+  left: auto;
+  right: 0;
+  transform: none;
+}
 
 .attendance-cell.active {
   border-color: #42915a;
