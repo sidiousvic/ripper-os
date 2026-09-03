@@ -29,7 +29,7 @@ import {
   Target,
   TrendingUp,
 } from "lucide-react";
-import data from "./training-data.json";
+import demoData from "./training-data.json";
 
 type MetricKey = "heaviestKg" | "e1rmKg" | "bestSetReps" | "totalVolumeKg" | "totalReps" | "totalSets" | "durationSec";
 type ProgressRecord = {
@@ -55,8 +55,10 @@ type Exercise = {
   totalVolumeKg: number;
   progress: ProgressRecord[];
 };
+type Recommendation = { title: string; summary: string; evidence: string[]; actions: string[]; priority: "high" | "medium" | "low"; caveat: string };
 
-const exercises = data.exercises as Exercise[];
+let data = demoData;
+let exercises = data.exercises as Exercise[];
 const metricMeta: Record<MetricKey, { label: string; short: string; unit: string }> = {
   heaviestKg: { label: "Heaviest load", short: "Load", unit: "kg" },
   e1rmKg: { label: "Estimated 1RM", short: "e1RM", unit: "kg" },
@@ -151,6 +153,10 @@ function ChartTooltip({ active, payload, label, unit = "" }: { active?: boolean;
 }
 
 export default function Home() {
+  const [, redraw] = useState(0);
+  const [uploadState, setUploadState] = useState<string>("");
+  const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
+  const [recommendationState, setRecommendationState] = useState<string>("");
   const [selectedExerciseName, setSelectedExerciseName] = useState("Dumbbell Fly");
   const selectedExercise = exercises.find((exercise) => exercise.name === selectedExerciseName) ?? exercises[0];
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>(selectedExercise.defaultMetric);
@@ -158,6 +164,45 @@ export default function Home() {
   const [family, setFamily] = useState("All");
   const [visibleCount, setVisibleCount] = useState(24);
   const [attendanceYear, setAttendanceYear] = useState(Number(data.coverage.lastDate.slice(0, 4)));
+
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setUploadState("Parsing MacroFactor export…");
+    const form = new FormData();
+    form.append("file", file);
+    try {
+      const response = await fetch("/api/parse", { method: "POST", body: form });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error ?? "Could not parse the workbook.");
+      data = payload;
+      exercises = data.exercises as Exercise[];
+      setSelectedExerciseName(exercises[0]?.name ?? "");
+      setSelectedMetric(exercises[0]?.defaultMetric ?? "totalSets");
+      setAttendanceYear(Number(data.coverage.lastDate.slice(0, 4)));
+      setUploadState(`Loaded ${file.name}`);
+      setRecommendations([]);
+      redraw((value) => value + 1);
+    } catch (error) {
+      setUploadState(error instanceof Error ? error.message : "Could not parse the workbook.");
+    } finally {
+      event.target.value = "";
+    }
+  };
+
+  const generateRecommendations = async () => {
+    setRecommendationState("Generating recommendations…");
+    try {
+      const summary = { coverage: data.coverage, muscles: data.muscles, gaps: data.gaps, achievements: data.achievements, busiestMonths: data.busiestMonths, quietestMonths: data.quietestMonths };
+      const response = await fetch("/api/recommendations", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(summary) });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error ?? "Recommendation generation failed.");
+      setRecommendations(payload.recommendations);
+      setRecommendationState("Recommendations updated from this dataset.");
+    } catch (error) {
+      setRecommendationState(error instanceof Error ? error.message : "Recommendation generation failed.");
+    }
+  };
 
   const selectExercise = (exercise: Exercise) => {
     setSelectedExerciseName(exercise.name);
@@ -220,6 +265,10 @@ export default function Home() {
         <div className="hero-copy">
           <h1><b style={{marginBottom: "30px", fontFamily: "BiauKaiHK"}}>RIPPER <span>OS</span></b>.<br />Training. <span>Analyzed.</span></h1>
           <p>I upload my training data, and Ripper OS organizes it into progress, consistency, muscle balance, highlights, and next opportunities. It&apos;s like Spotify Wrapped for training.</p>
+          <label className="button upload-button">Upload MacroFactor export
+            <input type="file" accept=".xlsx" onChange={handleUpload} />
+          </label>
+          {uploadState && <p className="upload-status" role="status">{uploadState}</p>}
           <div className="hero-actions">
             <a className="button primary" href="#progress">Explore all exercises <ChevronRight size={17} /></a>
             <a className="button secondary" href="#next">See where to go next</a>
@@ -495,13 +544,19 @@ export default function Home() {
           <SectionHeading
             kicker="Where to go next"
             title="The clearest opportunities in the data"
-            description="These are programming prompts, not diagnoses. The best next block is one you can recover from, perform consistently, and measure with stable technique."
+            description="These are programming prompts, not diagnoses. Generate a personalized interpretation after uploading your MacroFactor export."
+            action={<button className="button secondary" onClick={generateRecommendations}><Sparkles size={16} /> Generate recommendations</button>}
           />
+          {recommendationState && <p className="upload-status" role="status">{recommendationState}</p>}
           <div className="next-grid">
+            {recommendations.map((item, index) => <article className="next-card panel" key={`${item.title}-${index}`}><span>0{index + 1}</span><div className="next-icon"><Target size={21} /></div><h3>{item.title}</h3><p>{item.summary}</p><p className="muted small">{item.evidence.join(" · ")}</p><div className="next-tags">{item.actions.map((action) => <i key={action}>{action}</i>)}</div></article>)}
+            {!recommendations.length && data !== demoData && <p className="upload-status">Upload complete. Generate recommendations to interpret this dataset.</p>}
+            {!recommendations.length && data === demoData && <>
             <article className="next-card panel"><span>01</span><div className="next-icon"><Target size={21} /></div><h3>Build a lower-body floor</h3><p>Recent quad exposure is <strong>0.8 sets/week</strong>; calves and tibialis are at <strong>0</strong>. Add two repeatable lower-body anchors and progress them for 8–12 weeks.</p><div className="next-tags"><i>Quads</i><i>Calves</i><i>Tibialis</i></div></article>
             <article className="next-card panel"><span>02</span><div className="next-icon"><TrendingUp size={21} /></div><h3>Restore chest and lat balance</h3><p>Recent chest exposure is <strong>2.7 sets/week</strong> and lats are <strong>2.3</strong>, well below your earlier pattern. Reintroduce one press and one vertical pull as tracked anchors.</p><div className="next-tags"><i>Chest</i><i>Lats</i></div></article>
             <article className="next-card panel"><span>03</span><div className="next-icon"><Gauge size={21} /></div><h3>Watch shoulder overlap</h3><p>Front delts lead recent exposure at <strong>11.4 sets/week</strong>. Keep the strong lateral-delt progress, but count pressing overlap before adding more front-delt work.</p><div className="next-tags"><i>Front delts</i><i>Side delts</i><i>Rear delts</i></div></article>
             <article className="next-card panel"><span>04</span><div className="next-icon"><CalendarDays size={21} /></div><h3>Protect the rhythm</h3><p>Your best sustainable target is <strong>10–12 sessions/month</strong>. Plan deloads or travel weeks so breaks do not accidentally become another 10–14-day gap.</p><div className="next-tags"><i>Cadence</i><i>Recovery</i></div></article>
+            </>}
           </div>
           <div className="principle panel"><div className="principle-icon"><Dumbbell size={25} /></div><div><p className="eyebrow accent">A simple next-year rule</p><h3>Keep six anchor movements stable long enough to measure.</h3><p>Choose one horizontal press, one vertical press, one vertical pull, one row, one knee-dominant lift, and one hip hinge. Track load, reps, and reps-in-reserve consistently; rotate accessories around them.</p></div></div>
         </div>
