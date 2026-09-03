@@ -325,11 +325,16 @@ button {
   color: var(--green);
 }
 
+.hero h1 > b {
+  display: inline-block;
+  font-size: 1.18em;
+}
+
 .hero-copy > p {
   width: min(var(--scale-body-width), 554px);
   max-width: none;
   margin: 16px auto 0;
-  color: #9db0a2;
+  color: #fff;
   font-size: 18px;
   line-height: 1.65;
   transform-origin: center;
@@ -2013,6 +2018,11 @@ h1, h2, h3, h4,
 .hero-actions .button,
 button, .button {
   font-family: var(--font-body);
+}
+
+.donate-button:disabled {
+  cursor: default;
+  opacity: 1;
 }
 
 @media (max-width: 760px) {

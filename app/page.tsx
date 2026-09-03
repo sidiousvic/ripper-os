@@ -326,7 +326,7 @@ export default function Home() {
           {data.muscles.length > 0 && <a href="#muscles">Muscles</a>}
           <a href="#next">Next steps</a>
         </nav>
-        <span className="data-pill"><CircleDot size={13} /> {data.coverage.totalSessions ? `Updated ${formatDate(data.coverage.lastDate, { day: "numeric", month: "short", year: "numeric" })}` : "Awaiting upload"}</span>
+        <button className="data-pill donate-button" type="button" disabled>Donate</button>
       </header>
 
       <section className="hero shell" id="top">
