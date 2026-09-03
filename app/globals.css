@@ -1641,11 +1641,14 @@ button {
   display: grid;
   gap: 10px;
   margin: 20px 0 0;
-  padding: 14px 0 0 19px;
-  border-top: 1px solid var(--line);
+  padding: 14px 15px 14px 31px;
+  border: 1px solid rgba(67, 255, 126, .08);
+  border-radius: 12px;
   color: var(--muted);
   font-size: 14px;
   line-height: 1.5;
+  background: rgba(4, 13, 8, .34);
+  box-shadow: var(--shadow-control);
 }
 
 .next-actions li::marker { color: var(--green); }
