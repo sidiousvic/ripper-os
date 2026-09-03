@@ -442,7 +442,7 @@ export default function Home() {
               <div className="calendar-days"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
               <div className="attendance-grid" style={{ gridTemplateColumns: `repeat(${attendanceWeeks.length}, minmax(0, 1fr))` }}>
                 {attendanceWeeks.flatMap((week) => week.days.map((day, index) => (
-                  <span key={`${week.week}-${index}`} className={day.inYear ? day.active ? "attendance-cell active" : "attendance-cell" : "attendance-cell outside"} title={`${formatDate(day.date)}: ${day.active ? "trained" : "rest"}`} aria-label={`${formatDate(day.date)}: ${day.active ? "trained" : "rest"}`} />
+                  <span key={`${week.week}-${index}`} className={day.inYear ? day.active ? "attendance-cell active" : "attendance-cell" : "attendance-cell outside"} data-tooltip={`${formatDate(day.date)}: ${day.active ? "trained" : "rest"}`} title={`${formatDate(day.date)}: ${day.active ? "trained" : "rest"}`} aria-label={`${formatDate(day.date)}: ${day.active ? "trained" : "rest"}`} />
                 )))}
               </div>
             </div>
@@ -633,7 +633,7 @@ export default function Home() {
           <p className="eyebrow accent">Optional AI delight</p>
           <h2 id="connect-title">Connect OpenAI</h2>
           <p>Charts and upload processing work without an OpenAI account. Add an OpenAI API key only if you want personalized recommendations.</p>
-          <input className="connect-key-input" type="text" value={keyDraft} onChange={(event) => setKeyDraft(event.target.value)} placeholder="sk-…" autoFocus autoComplete="off" spellCheck={false} aria-label="OpenAI API key" />
+          <input className="connect-key-input" type="password" value={keyDraft} onChange={(event) => setKeyDraft(event.target.value)} placeholder="sk-…" autoFocus autoComplete="new-password" spellCheck={false} aria-label="OpenAI API key" />
           <p className="muted small">This key is kept in memory for this session only. It is never saved to browser storage. API usage is billed separately from ChatGPT.</p>
           <div className="connect-actions"><button className="button secondary" onClick={() => { setOpenAIKey(""); setKeyDraft(""); setConnectOpen(false); }}>Disconnect</button><button className="button primary" onClick={() => { setOpenAIKey(keyDraft.trim()); setConnectOpen(false); }}>Connect</button></div>
         </section>
@@ -656,6 +656,8 @@ export default function Home() {
           <div className="connect-actions"><button className="button secondary" onClick={() => setClearConfirmOpen(false)}>Cancel</button><button className="button primary" onClick={() => { setClearConfirmOpen(false); clearUploadedData(); }}>Clear data</button></div>
         </section>
       </div>}
+
+      {recommendationState.startsWith("Generating") && <div className="ai-loading-toast" role="status" aria-live="polite"><Sparkles size={18} /><div><p className="eyebrow accent">AI insight</p><p>Generating recommendations…</p></div></div>}
 
       <footer className="shell footer">
         <div className="sidiousware-lockup">
