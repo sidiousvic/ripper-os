@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { FileBlob, SpreadsheetFile } from "@oai/artifact-tool";
+import * as XLSX from "xlsx";
 
 const [macroFactorPath, outputPath] = process.argv.slice(2).filter((value) => value !== "--");
 if (!macroFactorPath || !outputPath) {
@@ -27,7 +27,12 @@ const dateFromKey = (value) => new Date(`${value}T00:00:00Z`);
 const numOrNull = (value) => typeof value === "number" && Number.isFinite(value) ? value : null;
 const num = (value) => numOrNull(value) ?? 0;
 const cleanMetric = (value) => String(value ?? "").replace(/ \((kg|sets|reps|sec)\)$/i, "").trim();
-const rowsFrom = (workbook, name) => workbook.worksheets.getItem(name).getUsedRange(true).values;
+const workbook = XLSX.read(await fs.readFile(macroFactorPath), { type: "buffer", cellDates: true });
+const rowsFrom = (name) => {
+  const sheet = workbook.Sheets[name];
+  if (!sheet) throw new Error(`Missing required MacroFactor sheet: ${name}`);
+  return XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: null });
+};
 const sortByDate = (a, b) => a.date.localeCompare(b.date);
 
 const canonicalAliases = new Map([
@@ -65,13 +70,12 @@ const defaultMetric = (name, records) => {
   return "totalSets";
 };
 
-const macroFactor = await SpreadsheetFile.importXlsx(await FileBlob.load(macroFactorPath));
 const exerciseRecords = [];
 const sessions = [];
 
 const macroExerciseMap = new Map();
 const mergeMacroMetric = (sheetName, field) => {
-  const rows = rowsFrom(macroFactor, sheetName);
+  const rows = rowsFrom(sheetName);
   const headers = rows[0].map(cleanMetric);
   for (const row of rows.slice(1)) {
     const date = dateKey(row[0]);
@@ -132,6 +136,8 @@ for (const [date, totals] of macroByDate) {
 sessions.sort(sortByDate);
 exerciseRecords.sort((a, b) => a.date.localeCompare(b.date) || a.exercise.localeCompare(b.exercise));
 
+if (!sessions.length) throw new Error("No workout sessions were found. Confirm this is an all-time MacroFactor training export.");
+
 const firstDate = sessions[0].date;
 const lastDate = sessions.at(-1).date;
 const firstMonth = firstDate.slice(0, 7);
@@ -188,7 +194,7 @@ for (let cursor = new Date(firstMonday); cursor <= lastMonday; cursor = new Date
 
 const muscleRecords = [];
 
-const macroMuscleRows = rowsFrom(macroFactor, "Muscle Groups - Sets");
+const macroMuscleRows = rowsFrom("Muscle Groups - Sets");
 const macroMuscleHeaders = macroMuscleRows[0].map(cleanMetric);
 for (const row of macroMuscleRows.slice(1)) {
   const date = dateKey(row[0]);
