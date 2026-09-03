@@ -821,10 +821,13 @@ button {
 
 .chart-area {
   width: 100%;
+  min-width: 1px;
+  min-height: 1px;
   touch-action: pan-x;
 }
 
-.recharts-wrapper, .recharts-surface { max-width: 100%; }
+.chart-panel { width: 100%; min-width: 0; }
+
 
 .chart-area.tall {
   height: 340px;
