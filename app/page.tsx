@@ -339,7 +339,7 @@ export default function Home() {
           <a href="#next">Insights</a>
           <a href="/about">About</a>
         </nav>
-        <div className="topbar-actions"><span className="data-pill" title={lastExportAt ? `Uploaded ${new Date(lastExportAt).toLocaleString()}` : undefined}>{lastExportName ? `Last export · ${lastExportName}` : "Awaiting upload"}</span><a className="data-pill donate-button" href="https://donate.stripe.com/bJe8wQ18J4so1wSdrKfjG00" target="_blank" rel="noreferrer">Donate</a></div>
+        <a className="data-pill donate-button" href="https://donate.stripe.com/bJe8wQ18J4so1wSdrKfjG00" target="_blank" rel="noreferrer">Donate</a>
       </header>
 
       <section className="hero shell" id="top">
@@ -353,6 +353,7 @@ export default function Home() {
             </label>
             <button className="button upload-button" onClick={() => { setKeyDraft(openAIKey); setConnectOpen(true); }}><KeyRound size={17} aria-hidden="true" />{openAIKey ? "OpenAI connected" : "Connect OpenAI"}</button>
             {hasUploadedData && <button className="button upload-button" onClick={() => setClearConfirmOpen(true)}><Trash2 size={17} aria-hidden="true" />Clear uploaded data</button>}
+            {lastExportName && <span className="data-pill last-export-pill" title={lastExportAt ? `Uploaded ${new Date(lastExportAt).toLocaleString()}` : undefined}>Last export · {lastExportName}</span>}
           </div>
           {uploadState && <p className="upload-status" role="status">{uploadState}</p>}
           <div className="hero-actions" aria-label="Dashboard navigation">
