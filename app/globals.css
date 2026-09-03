@@ -275,6 +275,8 @@ h4 {
 
 .data-pill {
   justify-self: end;
+  flex-shrink: 0;
+  white-space: nowrap;
   padding: 7px 11px;
   font-size: 12px;
   font-weight: 650;
