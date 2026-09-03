@@ -175,6 +175,8 @@ export default function Home() {
   const [aiConsentOpen, setAiConsentOpen] = useState(false);
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const [recommendationError, setRecommendationError] = useState("");
+  const [lastExportName, setLastExportName] = useState("");
+  const [lastExportAt, setLastExportAt] = useState("");
   const [selectedExerciseName, setSelectedExerciseName] = useState("Dumbbell Fly");
   const selectedExercise = exercises.find((exercise) => exercise.name === selectedExerciseName) ?? exercises[0] ?? emptyExercise;
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>(selectedExercise.defaultMetric);
@@ -184,20 +186,23 @@ export default function Home() {
   const [attendanceYear, setAttendanceYear] = useState(Number(data.coverage.lastDate.slice(0, 4)));
   const hasUploadedData = data !== demoData;
 
-  // The uploaded dataset is an external sessionStorage snapshot; hydrate the interactive view once on mount.
+  // Restore only the normalized dashboard snapshot; raw workbook data and API keys are never stored.
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     try {
-      sessionStorage.removeItem("ripper-os-training-data");
-      const saved = sessionStorage.getItem(sessionDataKey);
+      localStorage.removeItem("ripper-os-training-data");
+      const saved = localStorage.getItem(sessionDataKey);
       if (!saved) return;
-      data = JSON.parse(saved);
+      const snapshot = JSON.parse(saved);
+      data = snapshot.data;
       exercises = data.exercises as Exercise[];
+      setLastExportName(snapshot.fileName ?? ""); setLastExportAt(snapshot.uploadedAt ?? "");
+      setRecommendations(snapshot.recommendations ?? []); setAiInsight(snapshot.aiInsight ?? null);
       setSelectedExerciseName(exercises[0]?.name ?? "");
       setSelectedMetric(exercises[0]?.defaultMetric ?? "totalSets");
       setAttendanceYear(Number(data.coverage.lastDate.slice(0, 4)));
       redraw((value) => value + 1);
-    } catch { sessionStorage.removeItem(sessionDataKey); }
+    } catch { localStorage.removeItem(sessionDataKey); }
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
 
@@ -213,9 +218,12 @@ export default function Home() {
       if (!response.ok) throw new Error(payload.error ?? "Could not parse the workbook.");
       data = payload;
       exercises = data.exercises as Exercise[];
-      const serialized = JSON.stringify(payload);
-      if (serialized.length <= 4_000_000) sessionStorage.setItem(sessionDataKey, serialized);
-      else setUploadState(`Loaded ${file.name}; this dataset is too large for session persistence.`);
+      const uploadedAt = new Date().toISOString();
+      const snapshot = { data: payload, fileName: file.name, uploadedAt, recommendations: [], aiInsight: null };
+      const serialized = JSON.stringify(snapshot);
+      if (serialized.length <= 4_000_000) localStorage.setItem(sessionDataKey, serialized);
+      else setUploadState(`Loaded ${file.name}; this rendered snapshot is too large for browser storage.`);
+      setLastExportName(file.name); setLastExportAt(uploadedAt);
       setSelectedExerciseName(exercises[0]?.name ?? "");
       setSelectedMetric(exercises[0]?.defaultMetric ?? "totalSets");
       setAttendanceYear(Number(data.coverage.lastDate.slice(0, 4)));
@@ -232,12 +240,13 @@ export default function Home() {
   };
 
   const clearUploadedData = () => {
-    sessionStorage.removeItem(sessionDataKey);
+    localStorage.removeItem(sessionDataKey);
     data = demoData;
     exercises = data.exercises as Exercise[];
     setRecommendations([]);
     setAiInsight(null);
     setRecommendationError("");
+    setLastExportName(""); setLastExportAt("");
     setUploadState("");
     setRecommendationState("");
     setSelectedExerciseName("");
@@ -263,6 +272,8 @@ export default function Home() {
       if (!response.ok) throw new Error(payload.error ?? "Recommendation generation failed.");
       setRecommendations(payload.recommendations);
       setAiInsight({ sustainedPractice: payload.sustainedPractice, nextYearRule: payload.nextYearRule, sectionInsights: payload.sectionInsights ?? {} });
+      const saved = localStorage.getItem(sessionDataKey);
+      if (saved) localStorage.setItem(sessionDataKey, JSON.stringify({ ...JSON.parse(saved), recommendations: payload.recommendations, aiInsight: { sustainedPractice: payload.sustainedPractice, nextYearRule: payload.nextYearRule, sectionInsights: payload.sectionInsights ?? {} } }));
       setRecommendationState("Recommendations updated from this dataset.");
     } catch (error) {
       const message = error instanceof Error ? error.message : "Recommendation generation failed.";
@@ -328,7 +339,7 @@ export default function Home() {
           <a href="#next">Insights</a>
           <a href="/about">About</a>
         </nav>
-        <a className="data-pill donate-button" href="https://donate.stripe.com/bJe8wQ18J4so1wSdrKfjG00" target="_blank" rel="noreferrer">Donate</a>
+        <div className="topbar-actions"><span className="data-pill" title={lastExportAt ? `Uploaded ${new Date(lastExportAt).toLocaleString()}` : undefined}>{lastExportName ? `Last export · ${lastExportName}` : "Awaiting upload"}</span><a className="data-pill donate-button" href="https://donate.stripe.com/bJe8wQ18J4so1wSdrKfjG00" target="_blank" rel="noreferrer">Donate</a></div>
       </header>
 
       <section className="hero shell" id="top">

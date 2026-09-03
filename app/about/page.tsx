@@ -21,8 +21,8 @@ export default function AboutPage() {
       <h2>Connecting OpenAI</h2>
       <p>OpenAI access is optional. Select <strong>Connect OpenAI</strong>, paste an API key, and connect. The key stays in memory for the current browser session and is not saved to local storage. API usage is billed by OpenAI separately from ChatGPT, so review your API billing limits.</p>
       <p>To create a key, sign in at <a href="https://platform.openai.com/" target="_blank" rel="noreferrer">platform.openai.com</a>, open API keys, create a secret key, copy it once, and paste it into Ripper OS. Never share the key or commit it to GitHub. Without OpenAI, charts still work.</p>
-      <h2>Privacy and limitations</h2><p>Your uploaded analysis stays in this browser session and can be cleared. Ripper OS is a training-data visualization tool, not medical advice. Comparisons are only as reliable as the names, units, and logging consistency in the export.</p>
+      <h2>Privacy and limitations</h2><p>Your normalized rendered analysis and generated insights can be kept in this browser for sharing and later visits; the original workbook and API key are never stored. Ripper OS is a training-data visualization tool, not medical advice. Uploads are limited to 25 MB, CSV exports do not provide muscle-group analysis, and comparisons are only as reliable as the names, units, and logging consistency in the export.</p>
     </section>
-    <footer className="shell footer"><p>Built and distributed by SIDIOUSWARE.</p><p className="muted">MIT sidiousvic All Rights Reserved.</p></footer>
+    <footer className="shell footer"><p>Built and distributed by SIDIOUSWARE.</p><p className="muted">© All Rights Reserved.</p></footer>
   </main>;
 }

@@ -267,6 +267,9 @@ h4 {
   box-shadow: var(--shadow-control);
 }
 
+.topbar-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; min-width: 0; }
+.topbar-actions .data-pill { max-width: 260px; overflow: hidden; text-overflow: ellipsis; }
+
 .data-pill,
 .record-tags span,
 .record-tags span {
@@ -818,7 +821,10 @@ button {
 
 .chart-area {
   width: 100%;
+  touch-action: pan-x;
 }
+
+.recharts-wrapper, .recharts-surface { max-width: 100%; }
 
 .chart-area.tall {
   height: 340px;
