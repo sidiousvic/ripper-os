@@ -398,6 +398,7 @@ export default function Home() {
             {hasUploadedData && <a className="button primary" href="#progress">Explore all exercises <ChevronRight size={17} /></a>}
             {hasUploadedData && <button className="button ai-action" onClick={generateRecommendations} disabled={recommendationState.startsWith("Generating")}><Sparkles size={16} /> Generate AI insights</button>}
           </div>
+          <p className="export-guide-link"><a href="/about">How to export my MacroFactor data</a></p>
           {uploadState && <p className="upload-status" role="status">{uploadState}</p>}
         </div>
       </section>
@@ -720,7 +721,6 @@ export default function Home() {
           <h2 id="loaded-export-title">MacroFactor data is loaded</h2>
           <p className="loaded-export-name">{lastExportName || "MacroFactor export"}</p>
           {lastExportAt && <p className="muted small">Loaded {new Date(lastExportAt).toLocaleString()}</p>}
-          <p className="small"><a href="/about">How to export my MacroFactor data</a></p>
           <div className="connect-actions"><button className="button secondary" onClick={() => setLoadedExportOpen(false)}>Close</button><label className="button primary upload-button">Replace export<input type="file" accept=".xlsx,.csv" onChange={(event) => { setLoadedExportOpen(false); handleUpload(event); }} /></label></div>
         </section>
       </div>}

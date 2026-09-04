@@ -388,6 +388,23 @@ button {
   margin-top: 26px;
 }
 
+.export-guide-link {
+  margin: 0.65rem 0 0;
+  text-align: center;
+  font-size: 0.82rem;
+}
+
+.export-guide-link a {
+  color: var(--accent, #3fe277);
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
+}
+
+.export-guide-link a:hover,
+.export-guide-link a:focus-visible {
+  color: #c7ff4a;
+}
+
 .hero-actions .button {
   flex: 0 1 290px;
   width: 290px;
