@@ -720,6 +720,7 @@ export default function Home() {
           <h2 id="loaded-export-title">MacroFactor data is loaded</h2>
           <p className="loaded-export-name">{lastExportName || "MacroFactor export"}</p>
           {lastExportAt && <p className="muted small">Loaded {new Date(lastExportAt).toLocaleString()}</p>}
+          <p className="small"><Link href="/about">How to export my MacroFactor data</Link></p>
           <div className="connect-actions"><button className="button secondary" onClick={() => setLoadedExportOpen(false)}>Close</button><label className="button primary upload-button">Replace export<input type="file" accept=".xlsx,.csv" onChange={(event) => { setLoadedExportOpen(false); handleUpload(event); }} /></label></div>
         </section>
       </div>}
