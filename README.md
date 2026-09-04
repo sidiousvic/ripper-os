@@ -1,65 +1,89 @@
 # Ripper OS
 
-Ripper OS is a static React dashboard that turns workout history into progress, consistency, muscle-balance, and next-step views.
-
-The site is intentionally data-light. It publishes the calculated training summary, not raw account or nutrition data. The repository does not include a personal CSV or workbook; users provide their own MacroFactor export through the upload button.
+Ripper OS turns a MacroFactor Workouts export into a readable picture of how you train: progress, consistency, gaps, muscle exposure, exercise history, and optional AI-written observations. It is an early beta and does not provide medical advice.
 
 ## Requirements
 
 - Node.js 22.13 or newer
-- An all-time MacroFactor `.xlsx` or workout `.csv` export
-- An OpenAI API key is optional and only required for generated recommendations
-
-Install dependencies with:
+- A MacroFactor `.xlsx` workbook export or workout `.csv` export
+- An OpenAI API key is optional; charts work without one
 
 ```bash
 npm install
+npm run dev
 ```
 
-## MacroFactor workbook format
+Open the local URL printed by Vinext.
 
-Export an **all-time** MacroFactor training workbook. Each refresh treats the MacroFactor workbook as a replacement, not an append, so always provide the complete export.
+## Importing MacroFactor data
 
-The workbook must contain these sheets. Sheet names are case-sensitive. The app also accepts MacroFactor's row-oriented workout CSV export, with columns such as `Date`, `Exercise`, `Weight (kg)`, `Reps`, and `Workout Duration`.
+Export your all-time training history from MacroFactor and upload the `.xlsx` or `.csv` file in the dashboard. Each new upload replaces the previous analysis; it is not appended.
 
-| Sheet | Layout |
+In MacroFactor, use **More → Data Management → Data Export**. Granular Export with workout or exercise data gives the most detail. Quick Export also works when MacroFactor Workouts data is included.
+
+### XLSX workbook
+
+Ripper OS reads the standard MacroFactor workout sheets when they are present. The first column is a date and the remaining columns are exercise or muscle names with numeric values. The supported sheets are:
+
+| Sheet | Values |
 | --- | --- |
-| `Exercises - Total Sets` | First column: date. Remaining columns: exercise names and set totals. |
-| `Exercises - Total Reps` | First column: date. Remaining columns: exercise names and rep totals. |
-| `Exercises - Best Set Reps` | First column: date. Remaining columns: exercise names and best-set rep totals. |
-| `Exercises - Heaviest Weight` | First column: date. Remaining columns: exercise names and heaviest recorded load. |
-| `Exercises - Total Volume` | First column: date. Remaining columns: exercise names and total volume. |
-| `Exercises - 1-RM` | First column: date. Remaining columns: exercise names and exported estimated 1RM. |
-| `Exercises - Total Duration` | First column: date. Remaining columns: exercise names and duration in seconds. |
-| `Muscle Groups - Sets` | First column: date. Remaining columns: muscle groups and set-equivalent exposure. |
+| `Exercises - Total Sets` | Working sets |
+| `Exercises - Total Reps` | Total repetitions |
+| `Exercises - Best Set Reps` | Best-set repetitions |
+| `Exercises - Heaviest Weight` | Heaviest recorded load |
+| `Exercises - Total Volume` | Session volume |
+| `Exercises - 1-RM` | Exported estimated 1RM |
+| `Exercises - Total Duration` | Duration in seconds |
+| `Muscle Groups - Sets` | Muscle-group set-equivalents |
 
-The first row of every sheet is treated as the header row. Dates may be Excel serial dates or parseable date strings such as `2026-09-02` or `2026/09/02`. Exercise and metric headers may include unit suffixes such as `(kg)`, `(sets)`, `(reps)`, or `(sec)`; those suffixes are removed automatically.
+The workbook may include other MacroFactor tabs; unrelated nutrition, account, and settings data is ignored. Missing muscle-group data means the muscle balance and exposure heatmap are omitted. Exercise metric sheets are merged by date and exercise, so a workbook does not need every optional metric sheet.
 
-Example shape:
+### Workout CSV
 
-```text
-Exercises - Total Sets
-Date        Dumbbell Fly (sets)   Back Squat (sets)
-2026-08-01  3                     4
-2026-08-04  3                     0
-```
+The core row-oriented schema is:
 
-Nutrition, food, account, email, settings, and unrelated workbook tabs are ignored and never copied into the public dataset.
+| Column | Required | Meaning |
+| --- | --- | --- |
+| `Date` | Yes | Workout date |
+| `Exercise` | Yes | Exercise name |
+| `Weight (kg)` | Recommended | Load used for load and volume |
+| `Reps` | Recommended | Repetitions for the row/set |
+| `Workout Duration` or `Duration` | Optional | Duration when available |
 
-## Use your own export in the app
+Extra columns such as `Workout ID`, `Workout`, `Set Type`, `Notes`, and `Distance` are allowed. Keep MacroFactor's original headers. FIT and additional file types are planned for a future release.
 
-The deployed app and local development server include an **Upload MacroFactor export** button. The workbook is parsed transiently by the app's `/api/parse` endpoint and the resulting summary replaces the starting state for the current session. The original workbook is not persisted by Ripper OS.
-The normalized result is retained in `localStorage` so a refresh keeps the analysis. Use **Clear uploaded data** to remove it.
+The upload limit is 25 MB. XLSX archives are also checked for excessive expansion and oversized sheets before parsing.
 
-The graphs do not require an OpenAI account. After uploading, choose **Generate recommendations** to run the optional AI interpretation. Each user may connect their own OpenAI API key through the UI; no shared `OPENAI_API_KEY` should be configured on a public deployment. The key is held in memory for that browser session and sent to the server only for verification and the user-requested insight call. You can select a model with `OPENAI_MODEL` (the default is `gpt-5-mini`). The recommendation request contains calculated training summaries, not the raw workbook.
+## What the dashboard does
 
-MacroFactor CSV exports contain workout and exercise metrics but generally do not include the muscle-group sheet. Muscle-balance views are omitted when that data is unavailable.
+- **Progress:** Search and sort your exercise library. The default metric is load for weighted work, reps for bodyweight work, and duration for cardio when available.
+- **Exercise charts:** View one continuous history line. The line fades toward yellow over the latest four weeks. Use **Compare with** to overlay another available metric on its own scale, such as load and session reps.
+- **Consistency:** See monthly sessions, attendance, gaps, and training-load intensity.
+- **Muscles:** Compare early and recent weekly set-equivalents when muscle-group data exists.
+- **Muscle exposure:** See weekly muscle exposure as a heatmap when the export contains that data. Short exports use an adaptive heading; exports with no muscle rows hide the empty section.
+- **Insights:** Optionally send the calculated summary to OpenAI for plain-language observations and programming prompts.
 
-The upload and recommendation endpoints currently require a Node-compatible server runtime. A static-only host can serve the bundled demo dashboard, but it cannot process new workbooks or call OpenAI until its provider's serverless adapter is configured.
+## Privacy and OpenAI keys
 
-## Refresh the checked-in dataset
+The original workbook is processed transiently and is not retained by Ripper OS. A normalized rendered snapshot, filename, upload time, and generated insights may be kept in this browser's `localStorage` (up to roughly 4 MB) so a refresh can restore the last export. Use **Clear uploaded data** to remove it.
 
-From the project directory, pass the newest all-time MacroFactor export and the output JSON path:
+OpenAI is bring-your-own-key. Ripper OS does not use a shared public API key. The key is held in memory for the current browser session, is not saved in browser storage, and is sent to the server only for the connection check or the recommendation request. OpenAI API billing is separate from a ChatGPT subscription. Revoke a key immediately if it is exposed.
+
+## Rate limits
+
+Ripper OS applies lightweight per-network safety limits: uploads are limited to 8 per minute, connection checks to 6 per minute, and recommendation requests to 6 per minute. Recommendations also have a per-network/per-key limit of 5 requests per 10 minutes. These limits are in-memory safeguards and reset when the server instance is recycled.
+
+OpenAI applies separate project, quota, billing, and provider-throttling limits. A first request can fail when a key has no available quota or when several people share a network. Ripper OS does not add a country block, although OpenAI availability and network conditions can vary by region.
+
+## Security notes
+
+The API routes require same-origin browser requests, enforce request-size limits, reject oversized or suspicious XLSX archives, cap workbook dimensions, sanitize model output, and return generic upstream errors. The deployed app also sends CSP, `nosniff`, referrer, permissions, and cross-origin isolation headers.
+
+The in-memory limiter is suitable for a beta, not a complete DDoS solution. For a larger public launch, add a durable Vercel WAF/Redis limit, monitoring, and alerting. Never put a user's API key in `OPENAI_API_KEY` on a public deployment.
+
+## Refresh the checked-in demo data
+
+The checked-in dataset is only the demo/starting state. Do not commit personal training history.
 
 ```bash
 npm run refresh:data -- \
@@ -67,33 +91,34 @@ npm run refresh:data -- \
   "app/training-data.json"
 ```
 
-Then validate the site:
+The script normalizes aliases, merges daily metrics, and writes the generated JSON. It does not modify the source workbook.
+
+## Checks
 
 ```bash
-npm run lint
-npm run build
+npm test       # generated data shape
+npm run lint   # ESLint
+npm run build  # production build
 ```
 
-The refresh script normalizes exercise aliases, merges daily metrics, calculates summaries and rankings, and writes the static file consumed by the dashboard. It does not modify the source workbook.
+## Deployment
 
-The checked-in dataset is an empty starting state. Users should upload their own export through the app instead of committing personal training history.
+Because uploads and OpenAI calls use `/api/parse`, `/api/openai-connection`, and `/api/recommendations`, deployment needs a Node-compatible server or serverless adapter. Vercel is a suitable option for the current app. A static-only host can show the bundled demo but cannot process new uploads or call OpenAI.
 
-## Development
+## Contributing and bugs
 
-```bash
-npm run dev
-```
-
-Open the local URL printed by Vinext. The dashboard has no login, database, upload endpoint, or server-side data store; publishing is a static Site deployment.
-
-## Privacy and publishing
-
-Review `app/training-data.json` before publishing. Do not commit raw workbooks, nutrition records, account information, email addresses, or other identifying data. The generated public dataset is intended to contain only aggregated training information.
+Open a pull request with a focused change and a short description; I will review contributions. Use the **Report a bug** link in the About page to open a GitHub issue. Please do not attach personal exports, API keys, or other private data.
 
 ## Project layout
 
-- `app/page.tsx` — dashboard UI and interactions
+- `app/page.tsx` — dashboard UI, charts, upload state, local snapshot restore, and interactions
+- `app/about/page.tsx` — user guide, schema, privacy, limitations, and rate-limit explanation
+- `app/api/parse/route.ts` — CSV/XLSX parsing and normalized summary generation
+- `app/api/openai-connection/route.ts` — transient OpenAI model access check
+- `app/api/recommendations/route.ts` — guarded AI recommendation route
 - `app/globals.css` — visual system and responsive layout
-- `app/training-data.json` — generated public dataset
-- `scripts/refresh-training-data.mjs` — workbook parser and metrics generator
-- `public/brand/` — local visual assets and fonts
+- `app/training-data.json` — generated demo dataset
+- `lib/security.ts` — same-origin and in-memory request safeguards
+- `scripts/refresh-training-data.mjs` — workbook normalization script
+- `scripts/test-data-shape.mjs` — data-shape check
+- `public/brand/` — local visual assets
