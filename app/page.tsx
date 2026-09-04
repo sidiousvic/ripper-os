@@ -635,11 +635,11 @@ export default function Home() {
         </div>
       </section>
 
-      {data.muscleHeatmap.weeks.length > 0 && <section className="section shell data-dependent muscle-heatmap-section" aria-labelledby="muscle-heatmap-title">
+      {data.muscleHeatmap.weeks.length > 0 && data.muscleHeatmap.rows.length > 0 && <section className="section shell data-dependent muscle-heatmap-section" aria-labelledby="muscle-heatmap-title">
         <SectionHeading
           kicker="Training exposure"
-          title="Your last 13 weeks at a glance"
-          description="Each square shows the recorded set-equivalents for one muscle group in one training week. Brighter squares mean more exposure."
+          title={data.muscleHeatmap.weeks.length >= 13 ? "Your last 13 weeks at a glance" : "Your training exposure so far"}
+          description={`Each square shows the recorded set-equivalents for one muscle group in one training week. Brighter squares mean more exposure. ${data.muscleHeatmap.weeks.length < 13 ? `This export covers ${data.muscleHeatmap.weeks.length} ${data.muscleHeatmap.weeks.length === 1 ? "week" : "weeks"}.` : ""}`}
         />
         <article className="panel heatmap-panel">
           <div className="panel-heading"><div><p className="eyebrow">Weekly pattern</p><h3 id="muscle-heatmap-title">Muscle exposure heatmap</h3></div><span className="muted small">set-equivalents</span></div>
@@ -758,8 +758,7 @@ export default function Home() {
         <div className="sidiousware-lockup">
           <Image src="/brand/sidiousware-logo.png" alt="Sidiousware" width={330} height={191} />
         </div>
-        <p><a href="https://github.com/sidiousvic/ripper-os/issues/new?title=Bug%3A%20&body=%23%23%20What%20happened%3F%0A%0A%23%23%20How%20can%20we%20reproduce%20it%3F%0A%0A%23%23%20Browser%20and%20device%0A" target="_blank" rel="noreferrer">🪲 Report a bug</a></p>
-        <p className="muted">All Rights Reserved.</p>
+        <p><a href="https://github.com/sidiousvic/ripper-os/issues/new?title=Bug%3A%20&body=%23%23%20What%20happened%3F%0A%0A%23%23%20How%20can%20we%20reproduce%20it%3F%0A%0A%23%23%20Browser%20and%20device%0A" target="_blank" rel="noreferrer">Report a bug 🪲</a></p>
       </footer>
     </main>
   );
