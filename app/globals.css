@@ -303,6 +303,15 @@ h4 {
   text-overflow: ellipsis;
 }
 
+.loaded-export-name {
+  margin-top: 14px;
+  color: var(--text);
+  font-weight: 700;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
 .hero {
   position: relative;
   display: flex;

@@ -175,6 +175,7 @@ export default function Home() {
   const [keyDraft, setKeyDraft] = useState("");
   const [aiConsentOpen, setAiConsentOpen] = useState(false);
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
+  const [loadedExportOpen, setLoadedExportOpen] = useState(false);
   const [recommendationError, setRecommendationError] = useState("");
   const [lastExportName, setLastExportName] = useState("");
   const [lastExportAt, setLastExportAt] = useState("");
@@ -350,12 +351,9 @@ export default function Home() {
           <p>Upload your training data and Ripper OS organizes it into progress, consistency, muscle balance, highlights, and next opportunities. It&apos;s like Spotify Wrapped for training.</p>
           <div className="hero-config" aria-label="Configuration">
             <p className="eyebrow accent">Configuration</p>
-            <label className="button upload-button">{hasUploadedData ? <Check size={17} aria-hidden="true" /> : <CircleDot size={17} aria-hidden="true" />}{hasUploadedData ? "MacroFactor export uploaded" : "Upload MacroFactor export"}
-              <input type="file" accept=".xlsx,.csv" onChange={handleUpload} />
-            </label>
+            {hasUploadedData ? <button className="button upload-button" onClick={() => setLoadedExportOpen(true)}><Check size={17} aria-hidden="true" />MacroFactor export uploaded</button> : <label className="button upload-button"><CircleDot size={17} aria-hidden="true" />Upload MacroFactor export<input type="file" accept=".xlsx,.csv" onChange={handleUpload} /></label>}
             <button className="button upload-button" onClick={() => { setKeyDraft(openAIKey); setConnectOpen(true); }}><KeyRound size={17} aria-hidden="true" />{openAIKey ? "OpenAI connected" : "Connect OpenAI"}</button>
             {hasUploadedData && <button className="button upload-button" onClick={() => setClearConfirmOpen(true)}><Trash2 size={17} aria-hidden="true" />Clear uploaded data</button>}
-            {lastExportName && <span className="data-pill last-export-pill" title={lastExportAt ? `Uploaded ${new Date(lastExportAt).toLocaleString()}` : undefined}>Loaded {lastExportName} · {lastExportAt ? new Date(lastExportAt).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" }) : ""}</span>}
           </div>
           {uploadState && <p className="upload-status" role="status">{uploadState}</p>}
           <div className="hero-actions" aria-label="Dashboard navigation">
@@ -661,6 +659,16 @@ export default function Home() {
           <input className="connect-key-input" type="password" value={keyDraft} onChange={(event) => setKeyDraft(event.target.value)} placeholder="sk-…" autoFocus autoComplete="new-password" spellCheck={false} aria-label="OpenAI API key" />
           <p className="muted small">This key is kept in memory for this session only. It is never saved to browser storage. API usage is billed separately from ChatGPT.</p>
           <div className="connect-actions"><button className="button secondary" onClick={() => { setOpenAIKey(""); setKeyDraft(""); setConnectOpen(false); }}>Disconnect</button><button className="button primary" onClick={() => { setOpenAIKey(keyDraft.trim()); setConnectOpen(false); }}>Connect</button></div>
+        </section>
+      </div>}
+
+      {loadedExportOpen && <div className="connect-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setLoadedExportOpen(false); }}>
+        <section className="connect-dialog panel" role="dialog" aria-modal="true" aria-labelledby="loaded-export-title">
+          <p className="eyebrow accent">Current export</p>
+          <h2 id="loaded-export-title">MacroFactor data is loaded</h2>
+          <p className="loaded-export-name">{lastExportName || "MacroFactor export"}</p>
+          {lastExportAt && <p className="muted small">Loaded {new Date(lastExportAt).toLocaleString()}</p>}
+          <div className="connect-actions"><button className="button secondary" onClick={() => setLoadedExportOpen(false)}>Close</button><label className="button primary upload-button">Replace export<input type="file" accept=".xlsx,.csv" onChange={(event) => { setLoadedExportOpen(false); handleUpload(event); }} /></label></div>
         </section>
       </div>}
 
