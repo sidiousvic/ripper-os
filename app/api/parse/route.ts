@@ -48,7 +48,10 @@ export async function POST(request: Request) {
     });
     const firstMs = Date.parse(`${first}T00:00:00Z`);
     const lastMs = Date.parse(`${last}T00:00:00Z`);
-    const windowSpan = 8 * 7 * DAY;
+    // Use up to eight weeks per side, but never overlap the comparison windows.
+    // A short export should compare its first and last portions, not largely the
+    // same days twice.
+    const windowSpan = Math.min(8 * 7 * DAY, Math.max(DAY, Math.floor((lastMs - firstMs + DAY) / 2)));
     const earlyStart = first;
     const earlyEnd = new Date(Math.min(lastMs, firstMs + windowSpan - DAY)).toISOString().slice(0, 10);
     const recentStart = new Date(Math.max(firstMs, lastMs - windowSpan + DAY)).toISOString().slice(0, 10);

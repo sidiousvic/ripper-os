@@ -354,7 +354,7 @@ export default function Home() {
   const selectedMeta = metricMeta[selectedMetric];
 
   const monthlyChart = data.monthly.map((item) => ({ ...item, label: formatMonth(item.month) }));
-  const maxRecentMuscle = Math.max(...data.muscles.map((muscle) => muscle.recentWeekly), 1);
+  const maxRecentMuscle = Math.max(...data.muscles.flatMap((muscle) => [muscle.earlyWeekly, muscle.recentWeekly]), 1);
   const firstAttendanceYear = Number(data.coverage.firstDate.slice(0, 4));
   const lastAttendanceYear = Number(data.coverage.lastDate.slice(0, 4));
   const attendanceYears = Array.from({ length: lastAttendanceYear - firstAttendanceYear + 1 }, (_, index) => firstAttendanceYear + index);
@@ -456,7 +456,7 @@ export default function Home() {
             </div>
             <div className="chart-area tall">
               <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={monthlyChart} margin={{ top: 12, right: 4, left: -24, bottom: 0 }}>
+                <ComposedChart data={monthlyChart} margin={{ top: 12, right: 4, left: -24, bottom: 16 }}>
                   <CartesianGrid stroke="#1c3425" vertical={false} />
                   <XAxis dataKey="month" tickFormatter={formatMonth} tick={{ fill: "#789080", fontSize: 16 }} axisLine={false} tickLine={false} interval={2} />
                   <YAxis yAxisId="sessions" tick={{ fill: "#789080", fontSize: 16 }} axisLine={false} tickLine={false} allowDecimals={false} />
@@ -557,7 +557,7 @@ export default function Home() {
             <div className="chart-area focus-chart">
               {selectedSeries.length > 1 ? (
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={selectedChartData} margin={{ top: 20, right: 8, left: -12, bottom: 2 }}>
+                  <LineChart data={selectedChartData} margin={{ top: 20, right: 8, left: -12, bottom: 16 }}>
                     <CartesianGrid stroke="#1c3425" vertical={false} />
                     <XAxis dataKey="date" tickFormatter={(value) => formatDate(value, { month: "short", year: "2-digit" })} tick={{ fill: "#789080", fontSize: 16 }} axisLine={false} tickLine={false} minTickGap={42} />
                     <YAxis tick={{ fill: "#789080", fontSize: 16 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
@@ -609,7 +609,7 @@ export default function Home() {
         <SectionHeading
           kicker="Muscle balance"
           title="Your program changed shape"
-          description={`Early window used is ${formatDate(data.muscleWindows.early[0], { month: "short", year: "numeric" })} to ${formatDate(data.muscleWindows.early[1], { month: "short", year: "numeric" })}. Recent window is ${formatDate(data.muscleWindows.recent[0], { month: "short", year: "numeric" })} to ${formatDate(data.muscleWindows.recent[1], { month: "short", year: "numeric" })}. Values are set-equivalents per week.`}
+          description={`Early window used is ${formatDate(data.muscleWindows.early[0])} to ${formatDate(data.muscleWindows.early[1])}. Recent window is ${formatDate(data.muscleWindows.recent[0])} to ${formatDate(data.muscleWindows.recent[1])}. Values are set-equivalents per week.`}
         />
         <SectionInsight text={aiInsight?.sectionInsights.muscles} />
         <div className={`two-column equal ${data.muscleHeatmap.weeks.length ? "" : "single-column"}`}>
@@ -619,11 +619,11 @@ export default function Home() {
               {data.muscles.map((muscle) => (
                 <div className="muscle-row" key={muscle.muscle}>
                   <span>{muscle.muscle}</span>
-                  <div className="muscle-tracks">
+                  <div className="muscle-tracks" aria-label={`${muscle.muscle}: early ${muscle.earlyWeekly}, recent ${muscle.recentWeekly} set-equivalents per week`}>
                     <i className="early" style={{ width: `${Math.min(100, (muscle.earlyWeekly / maxRecentMuscle) * 100)}%` }} />
                     <i className="recent" style={{ width: `${Math.min(100, (muscle.recentWeekly / maxRecentMuscle) * 100)}%` }} />
                   </div>
-                  <strong><small>{muscle.earlyWeekly}</small><b>{muscle.recentWeekly}</b></strong>
+                  <strong><small>E {muscle.earlyWeekly}</small><b>R {muscle.recentWeekly}</b></strong>
                 </div>
               ))}
             </div>
@@ -745,7 +745,7 @@ export default function Home() {
           <Image src="/brand/sidiousware-logo.png" alt="Sidiousware" width={330} height={191} />
         </div>
         <p>Built and distributed by SIDIOUSWARE.</p>
-        <p className="muted">MIT sidiousvic All Rights Reserved.</p>
+        <p className="muted">All Rights Reserved.</p>
       </footer>
     </main>
   );
