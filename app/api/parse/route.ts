@@ -36,14 +36,51 @@ export async function POST(request: Request) {
     const gaps = dates.slice(1).map((to, i) => { const daysBetween = Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${dates[i]}T00:00:00Z`)) / DAY); return { from: dates[i], to, daysBetween, daysOff: Math.max(0, daysBetween - 1) }; }).sort((a, b) => b.daysBetween - a.daysBetween).slice(0, 12);
     const exercises = [...new Set(records.map((x) => x.exercise))].map((name) => { const history = records.filter((x) => x.exercise === name); const metric = history.some((x) => n(x.heaviestKg)) ? "heaviestKg" : history.some((x) => n(x.bestSetReps)) ? "bestSetReps" : "totalSets"; return { name, family: family(name), defaultMetric: metric, availableMetrics: ["heaviestKg", "e1rmKg", "bestSetReps", "totalVolumeKg", "totalReps", "totalSets", "durationSec"].filter((k) => history.some((x) => n(x[k]) > 0)), firstDate: history[0].date, lastDate: history.at(-1).date, sessions: new Set(history.map((x) => x.date)).size, totalSets: r(history.reduce((s, x) => s + n(x.totalSets), 0)), totalReps: r(history.reduce((s, x) => s + n(x.totalReps), 0)), totalVolumeKg: r(history.reduce((s, x) => s + n(x.totalVolumeKg), 0)), progress: history.map(({ source, ...x }) => x) }; }).sort((a, b) => b.totalSets - a.totalSets || a.name.localeCompare(b.name));
     const achievements = exercises.filter((x) => x.progress.length > 1).slice(0, 4).map((x) => { const firstPoint = x.progress[0], latest = x.progress.at(-1), value = (p: any) => r(n(p[x.defaultMetric])); return { exercise: x.name, metric: x.defaultMetric, first: { date: firstPoint.date, value: value(firstPoint) }, latest: { date: latest.date, value: value(latest) }, peak: { date: latest.date, value: value(latest) }, percentChange: value(firstPoint) ? r((value(latest) / value(firstPoint) - 1) * 100, 0) : 0 }; });
-    const muscleValues = file.name.toLowerCase().endsWith(".csv") ? [["Date"]] : rows("Muscle Groups - Sets"); const mh = muscleValues[0]?.map(clean) ?? []; const muscleMap = new Map<string, number>(); for (const row of muscleValues.slice(1)) for (let c = 1; c < mh.length; c += 1) muscleMap.set(mh[c], (muscleMap.get(mh[c]) ?? 0) + n(row[c])); const muscles = [...muscleMap].map(([muscle, total]) => ({ muscle, allTimeSets: r(total), earlyWeekly: r(total / 8), recentWeekly: r(total / 8), change: 0 }));
+    // MacroFactor's muscle sheet is a dated set-equivalent ledger. Keep the two
+    // comparison windows separate: previously these were both derived from the
+    // all-time total, which made every pair of lines the same length.
+    const muscleValues = file.name.toLowerCase().endsWith(".csv") ? [["Date"]] : rows("Muscle Groups - Sets");
+    const muscleHeaders = muscleValues[0]?.map(clean) ?? [];
+    const muscleRows = muscleValues.slice(1).flatMap((row) => {
+      const date = key(row[0]);
+      if (!date) return [];
+      return [{ date, values: muscleHeaders.slice(1).map((muscle, index) => ({ muscle, sets: n(row[index + 1]) })) }];
+    });
+    const firstMs = Date.parse(`${first}T00:00:00Z`);
+    const lastMs = Date.parse(`${last}T00:00:00Z`);
+    const windowSpan = 8 * 7 * DAY;
+    const earlyStart = first;
+    const earlyEnd = new Date(Math.min(lastMs, firstMs + windowSpan - DAY)).toISOString().slice(0, 10);
+    const recentStart = new Date(Math.max(firstMs, lastMs - windowSpan + DAY)).toISOString().slice(0, 10);
+    const recentEnd = last;
+    const weeksIn = (start: string, end: string) => Math.max(1, (Date.parse(`${end}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`) + DAY) / (7 * DAY));
+    const totalFor = (muscle: string, start?: string, end?: string) => muscleRows.reduce((total, row) => {
+      if ((start && row.date < start) || (end && row.date > end)) return total;
+      return total + (row.values.find((value) => value.muscle === muscle)?.sets ?? 0);
+    }, 0);
+    const muscles = muscleHeaders.slice(1).map((muscle) => {
+      const earlyWeekly = r(totalFor(muscle, earlyStart, earlyEnd) / weeksIn(earlyStart, earlyEnd));
+      const recentWeekly = r(totalFor(muscle, recentStart, recentEnd) / weeksIn(recentStart, recentEnd));
+      return { muscle, allTimeSets: r(totalFor(muscle)), earlyWeekly, recentWeekly, change: earlyWeekly ? r(((recentWeekly / earlyWeekly) - 1) * 100, 0) : recentWeekly ? 100 : 0 };
+    }).filter((muscle) => muscle.allTimeSets > 0);
+    const heatmapStart = new Date(Math.max(firstMs, lastMs - 12 * 7 * DAY));
+    heatmapStart.setUTCDate(heatmapStart.getUTCDate() - ((heatmapStart.getUTCDay() + 6) % 7));
+    const heatmapWeeks: string[] = [];
+    for (let cursor = heatmapStart.valueOf(); cursor <= lastMs; cursor += 7 * DAY) heatmapWeeks.push(new Date(cursor).toISOString().slice(0, 10));
+    const muscleHeatmap = {
+      weeks: heatmapWeeks,
+      rows: muscles.map(({ muscle }) => ({
+        muscle,
+        weeks: heatmapWeeks.map((week) => totalFor(muscle, week, new Date(Date.parse(`${week}T00:00:00Z`) + 6 * DAY).toISOString().slice(0, 10))),
+      })),
+    };
     const monday = (value: string) => { const d = new Date(`${value}T00:00:00Z`); return new Date(d.valueOf() - ((d.getUTCDay() + 6) % 7) * DAY).toISOString().slice(0, 10); };
     const weekMap = new Map<string, Set<string>>(); for (const date of dates) { const week = monday(date); if (!weekMap.has(week)) weekMap.set(week, new Set()); weekMap.get(week)!.add(date); }
     const dailySets = new Map<string, number>(); const dailyLoad = new Map<string, number>(); for (const record of records) { dailySets.set(record.date, (dailySets.get(record.date) ?? 0) + n(record.totalSets)); dailyLoad.set(record.date, (dailyLoad.get(record.date) ?? 0) + n(record.totalVolumeKg)); }
     const maxDailyLoad = Math.max(...dailyLoad.values(), 0);
     const attendance: any[] = []; const firstWeek = new Date(`${monday(first)}T00:00:00Z`); const lastWeek = new Date(`${monday(last)}T00:00:00Z`); let currentStreak = 0; let longestStreak = 0;
     for (let cursor = firstWeek; cursor <= lastWeek; cursor = new Date(cursor.valueOf() + 7 * DAY)) { const week = cursor.toISOString().slice(0, 10); const active = weekMap.get(week) ?? new Set<string>(); const days = Array.from({ length: 7 }, (_, index) => { const date = new Date(cursor.valueOf() + index * DAY).toISOString().slice(0, 10); const sets = dailySets.get(date) ?? 0; const load = dailyLoad.get(date) ?? 0; const ratio = maxDailyLoad ? load / maxDailyLoad : 0; return sets ? maxDailyLoad ? ratio >= .66 ? 3 : ratio >= .33 ? 2 : 1 : sets >= 16 ? 3 : sets >= 8 ? 2 : 1 : 0; }); attendance.push({ week, days, sessions: active.size }); if (active.size) { currentStreak += 1; longestStreak = Math.max(longestStreak, currentStreak); } else currentStreak = 0; }
-    const complete = months.filter((x) => x.coverage === "complete"); const payload = { generatedAt: new Date().toISOString(), coverage: { firstDate: first, lastDate: last, journeyDays: Math.round((Date.parse(`${last}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) / DAY) + 1, totalSessions: sessions.length, averageSessionsPerMonth: r(sessions.length / months.length), averageSessionsPerWeek: r(sessions.length / (((Date.parse(`${last}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) / DAY + 1) / 7)), exerciseCount: exercises.length, longestActiveWeekStreak: longestStreak }, monthly: months, busiestMonths: [...complete].sort((a, b) => b.sessions - a.sessions).slice(0, 5), quietestMonths: [...complete].sort((a, b) => a.sessions - b.sessions).slice(0, 5), gaps, attendance, exercises, muscleWindows: { early: [first, first], recent: [last, last] }, muscles, muscleHeatmap: { weeks: [], rows: [] }, achievements, methodology: { strength: "Weighted exercise progress defaults to the heaviest recorded load.", muscles: "Muscle balance uses muscle-group set equivalents. These are exposure signals, not diagnoses.", caveat: "Confirm sudden load changes against the exercise setup." } };
+    const complete = months.filter((x) => x.coverage === "complete"); const payload = { generatedAt: new Date().toISOString(), coverage: { firstDate: first, lastDate: last, journeyDays: Math.round((Date.parse(`${last}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) / DAY) + 1, totalSessions: sessions.length, averageSessionsPerMonth: r(sessions.length / months.length), averageSessionsPerWeek: r(sessions.length / (((Date.parse(`${last}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) / DAY + 1) / 7)), exerciseCount: exercises.length, longestActiveWeekStreak: longestStreak }, monthly: months, busiestMonths: [...complete].sort((a, b) => b.sessions - a.sessions).slice(0, 5), quietestMonths: [...complete].sort((a, b) => a.sessions - b.sessions).slice(0, 5), gaps, attendance, exercises, muscleWindows: { early: [earlyStart, earlyEnd], recent: [recentStart, recentEnd] }, muscles, muscleHeatmap, achievements, methodology: { strength: "Weighted exercise progress defaults to the heaviest recorded load.", muscles: "Muscle balance uses muscle-group set equivalents. These are exposure signals, not diagnoses.", caveat: "Confirm sudden load changes against the exercise setup." } };
     return Response.json(payload, { headers: { "cache-control": "no-store" } });
   } catch (error) { return Response.json({ error: error instanceof Error ? error.message : "Could not parse the workbook." }, { status: 422 }); }
 }

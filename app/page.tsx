@@ -24,6 +24,7 @@ import {
   Dumbbell,
   Flame,
   Gauge,
+  HeartPulse,
   Layers3,
   KeyRound,
   Search,
@@ -85,6 +86,24 @@ const metricValue = (record: ProgressRecord, metric: MetricKey) => Number(record
 const metricSeries = (exercise: Exercise, metric: MetricKey) => exercise.progress
   .filter((record) => metricValue(record, metric) > 0)
   .map((record) => ({ ...record, value: metricValue(record, metric) }));
+
+// Make the first movement feel like a meaningful headline, not merely the first
+// alphabetical or most-frequent record. A stable, well-practised lift with the
+// clearest change in its primary metric wins; frequency only breaks close ties.
+const featuredExercise = (items: Exercise[]) => items
+  .map((exercise) => {
+    const series = metricSeries(exercise, exercise.defaultMetric);
+    if (series.length < 3 || exercise.sessions < 3) return { exercise, score: -1 };
+    const values = series.map((point) => point.value);
+    const first = values[0];
+    const latest = values.at(-1) ?? first;
+    const range = Math.max(...values) - Math.min(...values);
+    const scale = Math.max(Math.abs(first), 1);
+    const growth = Math.max(0, (latest - first) / scale);
+    const variation = range / scale;
+    return { exercise, score: Math.min(growth, 3) * 3 + Math.min(variation, 3) + Math.min(exercise.sessions, 20) / 100 };
+  })
+  .sort((a, b) => b.score - a.score || b.exercise.sessions - a.exercise.sessions)[0]?.exercise ?? items[0];
 
 function Delta({ value, suffix = "%" }: { value: number; suffix?: string }) {
   const positive = value >= 0;
@@ -173,14 +192,15 @@ export default function Home() {
   const [openAIKey, setOpenAIKey] = useState("");
   const [connectOpen, setConnectOpen] = useState(false);
   const [keyDraft, setKeyDraft] = useState("");
+  const [connectionState, setConnectionState] = useState("");
   const [aiConsentOpen, setAiConsentOpen] = useState(false);
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const [loadedExportOpen, setLoadedExportOpen] = useState(false);
   const [recommendationError, setRecommendationError] = useState("");
   const [lastExportName, setLastExportName] = useState("");
   const [lastExportAt, setLastExportAt] = useState("");
-  const [selectedExerciseName, setSelectedExerciseName] = useState("Dumbbell Fly");
-  const selectedExercise = exercises.find((exercise) => exercise.name === selectedExerciseName) ?? exercises[0] ?? emptyExercise;
+  const [selectedExerciseName, setSelectedExerciseName] = useState(() => featuredExercise(exercises)?.name ?? "");
+  const selectedExercise = exercises.find((exercise) => exercise.name === selectedExerciseName) ?? featuredExercise(exercises) ?? emptyExercise;
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>(selectedExercise.defaultMetric);
   const [search, setSearch] = useState("");
   const [family, setFamily] = useState("All");
@@ -201,8 +221,9 @@ export default function Home() {
       exercises = data.exercises as Exercise[];
       setLastExportName(snapshot.fileName ?? ""); setLastExportAt(snapshot.uploadedAt ?? "");
       setRecommendations(snapshot.recommendations ?? []); setAiInsight(snapshot.aiInsight ?? null);
-      setSelectedExerciseName(exercises[0]?.name ?? "");
-      setSelectedMetric(exercises[0]?.defaultMetric ?? "totalSets");
+      const featured = featuredExercise(exercises);
+      setSelectedExerciseName(featured?.name ?? "");
+      setSelectedMetric(featured?.defaultMetric ?? "totalSets");
       setAttendanceYear(Number(data.coverage.lastDate.slice(0, 4)));
       redraw((value) => value + 1);
     } catch { localStorage.removeItem(sessionDataKey); }
@@ -227,8 +248,9 @@ export default function Home() {
       if (serialized.length <= 4_000_000) localStorage.setItem(sessionDataKey, serialized);
       else setUploadState(`Loaded ${file.name}; this rendered snapshot is too large for browser storage.`);
       setLastExportName(file.name); setLastExportAt(uploadedAt);
-      setSelectedExerciseName(exercises[0]?.name ?? "");
-      setSelectedMetric(exercises[0]?.defaultMetric ?? "totalSets");
+      const featured = featuredExercise(exercises);
+      setSelectedExerciseName(featured?.name ?? "");
+      setSelectedMetric(featured?.defaultMetric ?? "totalSets");
       setAttendanceYear(Number(data.coverage.lastDate.slice(0, 4)));
       setUploadState("");
       setRecommendations([]);
@@ -260,6 +282,23 @@ export default function Home() {
 
   const generateRecommendations = async () => {
     setAiConsentOpen(true);
+  };
+
+  const verifyOpenAIConnection = async () => {
+    const apiKey = keyDraft.trim();
+    if (!apiKey) { setConnectionState("Enter an API key to continue."); return; }
+    setConnectionState("Verifying OpenAI connection…");
+    try {
+      const response = await fetch("/api/openai-connection", { method: "POST", headers: { "x-openai-api-key": apiKey } });
+      const payload = await response.json() as { error?: string };
+      if (!response.ok) throw new Error(payload.error ?? "OpenAI could not verify this connection.");
+      setOpenAIKey(apiKey);
+      setKeyDraft("");
+      setConnectionState("");
+      setConnectOpen(false);
+    } catch (error) {
+      setConnectionState(error instanceof Error ? error.message : "OpenAI could not verify this connection.");
+    }
   };
 
   const requestRecommendations = async () => {
@@ -349,17 +388,14 @@ export default function Home() {
         <div className="hero-copy">
           <h1><b style={{marginBottom: "30px", fontFamily: "BiauKaiHK"}}>RIPPER <span>OS</span></b>.<br /><span className="hero-training">Training, <span>Analyzed.</span></span></h1>
           <p>Upload your training data and Ripper OS organizes it into progress, consistency, muscle balance, highlights, and next opportunities. It&apos;s like Spotify Wrapped for training.</p>
-          <div className="hero-config" aria-label="Configuration">
-            <p className="eyebrow accent">Configuration</p>
-            {hasUploadedData ? <button className="button upload-button" onClick={() => setLoadedExportOpen(true)}><Check size={17} aria-hidden="true" />MacroFactor export uploaded</button> : <label className="button upload-button"><CircleDot size={17} aria-hidden="true" />Upload MacroFactor export<input type="file" accept=".xlsx,.csv" onChange={handleUpload} /></label>}
-            <button className="button upload-button" onClick={() => { setKeyDraft(openAIKey); setConnectOpen(true); }}><KeyRound size={17} aria-hidden="true" />{openAIKey ? "OpenAI connected" : "Connect OpenAI"}</button>
+          <div className="hero-actions" aria-label="Dashboard actions">
+            {hasUploadedData ? <button className="button upload-button is-ready" onClick={() => setLoadedExportOpen(true)}><Check size={17} aria-hidden="true" />MacroFactor export uploaded</button> : <label className="button upload-button"><CircleDot size={17} aria-hidden="true" />Upload MacroFactor export<input type="file" accept=".xlsx,.csv" onChange={handleUpload} /></label>}
+            <button className={`button upload-button ${openAIKey ? "is-ready" : ""}`} onClick={() => { setKeyDraft(openAIKey); setConnectionState(""); setConnectOpen(true); }}><KeyRound size={17} aria-hidden="true" />{openAIKey ? "OpenAI connected" : "Connect OpenAI"}</button>
             {hasUploadedData && <button className="button upload-button" onClick={() => setClearConfirmOpen(true)}><Trash2 size={17} aria-hidden="true" />Clear uploaded data</button>}
-          </div>
-          {uploadState && <p className="upload-status" role="status">{uploadState}</p>}
-          <div className="hero-actions" aria-label="Dashboard navigation">
             {hasUploadedData && <a className="button primary" href="#progress">Explore all exercises <ChevronRight size={17} /></a>}
             {hasUploadedData && <button className="button ai-action" onClick={generateRecommendations}><Sparkles size={16} /> Generate AI insights</button>}
           </div>
+          {uploadState && <p className="upload-status" role="status">{uploadState}</p>}
         </div>
       </section>
 
@@ -498,7 +534,7 @@ export default function Home() {
           <article className="panel focus-panel" id="exercise-focus">
             <div className="focus-top">
               <div>
-                <p className="eyebrow">Selected movement · {selectedExercise.family}</p>
+                <p className="eyebrow">Selected movement</p>
                 <h3>{selectedExercise.name}</h3>
                 <div className="record-tags">
                   <span>{selectedExercise.sessions} sessions</span>
@@ -549,9 +585,11 @@ export default function Home() {
               const latest = series.at(-1)?.value ?? 0;
               const change = first ? ((latest / first) - 1) * 100 : 0;
               const meta = metricMeta[exercise.defaultMetric];
+              const cardio = /rope|run|walk|bike|cycling|cardio|rowing|rower/i.test(exercise.name);
+              const bodyweight = !cardio && !exercise.availableMetrics.includes("heaviestKg");
               return (
                 <button className={selectedExercise.name === exercise.name ? "exercise-card panel selected" : "exercise-card panel"} onClick={() => selectExercise(exercise)} key={exercise.name}>
-                  <div className="exercise-card-top"><span>{exercise.family}</span><ChevronRight size={16} /></div>
+                  <div className="exercise-card-top"><span>{cardio ? <><HeartPulse size={14} aria-hidden="true" /> Cardio</> : bodyweight ? <><Dumbbell size={14} aria-hidden="true" /> Bodyweight</> : exercise.family}</span><ChevronRight size={16} /></div>
                   <h4>{exercise.name}</h4>
                   <Sparkline values={series.map((record) => record.value)} />
                   <div className="exercise-card-bottom">
@@ -571,10 +609,10 @@ export default function Home() {
         <SectionHeading
           kicker="Muscle balance"
           title="Your program changed shape"
-          description={`Early window: ${formatDate(data.muscleWindows.early[0], { month: "short", year: "numeric" })}–${formatDate(data.muscleWindows.early[1], { month: "short", year: "numeric" })}. Recent window: ${formatDate(data.muscleWindows.recent[0], { month: "short", year: "numeric" })}–${formatDate(data.muscleWindows.recent[1], { month: "short", year: "numeric" })}. Values are set-equivalents per week.`}
+          description={`Early window used is ${formatDate(data.muscleWindows.early[0], { month: "short", year: "numeric" })} to ${formatDate(data.muscleWindows.early[1], { month: "short", year: "numeric" })}. Recent window is ${formatDate(data.muscleWindows.recent[0], { month: "short", year: "numeric" })} to ${formatDate(data.muscleWindows.recent[1], { month: "short", year: "numeric" })}. Values are set-equivalents per week.`}
         />
         <SectionInsight text={aiInsight?.sectionInsights.muscles} />
-        <div className="two-column equal">
+        <div className={`two-column equal ${data.muscleHeatmap.weeks.length ? "" : "single-column"}`}>
           <article className="panel muscle-bars-panel">
             <div className="panel-heading"><div><p className="eyebrow">Early vs recent</p><h3>Weekly exposure by muscle</h3></div><div className="legend-inline"><span><i className="legend-early" /> Early</span><span><i className="legend-recent" /> Recent</span></div></div>
             <div className="muscle-bars">
@@ -585,7 +623,7 @@ export default function Home() {
                     <i className="early" style={{ width: `${Math.min(100, (muscle.earlyWeekly / maxRecentMuscle) * 100)}%` }} />
                     <i className="recent" style={{ width: `${Math.min(100, (muscle.recentWeekly / maxRecentMuscle) * 100)}%` }} />
                   </div>
-                  <strong>{muscle.recentWeekly}</strong>
+                  <strong><small>{muscle.earlyWeekly}</small><b>{muscle.recentWeekly}</b></strong>
                 </div>
               ))}
             </div>
@@ -658,7 +696,8 @@ export default function Home() {
           <p>Charts and upload processing work without an OpenAI account. Add an OpenAI API key only if you want personalized recommendations.</p>
           <input className="connect-key-input" type="password" value={keyDraft} onChange={(event) => setKeyDraft(event.target.value)} placeholder="sk-…" autoFocus autoComplete="new-password" spellCheck={false} aria-label="OpenAI API key" />
           <p className="muted small">This key is kept in memory for this session only. It is never saved to browser storage. API usage is billed separately from ChatGPT.</p>
-          <div className="connect-actions"><button className="button secondary" onClick={() => { setOpenAIKey(""); setKeyDraft(""); setConnectOpen(false); }}>Disconnect</button><button className="button primary" onClick={() => { setOpenAIKey(keyDraft.trim()); setConnectOpen(false); }}>Connect</button></div>
+          {connectionState && <p className="connect-status" role="status">{connectionState}</p>}
+          <div className="connect-actions"><button className="button secondary" onClick={() => { setOpenAIKey(""); setKeyDraft(""); setConnectionState(""); setConnectOpen(false); }}>Disconnect</button><button className="button primary" onClick={verifyOpenAIConnection} disabled={connectionState === "Verifying OpenAI connection…"}>{connectionState === "Verifying OpenAI connection…" ? "Verifying…" : "Connect"}</button></div>
         </section>
       </div>}
 

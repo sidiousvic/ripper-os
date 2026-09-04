@@ -54,7 +54,7 @@ body {
   margin: 0;
   background-color: var(--bg);
   background-image:
-    linear-gradient(rgba(2, 6, 3, .42), rgba(2, 6, 3, .98)),
+    linear-gradient(rgba(2, 6, 3, .4), rgba(2, 6, 3, 1)),
     url("/brand/sidiousware-background-nologo.png");
   background-position: center;
   background-repeat: no-repeat;
@@ -245,7 +245,7 @@ h4 {
 .topbar nav {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 18px;
   color: var(--muted);
   font-size: 13px;
   font-weight: 650;
@@ -253,18 +253,15 @@ h4 {
 
 .topbar nav a {
   border: 0;
-  border-radius: 999px;
-  padding: 6px 12px;
-  background: #09140c;
-  box-shadow: var(--shadow-control);
-  transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  transition: color 160ms ease, text-shadow 160ms ease;
 }
 
 .topbar nav a:hover {
-  transform: translateY(-1px);
   color: var(--green);
-  background: #10271a;
-  box-shadow: var(--shadow-control);
+  text-shadow: 0 0 12px rgba(63, 226, 119, .7);
 }
 
 .topbar-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; min-width: 0; }
@@ -383,25 +380,23 @@ button {
   flex-wrap: wrap;
   gap: 12px;
   justify-content: center;
-  margin-top: 14px;
-}
-
-.hero-config {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 9px;
   margin-top: 26px;
 }
 
-.hero-config .eyebrow {
-  margin: 0;
+.hero-actions .button {
+  flex: 0 1 290px;
+  width: 290px;
+  max-width: 100%;
 }
 
-.hero-config .button,
-.hero-actions .button {
-  width: 260px;
-  max-width: 100%;
+.hero-actions .button.is-ready {
+  color: var(--green);
+  text-shadow: 0 0 12px rgba(63, 226, 119, .65);
+}
+
+.hero-actions .button.is-ready svg {
+  color: var(--green);
+  filter: drop-shadow(0 0 5px rgba(63, 226, 119, .7));
 }
 
 .button {
@@ -787,6 +782,7 @@ button {
 .connect-dialog h2 { margin: 6px 0 10px; }
 .connect-dialog > p:not(.eyebrow) { color: var(--muted); }
 .connect-key-input { width: 100%; margin: 20px 0 10px; border: 1px solid var(--line); border-radius: 10px; padding: 13px 14px; color: var(--text); background: rgba(3, 10, 5, .72); }
+.connect-status { min-height: 20px; margin: 12px 0 -7px; color: var(--green); font-size: 14px; line-height: 1.4; }
 .connect-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
 .connect-actions .button { min-width: 112px; }
 
@@ -808,6 +804,10 @@ button {
 
 .two-column.equal {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.two-column.equal.single-column {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .chart-panel,
@@ -1436,12 +1436,17 @@ button {
 }
 
 .exercise-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   color: var(--muted);
   font-size: 12px;
   font-weight: 700;
   letter-spacing: .08em;
   text-transform: uppercase;
 }
+
+.exercise-card-top > span { display: inline-flex; align-items: center; gap: 6px; }
 
 .exercise-card h4 {
   height: 62px;
@@ -1508,7 +1513,7 @@ button {
 
 .muscle-row {
   display: grid;
-  grid-template-columns: minmax(86px, 94px) minmax(0, 1fr) 36px;
+  grid-template-columns: minmax(86px, 94px) minmax(0, 1fr) 64px;
   align-items: center;
   gap: 11px;
   font-size: 12px;
@@ -1519,16 +1524,23 @@ button {
 }
 
 .muscle-row > strong {
-  color: var(--green);
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: flex-end;
+  gap: 5px;
   text-align: right;
 }
+
+.muscle-row > strong small { color: #88a18d; font-size: 11px; font-weight: 600; }
+.muscle-row > strong small::after { content: "→"; margin-left: 5px; color: #59765f; }
+.muscle-row > strong b { color: var(--green); font-size: 13px; }
 
 .muscle-tracks {
   position: relative;
   display: grid;
   align-content: center;
-  gap: 3px;
-  height: 14px;
+  gap: 5px;
+  height: 20px;
 }
 
 .muscle-tracks::before,
@@ -1536,25 +1548,25 @@ button {
   position: absolute;
   left: 0;
   width: 100%;
-  height: 2px;
+  height: 3px;
   border-radius: 999px;
   content: "";
   background: linear-gradient(90deg, #102118, #1a2b17);
 }
 
-.muscle-tracks::before { top: 2px; }
-.muscle-tracks::after { bottom: 2px; }
+.muscle-tracks::before { top: 3px; }
+.muscle-tracks::after { bottom: 3px; }
 
 .muscle-tracks i {
   position: relative;
   z-index: 1;
   display: block;
-  height: 2px;
+  height: 3px;
   border-radius: 999px;
 }
 
-.muscle-tracks i.early { background: linear-gradient(90deg, #294634, #65773c); }
-.muscle-tracks i.recent { background: linear-gradient(90deg, var(--green), var(--lime)); }
+.muscle-tracks i.early { background: linear-gradient(90deg, #4c805a, #92b34c); box-shadow: 0 0 5px rgba(122, 167, 76, .25); }
+.muscle-tracks i.recent { background: linear-gradient(90deg, #32dc75, #d2ff45); box-shadow: 0 0 7px rgba(63, 226, 119, .34); }
 
 .muscle-heatmap-scroll {
   width: 100%;
