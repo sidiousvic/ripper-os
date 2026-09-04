@@ -167,7 +167,7 @@ function SectionInsight({ text }: { text?: string }) {
   return <div className="callout ai-insight section-insight"><Sparkles size={17} /><p><strong>AI insight</strong> {text}</p></div>;
 }
 
-function ChartTooltip({ active, payload, label, unit = "" }: { active?: boolean; payload?: Array<{ name?: string; value?: number; color?: string; dataKey?: string }>; label?: string; unit?: string }) {
+function ChartTooltip({ active, payload, label, unit = "", comparisonUnit = "" }: { active?: boolean; payload?: Array<{ name?: string; value?: number; color?: string; dataKey?: string }>; label?: string; unit?: string; comparisonUnit?: string }) {
   if (!active || !payload?.length) return null;
   return (
     <div className="chart-tooltip">
@@ -176,7 +176,7 @@ function ChartTooltip({ active, payload, label, unit = "" }: { active?: boolean;
         <div key={`${item.name}-${item.dataKey}`} className="tooltip-row">
           <span className="tooltip-dot" style={{ background: item.color }} />
           <span>{item.name}</span>
-          <strong>{formatNumber(Number(item.value))}{unit ? ` ${unit}` : ""}</strong>
+        <strong>{formatNumber(Number(item.value))}{(item.dataKey === "comparisonValue" ? comparisonUnit : unit) ? ` ${item.dataKey === "comparisonValue" ? comparisonUnit : unit}` : ""}</strong>
         </div>
       ))}
     </div>
@@ -202,6 +202,7 @@ export default function Home() {
   const [selectedExerciseName, setSelectedExerciseName] = useState(() => featuredExercise(exercises)?.name ?? "");
   const selectedExercise = exercises.find((exercise) => exercise.name === selectedExerciseName) ?? featuredExercise(exercises) ?? emptyExercise;
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>(selectedExercise.defaultMetric);
+  const [comparisonMetric, setComparisonMetric] = useState<MetricKey | "">("");
   const [search, setSearch] = useState("");
   const [family, setFamily] = useState("All");
   const [exerciseSort, setExerciseSort] = useState<"recent" | "used">("recent");
@@ -332,6 +333,7 @@ export default function Home() {
   const selectExercise = (exercise: Exercise) => {
     setSelectedExerciseName(exercise.name);
     setSelectedMetric(exercise.defaultMetric);
+    setComparisonMetric("");
     document.getElementById("exercise-focus")?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
@@ -344,12 +346,13 @@ export default function Home() {
   const selectedSeries = metricSeries(selectedExercise, selectedMetric);
   const latestWindowStart = new Date(new Date(`${data.coverage.lastDate}T00:00:00Z`).valueOf() - (27 * 86_400_000)).toISOString().slice(0, 10);
   const recentFirstIndex = selectedSeries.findIndex((record) => record.date >= latestWindowStart);
-  const recentBridgeIndex = recentFirstIndex > 0 ? recentFirstIndex - 1 : recentFirstIndex;
-  const selectedChartData = selectedSeries.map((record, index) => ({
-    ...record,
-    historyValue: recentBridgeIndex === -1 || index <= recentBridgeIndex ? record.value : null,
-    recentValue: recentBridgeIndex >= 0 && index >= recentBridgeIndex ? record.value : null,
-  }));
+  const recentStartPercent = recentFirstIndex < 0 ? 100 : (recentFirstIndex / Math.max(selectedSeries.length - 1, 1)) * 100;
+  const recentFadeStart = Math.max(0, recentStartPercent - 5);
+  const recentFadeEnd = Math.min(100, recentStartPercent + 5);
+  const comparisonMeta = comparisonMetric ? metricMeta[comparisonMetric] : null;
+  const comparisonSeries = comparisonMetric ? metricSeries(selectedExercise, comparisonMetric) : [];
+  const comparisonByDate = new Map(comparisonSeries.map((record) => [record.date, record.value]));
+  const selectedChartData = selectedSeries.map((record) => ({ ...record, primaryValue: record.value, comparisonValue: comparisonByDate.get(record.date) ?? null }));
   const selectedFirst = selectedSeries[0]?.value ?? 0;
   const selectedLatest = selectedSeries.at(-1)?.value ?? 0;
   const selectedPeak = Math.max(...selectedSeries.map((record) => record.value), 0);
@@ -545,11 +548,19 @@ export default function Home() {
                   <span>{formatNumber(selectedExercise.totalSets, 0)} sets</span>
                 </div>
               </div>
+              <div className="metric-controls">
               <label className="metric-select">View metric
                 <select value={selectedMetric} onChange={(event) => setSelectedMetric(event.target.value as MetricKey)}>
                   {selectedExercise.availableMetrics.map((metric) => <option value={metric} key={metric}>{metricMeta[metric].label}</option>)}
                 </select>
               </label>
+              <label className="metric-select">Compare with
+                <select value={comparisonMetric} onChange={(event) => setComparisonMetric(event.target.value as MetricKey | "")}>
+                  <option value="">None</option>
+                  {selectedExercise.availableMetrics.filter((metric) => metric !== selectedMetric).map((metric) => <option value={metric} key={metric}>{metricMeta[metric].label}</option>)}
+                </select>
+              </label>
+              </div>
             </div>
             <div className="focus-metrics">
               <div><span>Starting</span><strong>{formatNumber(selectedFirst)} <small>{selectedMeta.unit}</small></strong></div>
@@ -557,17 +568,19 @@ export default function Home() {
               <div><span>All-time peak</span><strong>{formatNumber(selectedPeak)} <small>{selectedMeta.unit}</small></strong></div>
               <div><span>First → latest</span><strong><Delta value={selectedChange} /></strong></div>
             </div>
-            <div className="legend-inline focus-legend"><span><i className="legend-history" /> Complete history</span><span><i className="legend-latest" /> Latest 4 weeks</span></div>
+            <div className="legend-inline focus-legend"><span><i className="legend-history" /> {selectedMeta.label}</span>{comparisonMeta && <span><i className="legend-latest" /> {comparisonMeta.label}</span>}</div>
             <div className="chart-area focus-chart">
               {selectedSeries.length > 1 ? (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={selectedChartData} margin={{ top: 20, right: 8, left: -12, bottom: 16 }}>
+                    <defs><linearGradient id="exercise-line-gradient" x1="0" y1="0" x2="1" y2="0"><stop offset={`${recentFadeStart}%`} stopColor="#3fe277" /><stop offset={`${recentFadeEnd}%`} stopColor="#c7ff4a" /></linearGradient></defs>
                     <CartesianGrid stroke="#1c3425" vertical={false} />
                     <XAxis dataKey="date" tickFormatter={(value) => formatDate(value, { month: "short", year: "2-digit" })} tick={{ fill: "#789080", fontSize: 16 }} axisLine={false} tickLine={false} tickMargin={12} minTickGap={42} />
                     <YAxis tick={{ fill: "#789080", fontSize: 16 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
-                    <Tooltip content={<ChartTooltip unit={selectedMeta.unit} />} cursor={{ stroke: "#31523b", strokeDasharray: "3 3" }} />
-                    <Line type="monotone" dataKey="historyValue" name="Complete history" stroke="#3fe277" strokeWidth={3} connectNulls dot={{ r: 2.5, fill: "#07100a", strokeWidth: 2 }} activeDot={{ r: 5 }} />
-                    <Line type="monotone" dataKey="recentValue" name="Latest 4 weeks" stroke="#c7ff4a" strokeWidth={3.5} connectNulls dot={{ r: 3, fill: "#07100a", strokeWidth: 2 }} activeDot={{ r: 5 }} />
+                    {comparisonMeta && <YAxis yAxisId="comparison" orientation="right" tick={{ fill: "#c7ff4a", fontSize: 14 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />}
+                    <Tooltip content={<ChartTooltip unit={selectedMeta.unit} comparisonUnit={comparisonMeta?.unit} />} cursor={{ stroke: "#31523b", strokeDasharray: "3 3" }} />
+                    <Line type="monotone" dataKey="primaryValue" name={selectedMeta.label} stroke="url(#exercise-line-gradient)" strokeWidth={3.5} connectNulls dot={{ r: 2.5, fill: "#07100a", strokeWidth: 2 }} activeDot={{ r: 5 }} />
+                    {comparisonMeta && <Line yAxisId="comparison" type="monotone" dataKey="comparisonValue" name={comparisonMeta.label} stroke="#c7ff4a" strokeWidth={2.5} strokeDasharray="5 4" connectNulls dot={{ r: 2, fill: "#07100a", strokeWidth: 2 }} activeDot={{ r: 5 }} />}
                   </LineChart>
                 </ResponsiveContainer>
               ) : <div className="empty-state">Only one measurable point is available for this metric.</div>}
