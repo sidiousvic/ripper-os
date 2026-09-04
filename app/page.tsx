@@ -210,6 +210,17 @@ export default function Home() {
   const [attendanceYear, setAttendanceYear] = useState(Number(data.coverage.lastDate.slice(0, 4)));
   const hasUploadedData = data !== demoData;
 
+  useEffect(() => {
+    console.log(String.raw`
+RRRR  III  PPPP  PPPP  EEEE  RRRR    OOO   SSS
+R  R   I   P  P  P  P  E     R  R   O   O S
+RRRR   I   PPPP  PPPP  EEE   RRRR   O   O  SSS
+R R    I   P     P     E     R R    O   O    S
+R  R  III  P     P     EEEE  R  R    OOO   SSS
+`);
+    console.log("%cSo you're a dev! Let me know if you find something fishy around here. Keep ripping!", "font-family: Georgia, serif; font-size: 14px; color: #3fe277;");
+  }, []);
+
   // Restore only the normalized dashboard snapshot; raw workbook data and API keys are never stored.
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
