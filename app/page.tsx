@@ -458,7 +458,7 @@ export default function Home() {
               <ResponsiveContainer width="100%" height="100%">
                 <ComposedChart data={monthlyChart} margin={{ top: 12, right: 4, left: -24, bottom: 16 }}>
                   <CartesianGrid stroke="#1c3425" vertical={false} />
-                  <XAxis dataKey="month" tickFormatter={formatMonth} tick={{ fill: "#789080", fontSize: 16 }} axisLine={false} tickLine={false} interval={2} />
+                  <XAxis dataKey="month" tickFormatter={formatMonth} tick={{ fill: "#789080", fontSize: 16 }} axisLine={false} tickLine={false} tickMargin={12} interval={2} />
                   <YAxis yAxisId="sessions" tick={{ fill: "#789080", fontSize: 16 }} axisLine={false} tickLine={false} allowDecimals={false} />
                   <YAxis yAxisId="cumulative" orientation="right" tick={{ fill: "#789080", fontSize: 16 }} axisLine={false} tickLine={false} />
                   <Tooltip content={<ChartTooltip />} cursor={{ fill: "rgba(67, 255, 126, .04)" }} />
@@ -559,7 +559,7 @@ export default function Home() {
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={selectedChartData} margin={{ top: 20, right: 8, left: -12, bottom: 16 }}>
                     <CartesianGrid stroke="#1c3425" vertical={false} />
-                    <XAxis dataKey="date" tickFormatter={(value) => formatDate(value, { month: "short", year: "2-digit" })} tick={{ fill: "#789080", fontSize: 16 }} axisLine={false} tickLine={false} minTickGap={42} />
+                    <XAxis dataKey="date" tickFormatter={(value) => formatDate(value, { month: "short", year: "2-digit" })} tick={{ fill: "#789080", fontSize: 16 }} axisLine={false} tickLine={false} tickMargin={12} minTickGap={42} />
                     <YAxis tick={{ fill: "#789080", fontSize: 16 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
                     <Tooltip content={<ChartTooltip unit={selectedMeta.unit} />} cursor={{ stroke: "#31523b", strokeDasharray: "3 3" }} />
                     <Line type="monotone" dataKey="historyValue" name="Complete history" stroke="#3fe277" strokeWidth={3} connectNulls dot={{ r: 2.5, fill: "#07100a", strokeWidth: 2 }} activeDot={{ r: 5 }} />
@@ -571,7 +571,7 @@ export default function Home() {
           </article>
 
           <div className="explorer-toolbar">
-            <label className="search-box"><Search size={17} /><input value={search} onChange={(event) => { setSearch(event.target.value); setVisibleCount(24); }} placeholder="Search 76 exercises…" /></label>
+            <label className="search-box"><Search size={17} /><input value={search} onChange={(event) => { setSearch(event.target.value); setVisibleCount(24); }} placeholder={`Search ${data.coverage.exerciseCount} exercises…`} /></label>
             <label className="sort-select">Order by<select value={exerciseSort} onChange={(event) => setExerciseSort(event.target.value as "recent" | "used")}><option value="recent">Most recent</option><option value="used">Most used</option></select></label>
             <div className="family-filter" aria-label="Filter by exercise family">
               {families.map((item) => <button className={family === item ? "active" : ""} onClick={() => { setFamily(item); setVisibleCount(24); }} key={item}>{item}</button>)}
@@ -658,15 +658,17 @@ export default function Home() {
         <SectionInsight text={aiInsight?.sectionInsights.history} />
         <article className="panel leaderboard">
           <div className="leaderboard-head"><span>#</span><span>Exercise</span><span>Sessions</span><span>Working sets</span><span>Total reps</span></div>
-          {exercises.slice(0, 12).map((exercise, index) => (
-            <button className="leaderboard-row" onClick={() => selectExercise(exercise)} key={exercise.name}>
+          {exercises.slice(0, 12).map((exercise, index) => {
+            const cardio = /rope|run|walk|bike|cycling|cardio|rowing|rower/i.test(exercise.name);
+            const bodyweight = !cardio && !exercise.availableMetrics.includes("heaviestKg");
+            return <button className="leaderboard-row" onClick={() => selectExercise(exercise)} key={exercise.name}>
               <span className="rank-number">{index + 1}</span>
-              <span className="leader-name"><i><Dumbbell size={15} /></i><b>{exercise.name}</b><small>{exercise.family}</small></span>
+              <span className="leader-name"><i>{cardio ? <HeartPulse size={15} aria-label="Cardio exercise" /> : bodyweight ? <Dumbbell size={15} aria-label="Bodyweight exercise" /> : <Dumbbell size={15} aria-hidden="true" />}</i><b>{exercise.name}</b><small>{exercise.family}</small></span>
               <strong>{exercise.sessions}</strong>
               <strong>{formatNumber(exercise.totalSets, 0)}</strong>
               <strong>{formatNumber(exercise.totalReps, 0)}</strong>
-            </button>
-          ))}
+            </button>;
+          })}
         </article>
       </section>
 

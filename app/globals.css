@@ -294,6 +294,11 @@ h4 {
   color: var(--green);
 }
 
+.donate-button {
+  color: var(--green);
+  text-shadow: 0 0 11px rgba(63, 226, 119, .68);
+}
+
 .last-export-pill {
   max-width: min(100%, 520px);
   overflow: hidden;
@@ -1041,13 +1046,14 @@ button {
 .attendance-cell {
   position: relative;
   display: block;
-  width: 100%;
+  width: 99%;
   height: auto;
   min-width: 0;
   aspect-ratio: 1;
   border: 1px solid #1b3021;
-  border-radius: 3px;
+  border-radius: 9px;
   background: #0a150d;
+  box-shadow: 2px 2px black;
 }
 
 .attendance-cell[data-tooltip]::after {
