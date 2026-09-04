@@ -462,7 +462,7 @@ export default function Home() {
               <div className="legend-inline"><span><i className="legend-bar" /> Sessions</span><span><i className="legend-line" /> Cumulative</span></div>
             </div>
             <div className="chart-area tall">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={280} debounce={50}>
                 <ComposedChart data={monthlyChart} margin={{ top: 12, right: 4, left: -24, bottom: 16 }}>
                   <CartesianGrid stroke="#1c3425" vertical={false} />
                   <XAxis dataKey="month" tickFormatter={formatMonth} tick={{ fill: "#789080", fontSize: 16 }} axisLine={false} tickLine={false} tickMargin={12} interval={2} />
@@ -571,7 +571,7 @@ export default function Home() {
             <div className="legend-inline focus-legend"><span><i className="legend-history" /> {selectedMeta.label}</span>{comparisonMeta && <span><i className="legend-latest" /> {comparisonMeta.label}</span>}</div>
             <div className="chart-area focus-chart">
               {selectedSeries.length > 1 ? (
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={300} debounce={50}>
                   <LineChart data={selectedChartData} margin={{ top: 20, right: 8, left: -12, bottom: 16 }}>
                     <defs><linearGradient id="exercise-line-gradient" x1="0" y1="0" x2="1" y2="0"><stop offset={`${recentFadeStart}%`} stopColor="#3fe277" /><stop offset={`${recentFadeEnd}%`} stopColor="#c7ff4a" /></linearGradient></defs>
                     <CartesianGrid stroke="#1c3425" vertical={false} />
