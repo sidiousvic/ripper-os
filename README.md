@@ -48,10 +48,10 @@ Nutrition, food, account, email, settings, and unrelated workbook tabs are ignor
 
 ## Use your own export in the app
 
-The deployed app and local development server include an **Upload MacroFactor export** button. The workbook is parsed by the app's `/api/parse` endpoint and the resulting summary replaces the demo data for the current session. The original workbook is written to a temporary server file only while it is parsed, then deleted.
-The normalized result is retained in `sessionStorage` so a refresh in the same browser session keeps the analysis. Use **Clear uploaded data** to remove it.
+The deployed app and local development server include an **Upload MacroFactor export** button. The workbook is parsed transiently by the app's `/api/parse` endpoint and the resulting summary replaces the starting state for the current session. The original workbook is not persisted by Ripper OS.
+The normalized result is retained in `localStorage` so a refresh keeps the analysis. Use **Clear uploaded data** to remove it.
 
-The graphs do not require an OpenAI account. After uploading, choose **Generate recommendations** to run the optional AI interpretation. Configure the server with `OPENAI_API_KEY`; never put that key in frontend code or browser storage. You can select a model with `OPENAI_MODEL` (the default is `gpt-5-mini`). The recommendation request contains calculated training summaries, not the raw workbook.
+The graphs do not require an OpenAI account. After uploading, choose **Generate recommendations** to run the optional AI interpretation. Each user may connect their own OpenAI API key through the UI; no shared `OPENAI_API_KEY` should be configured on a public deployment. The key is held in memory for that browser session and sent to the server only for verification and the user-requested insight call. You can select a model with `OPENAI_MODEL` (the default is `gpt-5-mini`). The recommendation request contains calculated training summaries, not the raw workbook.
 
 MacroFactor CSV exports contain workout and exercise metrics but generally do not include the muscle-group sheet. Muscle-balance views are omitted when that data is unavailable.
 
