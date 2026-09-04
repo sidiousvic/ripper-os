@@ -1,4 +1,5 @@
 const windows = new Map<string, number[]>();
+const MAX_BUCKETS = 10_000;
 
 const clientId = (request: Request) =>
   request.headers.get("cf-connecting-ip")
@@ -11,6 +12,9 @@ export const takeRateLimit = (request: Request, scope: string, limit: number, wi
   const id = `${scope}:${clientId(request)}`;
   const now = Date.now();
   const active = (windows.get(id) ?? []).filter((time) => now - time < windowMs);
+  if (windows.size > MAX_BUCKETS) {
+    for (const [bucket, timestamps] of windows) if (!timestamps.some((time) => now - time < windowMs)) windows.delete(bucket);
+  }
   if (active.length >= limit) {
     const retryAfter = Math.max(1, Math.ceil((windowMs - (now - active[0])) / 1000));
     windows.set(id, active);

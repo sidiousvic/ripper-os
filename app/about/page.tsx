@@ -4,7 +4,8 @@ import "../globals.css";
 export default function AboutPage() {
   return <main className="about-page">
       <header className="topbar"><Link className="brand" href="/" aria-label="Ripper OS home"><span className="brand-mark"><img src="/brand/ripper-os-logo.png" alt="" width="38" height="38" /></span><span>Ripper OS</span></Link><nav><Link href="/">Back to dashboard</Link></nav><a className="data-pill donate-button" href="https://donate.stripe.com/bJe8wQ18J4so1wSdrKfjG00" target="_blank" rel="noreferrer">Donate</a></header>
-    <section className="section shell about-intro"><div className="about-copy"><p className="eyebrow accent">User guide</p><h1>Power Ripper OS with your training data.</h1><p>Ripper OS turns a MacroFactor Workouts export into a readable record of what you practiced, how consistently you trained, and where the clearest next opportunities are.</p></div></section>
+    <section className="section shell about-intro"><div className="about-copy"><p className="eyebrow accent">User guide</p><h1>Ripper OS</h1>
+    </div></section>
     <section className="section shell about-prose">
       <h2>What Ripper OS does</h2>
       <p>Ripper OS parses your selected MacroFactor export to calculate sessions, sets, reps, load, volume, progress histories, attendance, gaps, and training-load intensity. The original file is not retained after parsing. The dashboard helps you see the story in your archive instead of scanning a spreadsheet.</p>
@@ -23,6 +24,6 @@ export default function AboutPage() {
       <p>To create a key, sign in at <a href="https://platform.openai.com/" target="_blank" rel="noreferrer">platform.openai.com</a>, open API keys, create a secret key, copy it once, and paste it into Ripper OS. Never share the key or commit it to GitHub. Without OpenAI, charts still work.</p>
       <h2>Privacy and limitations</h2><p>Your normalized rendered analysis and generated insights can be kept in this browser for sharing and later visits; the original workbook and API key are never stored. Ripper OS is a training-data visualization tool, not medical advice. Uploads are limited to 25 MB, CSV exports do not provide muscle-group analysis, and comparisons are only as reliable as the names, units, and logging consistency in the export.</p>
     </section>
-    <footer className="shell footer"><p>Built and distributed by SIDIOUSWARE.</p><p><a href="https://github.com/sidiousvic/ripper-os/issues/new?title=Bug%3A%20&body=%23%23%20What%20happened%3F%0A%0A%23%23%20How%20can%20we%20reproduce%20it%3F%0A%0A%23%23%20Browser%20and%20device%0A" target="_blank" rel="noreferrer">Report a bug</a></p><p className="muted">© All Rights Reserved.</p></footer>
+    <footer className="shell footer"><p><a href="https://github.com/sidiousvic/ripper-os/issues/new?title=Bug%3A%20&body=%23%23%20What%20happened%3F%0A%0A%23%23%20How%20can%20we%20reproduce%20it%3F%0A%0A%23%23%20Browser%20and%20device%0A" target="_blank" rel="noreferrer">Report a bug</a></p><p className="muted">© All Rights Reserved.</p></footer>
   </main>;
 }

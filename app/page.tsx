@@ -281,6 +281,7 @@ export default function Home() {
   };
 
   const generateRecommendations = async () => {
+    if (recommendationState.startsWith("Generating")) return;
     setAiConsentOpen(true);
   };
 
@@ -320,9 +321,11 @@ export default function Home() {
     } catch (error) {
       const message = error instanceof Error ? error.message : "Recommendation generation failed.";
       setRecommendationState("");
-      setRecommendationError(/limit|429|few minutes/i.test(message)
-        ? "Recommendations are temporarily rate-limited to protect your connected API key. Please wait a few minutes, then try again."
-        : "Recommendations could not be generated right now. Check your OpenAI connection and try again.");
+      setRecommendationError(/^Recommendation limit reached|^Too many requests/i.test(message)
+        ? "Ripper OS is temporarily rate-limiting requests to protect your connected API key. Please wait a few minutes, then try again."
+        : /OpenAI is rate-limiting|account has reached a limit/i.test(message)
+          ? "OpenAI returned a usage or rate limit for this key. This is separate from Ripper OS; check the key’s OpenAI project limits, billing, and regional network access."
+          : "Recommendations could not be generated right now. Check your OpenAI connection and try again.");
     }
   };
 
@@ -393,7 +396,7 @@ export default function Home() {
             <button className={`button upload-button ${openAIKey ? "is-ready" : ""}`} onClick={() => { setKeyDraft(openAIKey); setConnectionState(""); setConnectOpen(true); }}><KeyRound size={17} aria-hidden="true" />{openAIKey ? "OpenAI connected" : "Connect OpenAI"}</button>
             {hasUploadedData && <button className="button upload-button" onClick={() => setClearConfirmOpen(true)}><Trash2 size={17} aria-hidden="true" />Clear uploaded data</button>}
             {hasUploadedData && <a className="button primary" href="#progress">Explore all exercises <ChevronRight size={17} /></a>}
-            {hasUploadedData && <button className="button ai-action" onClick={generateRecommendations}><Sparkles size={16} /> Generate AI insights</button>}
+            {hasUploadedData && <button className="button ai-action" onClick={generateRecommendations} disabled={recommendationState.startsWith("Generating")}><Sparkles size={16} /> Generate AI insights</button>}
           </div>
           {uploadState && <p className="upload-status" role="status">{uploadState}</p>}
         </div>
@@ -686,7 +689,7 @@ export default function Home() {
             kicker="Where to go next"
             title="The clearest opportunities in the data"
             description="Generate an AI interpretation after uploading your MacroFactor export. Only calculated summary metrics are sent; raw workbook rows are not. These are programming prompts, not diagnoses."
-            action={<button className="button ai-action" onClick={generateRecommendations}><Sparkles size={16} /> Generate recommendations</button>}
+            action={<button className="button ai-action" onClick={generateRecommendations} disabled={recommendationState.startsWith("Generating")}><Sparkles size={16} /> Generate recommendations</button>}
           />
           {recommendations.length > 0 && <div className="callout ai-insight" aria-live="polite"><Sparkles size={20} /><div><p className="eyebrow accent">AI insight</p><p>These recommendations were generated from the currently loaded MacroFactor summary. They are programming prompts, not diagnoses.</p></div></div>}
           {recommendationState && !recommendations.length && <div className="callout ai-insight" role="status"><Sparkles size={20} /><div><p className="eyebrow accent">AI insight</p><p>{recommendationState}</p></div></div>}
@@ -754,7 +757,6 @@ export default function Home() {
         <div className="sidiousware-lockup">
           <Image src="/brand/sidiousware-logo.png" alt="Sidiousware" width={330} height={191} />
         </div>
-        <p>Built and distributed by SIDIOUSWARE.</p>
         <p><a href="https://github.com/sidiousvic/ripper-os/issues/new?title=Bug%3A%20&body=%23%23%20What%20happened%3F%0A%0A%23%23%20How%20can%20we%20reproduce%20it%3F%0A%0A%23%23%20Browser%20and%20device%0A" target="_blank" rel="noreferrer">🪲 Report a bug</a></p>
         <p className="muted">All Rights Reserved.</p>
       </footer>
