@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { isSameOrigin, takeRateLimit, tooManyRequests } from "../../../lib/security";
 
 export const runtime = "nodejs";
 
@@ -22,9 +23,12 @@ const text = (value: unknown, max: number, fallback: string) => {
 };
 
 export async function POST(request: Request) {
+  if (!isSameOrigin(request)) return Response.json({ error: "Cross-site insight requests are not allowed." }, { status: 403 });
   const requestKey = request.headers.get("x-openai-api-key")?.trim();
-  const apiKey = requestKey || process.env.OPENAI_API_KEY;
-  if (!apiKey) return Response.json({ error: "Connect OpenAI or configure OPENAI_API_KEY on this server." }, { status: 503 });
+  const apiKey = requestKey;
+  if (!apiKey || !apiKey.startsWith("sk-") || apiKey.length < 20) return Response.json({ error: "Connect a valid OpenAI API key to generate insights." }, { status: 400 });
+  const globalLimit = takeRateLimit(request, "recommendations", 6, 60_000);
+  if (!globalLimit.allowed) return tooManyRequests(globalLimit.retryAfter);
   if (!allowed(request, apiKey)) return Response.json({ error: "Recommendation limit reached. Try again in a few minutes." }, { status: 429 });
   let summary: unknown;
   try { summary = await request.json(); } catch { return Response.json({ error: "Request body must be JSON." }, { status: 400 }); }
@@ -44,6 +48,10 @@ export async function POST(request: Request) {
     const sectionInsights = Object.fromEntries(["highlights", "consistency", "progress", "muscles", "history"].map((key) => [key, text(rawInsights[key], 240, "This section will become more useful as your uploaded history grows.")]));
     return Response.json({ sustainedPractice: text(parsed.sustainedPractice, 240, "Your consistency story will appear here after analysis."), nextYearRule: text(parsed.nextYearRule, 240, "Choose a small, repeatable change and measure it consistently."), sectionInsights, recommendations, generatedAt: new Date().toISOString(), model: process.env.OPENAI_MODEL ?? "gpt-5-mini", promptVersion }, { headers: { "cache-control": "no-store" } });
   } catch (error) {
-    return Response.json({ error: error instanceof Error ? error.message : "Recommendation generation failed." }, { status: 502 });
+    if (error instanceof OpenAI.APIError) {
+      if (error.status === 401 || error.status === 403) return Response.json({ error: "OpenAI rejected this API key or it cannot access the configured model." }, { status: error.status });
+      if (error.status === 429) return Response.json({ error: "OpenAI is rate-limiting this key or its account has reached a limit. Please try again later." }, { status: 429 });
+    }
+    return Response.json({ error: "Recommendations could not be generated right now. Please try again." }, { status: 502 });
   }
 }

@@ -507,7 +507,7 @@ export default function Home() {
             <div className="calendar-legend"><span>Less load</span><i /><i className="mid" /><i className="high" /><span>More load</span></div>
           </article>
           <article className="panel gap-panel">
-            <div className="panel-heading"><div><p className="eyebrow">Longest pauses</p><h3>Not just #1—the top five gaps</h3></div></div>
+            <div className="panel-heading"><div><p className="eyebrow">Longest pauses</p><h3>Your top five gaps</h3></div></div>
             <div className="gap-list">
               {data.gaps.slice(0, 5).map((gap, index) => (
                 <div className="gap-row" key={`${gap.from}-${gap.to}`}>
@@ -612,7 +612,7 @@ export default function Home() {
           description={`Early window used is ${formatDate(data.muscleWindows.early[0])} to ${formatDate(data.muscleWindows.early[1])}. Recent window is ${formatDate(data.muscleWindows.recent[0])} to ${formatDate(data.muscleWindows.recent[1])}. Values are set-equivalents per week.`}
         />
         <SectionInsight text={aiInsight?.sectionInsights.muscles} />
-        <div className={`two-column equal ${data.muscleHeatmap.weeks.length ? "" : "single-column"}`}>
+        <div className="two-column equal single-column">
           <article className="panel muscle-bars-panel">
             <div className="panel-heading"><div><p className="eyebrow">Early vs recent</p><h3>Weekly exposure by muscle</h3></div><div className="legend-inline"><span><i className="legend-early" /> Early</span><span><i className="legend-recent" /> Recent</span></div></div>
             <div className="muscle-bars">
@@ -628,26 +628,34 @@ export default function Home() {
               ))}
             </div>
           </article>
-          {data.muscleHeatmap.weeks.length > 0 && <article className="panel heatmap-panel">
-            <div className="panel-heading"><div><p className="eyebrow">Last 13 weeks</p><h3>Muscle exposure heatmap</h3></div><span className="muted small">set-equivalents</span></div>
-            <div className="muscle-heatmap-scroll">
-              <div className="muscle-heatmap">
-                <div className="heatmap-header"><span />{data.muscleHeatmap.weeks.map((week) => <i key={week}>{formatDate(week, { month: "short", day: "numeric" })}</i>)}</div>
-                {data.muscleHeatmap.rows.map((row) => (
-                  <div className="heatmap-row" key={row.muscle}>
-                    <span>{row.muscle}</span>
-                    {row.weeks.map((value, index) => {
-                      const level = value === 0 ? 0 : value < 3 ? 1 : value < 6 ? 2 : value < 10 ? 3 : 4;
-                      return <i className={`heat-${level}`} title={`${row.muscle}: ${value} sets, week of ${formatDate(data.muscleHeatmap.weeks[index])}`} key={`${row.muscle}-${index}`} />;
-                    })}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <p className="footnote">Set exposure helps spot programming imbalances, but it does not diagnose overtraining or recovery status.</p>
-          </article>}
         </div>
       </section>
+
+      {data.muscleHeatmap.weeks.length > 0 && <section className="section shell data-dependent muscle-heatmap-section" aria-labelledby="muscle-heatmap-title">
+        <SectionHeading
+          kicker="Training exposure"
+          title="Your last 13 weeks at a glance"
+          description="Each square shows the recorded set-equivalents for one muscle group in one training week. Brighter squares mean more exposure."
+        />
+        <article className="panel heatmap-panel">
+          <div className="panel-heading"><div><p className="eyebrow">Weekly pattern</p><h3 id="muscle-heatmap-title">Muscle exposure heatmap</h3></div><span className="muted small">set-equivalents</span></div>
+          <div className="muscle-heatmap-scroll" tabIndex={0} aria-label="Scrollable muscle exposure heatmap">
+            <div className="muscle-heatmap">
+              <div className="heatmap-header"><span />{data.muscleHeatmap.weeks.map((week) => <i key={week}>{formatDate(week, { month: "short", day: "numeric" })}</i>)}</div>
+              {data.muscleHeatmap.rows.map((row) => (
+                <div className="heatmap-row" key={row.muscle}>
+                  <span>{row.muscle}</span>
+                  {row.weeks.map((value, index) => {
+                    const level = value === 0 ? 0 : value < 3 ? 1 : value < 6 ? 2 : value < 10 ? 3 : 4;
+                    return <i className={`heat-${level}`} title={`${row.muscle}: ${value} sets, week of ${formatDate(data.muscleHeatmap.weeks[index])}`} aria-label={`${row.muscle}: ${value} set-equivalents, week of ${formatDate(data.muscleHeatmap.weeks[index])}`} key={`${row.muscle}-${index}`} />;
+                  })}
+                </div>
+              ))}
+            </div>
+          </div>
+          <p className="footnote">Set exposure helps spot programming imbalances, but it does not diagnose overtraining or recovery status.</p>
+        </article>
+      </section>}
 
       <section className="section shell data-dependent" id="history">
         <SectionHeading
@@ -747,6 +755,7 @@ export default function Home() {
           <Image src="/brand/sidiousware-logo.png" alt="Sidiousware" width={330} height={191} />
         </div>
         <p>Built and distributed by SIDIOUSWARE.</p>
+        <p><a href="https://github.com/sidiousvic/ripper-os/issues/new?title=Bug%3A%20&body=%23%23%20What%20happened%3F%0A%0A%23%23%20How%20can%20we%20reproduce%20it%3F%0A%0A%23%23%20Browser%20and%20device%0A" target="_blank" rel="noreferrer">Report a bug</a></p>
         <p className="muted">All Rights Reserved.</p>
       </footer>
     </main>

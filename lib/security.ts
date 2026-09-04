@@ -1,0 +1,35 @@
+const windows = new Map<string, number[]>();
+
+const clientId = (request: Request) =>
+  request.headers.get("cf-connecting-ip")
+  ?? request.headers.get("x-real-ip")
+  ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
+  ?? "unknown";
+
+/** A lightweight fallback. Configure a durable Vercel WAF or Redis limit in production. */
+export const takeRateLimit = (request: Request, scope: string, limit: number, windowMs: number) => {
+  const id = `${scope}:${clientId(request)}`;
+  const now = Date.now();
+  const active = (windows.get(id) ?? []).filter((time) => now - time < windowMs);
+  if (active.length >= limit) {
+    const retryAfter = Math.max(1, Math.ceil((windowMs - (now - active[0])) / 1000));
+    windows.set(id, active);
+    return { allowed: false, retryAfter };
+  }
+  active.push(now);
+  windows.set(id, active);
+  return { allowed: true, retryAfter: 0 };
+};
+
+/** Reject cross-site browser POSTs so these public routes cannot be used as a proxy. */
+export const isSameOrigin = (request: Request) => {
+  const origin = request.headers.get("origin");
+  const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
+  const protocol = request.headers.get("x-forwarded-proto") ?? new URL(request.url).protocol.replace(":", "");
+  return Boolean(origin && host && origin === `${protocol}://${host}`);
+};
+
+export const tooManyRequests = (retryAfter: number) => Response.json(
+  { error: "Too many requests. Please wait a minute and try again." },
+  { status: 429, headers: { "retry-after": String(retryAfter), "cache-control": "no-store" } },
+);

@@ -607,10 +607,22 @@ button {
   max-width: min(1100px, 100%);
 }
 
-.about-intro { padding-top: 78px; }
-.about-copy { max-width: 760px; }
-.about-copy h1 { margin-top: 10px; font-size: clamp(42px, 6vw, 72px); }
-.about-copy > p:last-child { max-width: 680px; margin-top: 18px; color: #b7c8bc; line-height: 1.65; }
+.about-page {
+  min-height: 100vh;
+  background: linear-gradient(rgba(2, 6, 3, .76), rgba(2, 6, 3, .93) 55%, rgba(0, 0, 0, .98));
+}
+
+.about-intro,
+.about-prose {
+  width: min(820px, calc(100% - 44px));
+  max-width: none;
+  margin-inline: auto;
+}
+
+.about-intro { padding-block: 94px 34px; }
+.about-copy { max-width: 100%; }
+.about-copy h1 { margin-top: 12px; font-size: clamp(42px, 5vw, 64px); line-height: 1.12; }
+.about-copy > p:last-child { max-width: 720px; margin-top: 22px; color: #c0d0c4; line-height: 1.7; }
 .about-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
 .about-card { padding: 28px; }
 .about-card h2 { margin-top: 10px; }
@@ -622,15 +634,16 @@ button {
 .schema-head { color: var(--text); background: rgba(67, 255, 126, .08); }
 .schema-row code { color: var(--lime); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .about-note { max-width: 900px; margin-top: 18px; line-height: 1.6; }
-.about-prose { max-width: 920px; }
-.about-prose h2 { margin-top: 58px; font-size: clamp(30px, 4vw, 46px); }
-.about-prose p, .about-prose li { max-width: 760px; color: #b7c8bc; line-height: 1.75; }
-.about-prose p { margin-top: 16px; }
-.about-prose ol { max-width: 760px; margin: 18px 0 0; padding-left: 24px; }
-.about-prose li { padding-left: 6px; margin-top: 10px; }
+.about-prose { padding-block: 34px 104px; }
+.about-prose h2 { margin-top: 74px; font-size: clamp(30px, 3.4vw, 42px); line-height: 1.15; }
+.about-prose h2:first-child { margin-top: 0; }
+.about-prose p, .about-prose li { max-width: 720px; color: #c0d0c4; line-height: 1.78; }
+.about-prose p { margin-top: 18px; }
+.about-prose ol { max-width: 720px; margin: 22px 0 0; padding-left: 25px; }
+.about-prose li { padding-left: 7px; margin-top: 12px; }
 .about-prose strong { color: var(--text); }
 .about-prose a { color: var(--lime); text-decoration: underline; text-underline-offset: 3px; }
-.schema-inline { max-width: 760px; margin-top: 22px; }
+.schema-inline { max-width: 720px; margin-top: 24px; }
 .schema-inline p { margin: 0; padding: 12px 0; border-bottom: 1px solid var(--line); }
 .schema-inline p:last-child { border-bottom: 0; }
 
@@ -1578,9 +1591,11 @@ button {
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  margin-top: 25px;
+  margin-top: 28px;
+  padding: 4px 2px 12px;
   overflow-x: auto;
   overscroll-behavior-inline: contain;
+  scrollbar-color: rgba(63, 226, 119, .5) rgba(5, 16, 8, .72);
 }
 
 .muscle-bars-panel,
@@ -1591,19 +1606,20 @@ button {
 }
 
 .muscle-heatmap {
-  min-width: 700px;
+  min-width: 820px;
 }
 
 .heatmap-header,
 .heatmap-row {
   display: grid;
-  grid-template-columns: 105px repeat(13, 1fr);
+  grid-template-columns: 132px repeat(13, minmax(30px, 1fr));
   align-items: center;
-  gap: 5px;
+  gap: 7px;
 }
 
 .heatmap-header {
-  margin-bottom: 9px;
+  min-height: 54px;
+  margin-bottom: 11px;
 }
 
 .heatmap-header i {
@@ -1611,23 +1627,35 @@ button {
   font-size: 12px;
   font-style: normal;
   text-align: center;
-  transform: rotate(-40deg);
+  transform: rotate(-38deg) translateY(7px);
+  white-space: nowrap;
 }
 
 .heatmap-row {
-  min-height: 23px;
+  min-height: 29px;
 }
 
 .heatmap-row > span {
   color: #a6b7aa;
   font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .heatmap-row i {
   display: block;
-  height: 17px;
+  height: 21px;
   border: 1px solid #1b3021;
-  border-radius: 4px;
+  border-radius: 5px;
+}
+
+.muscle-heatmap-section .section-heading {
+  max-width: 780px;
+}
+
+.muscle-heatmap-section .heatmap-panel {
+  padding: clamp(20px, 3vw, 32px);
 }
 
 .heat-0 { background: #09130c; }
@@ -1919,6 +1947,18 @@ button {
   text-align: center;
 }
 
+.footer a {
+  color: var(--green);
+  text-decoration: none;
+  text-shadow: 0 0 10px rgba(63, 226, 119, .45);
+}
+
+.footer a:hover {
+  color: var(--lime);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
 .footer {
   display: flex;
   flex-direction: column;
@@ -2028,6 +2068,20 @@ button {
   .heatmap-panel,
   .focus-panel {
     padding: 18px;
+  }
+
+  .muscle-heatmap {
+    min-width: 700px;
+  }
+
+  .heatmap-header,
+  .heatmap-row {
+    grid-template-columns: 112px repeat(13, minmax(27px, 1fr));
+    gap: 5px;
+  }
+
+  .heatmap-row i {
+    height: 19px;
   }
 
   .legend-inline {
