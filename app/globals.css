@@ -1064,7 +1064,7 @@ button {
   min-width: 0;
   aspect-ratio: 1;
   border: 1px solid #1b3021;
-  border-radius: 9px;
+  border-radius: 20%;
   background: #0a150d;
   box-shadow: 2px 2px black;
 }
