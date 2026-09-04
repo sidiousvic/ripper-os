@@ -707,7 +707,7 @@ export default function Home() {
           <p className="eyebrow accent">Power Ripper OS with AI</p>
           <h2 id="connect-title">Connect OpenAI</h2>
           <p>Charts and upload processing work without an OpenAI account. Add an OpenAI API key only if you want personalized recommendations.</p>
-          <input className="connect-key-input" type="password" value={keyDraft} onChange={(event) => setKeyDraft(event.target.value)} placeholder="sk-…" autoFocus autoComplete="new-password" spellCheck={false} aria-label="OpenAI API key" />
+          <input className="connect-key-input" type="password" value={keyDraft} onChange={(event) => setKeyDraft(event.target.value)} placeholder="sk-…" autoFocus autoComplete="off" data-1p-ignore="true" data-lpignore="true" data-form-type="other" spellCheck={false} aria-label="OpenAI API key" />
           <p className="muted small">This key is kept in memory for this session only. It is never saved to browser storage. API usage is billed separately from ChatGPT.</p>
           {connectionState && <p className="connect-status" role="status">{connectionState}</p>}
           <div className="connect-actions"><button className="button secondary" onClick={() => { setOpenAIKey(""); setKeyDraft(""); setConnectionState(""); setConnectOpen(false); }}>Disconnect</button><button className="button primary" onClick={verifyOpenAIConnection} disabled={connectionState === "Verifying OpenAI connection…"}>{connectionState === "Verifying OpenAI connection…" ? "Verifying…" : "Connect"}</button></div>
