@@ -46,7 +46,6 @@ function legacyPresentationRecords(imports: AggregateImport[], presentation?: Le
 export function buildDashboard(input: AggregateImport | DetailedImport | (AggregateImport | DetailedImport)[], presentation?: LegacyPresentation): DashboardData {
   const rawImports = Array.isArray(input) ? input : [input];
   const imports: AggregateImport[] = rawImports.map((data) => "representation" in data && data.representation === "detailed" ? projectStrengthImport(data) : data as AggregateImport);
-  if (imports.length !== 1) throw new Error("Import one history at a time until additive reconciliation is available.");
   for (const data of imports) assertValidImport(data);
   const records = legacyPresentationRecords(imports, presentation);
   if (records.length > 250_000 || new Set(records.map(record => record.exercise)).size > 5_000) throw new Error("Export exceeds the supported record or exercise limit.");
