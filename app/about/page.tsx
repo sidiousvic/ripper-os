@@ -4,7 +4,7 @@ import "../globals.css";
 
 export default function AboutPage() {
   return <main className="about-page">
-      <header className="topbar"><Link className="brand" href="/" aria-label="Ripper OS home"><span className="brand-mark"><img src="/brand/ripper-os-logo.png" alt="" width="38" height="38" /></span><span>Ripper OS</span></Link><nav><Link href="/">Back to dashboard</Link></nav><a className="data-pill donate-button" href="https://donate.stripe.com/bJe8wQ18J4so1wSdrKfjG00" target="_blank" rel="noreferrer">Donate</a></header>
+      <header className="topbar"><Link className="brand" href="/" aria-label="Ripper OS home"><span>Ripper OS</span></Link><nav><Link href="/">Back to dashboard</Link></nav><a className="data-pill donate-button" href="https://donate.stripe.com/bJe8wQ18J4so1wSdrKfjG00" target="_blank" rel="noreferrer">Donate</a></header>
     <section className="section shell about-intro"><div className="about-copy"><p className="eyebrow accent">User guide</p><h1>Ripper OS</h1>
     </div></section>
     <section className="section shell about-prose">

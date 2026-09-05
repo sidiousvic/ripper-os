@@ -15,7 +15,7 @@ export const metadata: Metadata = {
     description: siteDescription,
   },
   icons: {
-    icon: "/brand/ripperos-logo-favicon.png",
+    icon: "/ripper-os-icon.svg",
   },
 };
 

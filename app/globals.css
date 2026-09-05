@@ -1,53 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=Zen+Dots&display=swap");
-
-@font-face {
-  font-family: "Montaga";
-  src: url("/fonts/Montaga-Regular.ttf") format("truetype");
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-}
-
-  :root {
-  --font-body: "Montaga", Georgia, serif;
-  --font-display: "BiauKaiHK", Georgia, serif;
-  --font-button: "BiauKaiHK", Georgia, serif;
-  --font-identity: "BiauKaiHK", Georgia, serif;
-  --scale-identity-x: 1.2;
-  --bg: #020603;
-  --bg-raised: #061009;
-  --panel: #0a170e;
-  --panel-strong: #10291a;
-  --line: #21482d;
-  --line-bright: #4d875e;
-  --text: #f2f8f3;
-  --muted: #8da295;
-  --muted-2: #65786a;
-  --green: #3fe277;
-  --lime: #c7ff4a;
-  --red: #ff8f8f;
-  --shadow-soft: 0 10px 28px rgba(0, 0, 0, .42), 0 3px 10px rgba(0, 0, 0, .28), 0 0 22px rgba(63, 226, 119, .07);
-  --shadow-soft-raised: 0 14px 34px rgba(0, 0, 0, .5), 0 5px 14px rgba(0, 0, 0, .3), 0 0 26px rgba(63, 226, 119, .13);
-  --shadow-control: inset 0 -10px 15px #000;
-  --shadow-panel-3d: inset 0 -18px 28px rgba(0, 0, 0, .72), 0 10px 28px rgba(0, 0, 0, .42), 0 3px 10px rgba(0, 0, 0, .28), 0 0 22px rgba(63, 226, 119, .07);
-  --shadow-panel-hover: inset 0 -18px 28px rgba(0, 0, 0, .72), 0 16px 38px rgba(0, 0, 0, .5), 0 6px 16px rgba(0, 0, 0, .3), 0 0 34px rgba(63, 226, 119, .22);
-}
-
-@font-face {
-  font-family: "BiauKaiHK";
-  src: url("/fonts/BiauKaiHK-Latin.woff2") format("woff2");
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Bullvone";
-  src: url("/fonts/bullvone.otf") format("opentype");
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-}
+@import url("https://fonts.googleapis.com/css2?family=M+PLUS+U:wght@400;500;600;700;800&family=Zen+Dots&display=swap");
 
 * {
   box-sizing: border-box;
@@ -385,7 +336,7 @@ button {
 }
 
 .hero h1 .hero-training {
-  font-family: "Bullvone", Georgia, serif;
+  font-family: var(--font-ui);
   color: var(--text);
 }
 
@@ -2222,7 +2173,7 @@ h1, h2, h3, h4,
 }
 
 h2 {
-  font-family: "Bullvone", Georgia, serif;
+  font-family: var(--font-display);
 }
 
 .brand > span:last-child {
@@ -2273,8 +2224,12 @@ button, .button {
 
 /* Modern dark system: keep the existing component structure, quiet the chrome. */
 :root {
-  --font-ui: "Figtree", system-ui, sans-serif;
-  --font-display-modern: "Zen Dots", var(--font-ui);
+  --font-ui: "M PLUS U", system-ui, sans-serif;
+  --font-body: var(--font-ui);
+  --font-display: "Zen Dots", sans-serif;
+  --font-display-modern: var(--font-display);
+  --font-button: var(--font-ui);
+  --font-identity: var(--font-display);
   --color-bg: #111111;
   --color-surface: #161616;
   --color-surface-raised: #1c1c1c;
@@ -2284,17 +2239,22 @@ button, .button {
   --color-text: rgba(255, 255, 255, .94);
   --color-text-secondary: rgba(255, 255, 255, .68);
   --color-text-muted: rgba(255, 255, 255, .44);
-  --color-success: #9bc7a5;
-  --color-warning: #d5b47c;
+  --green-primary: #39ff66;
+  --green-bright: #6dff8c;
+  --green-muted: #8bc99a;
+  --green-subtle: rgba(57, 255, 102, .14);
+  --green-surface: rgba(57, 255, 102, .08);
+  --color-success: var(--green-muted);
+  --color-warning: var(--green-muted);
   --color-danger: #d99898;
-  --color-info: #91b6ca;
-  --chart-1: #9bc7a5;
-  --chart-2: #d5b47c;
-  --chart-3: #91b6ca;
-  --chart-4: #c1a8d0;
-  --chart-5: #d99898;
-  --chart-6: #8fc4bd;
-  --chart-7: #c9a98c;
+  --color-info: var(--green-muted);
+  --chart-1: var(--green-primary);
+  --chart-2: var(--green-bright);
+  --chart-3: var(--green-muted);
+  --chart-4: #67b779;
+  --chart-5: #4d995e;
+  --chart-6: #3a7c4a;
+  --chart-7: #2d6039;
   --bg: var(--color-bg);
   --bg-raised: var(--color-surface);
   --panel: var(--color-surface);
@@ -2304,8 +2264,8 @@ button, .button {
   --text: var(--color-text);
   --muted: var(--color-text-secondary);
   --muted-2: var(--color-text-muted);
-  --green: var(--chart-1);
-  --lime: var(--chart-2);
+  --green: var(--green-primary);
+  --lime: var(--green-bright);
   --red: var(--color-danger);
   --shadow-soft: none;
   --shadow-soft-raised: none;
@@ -2372,11 +2332,11 @@ h4,
   font-weight: 700;
 }
 
-.brand-mark {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: var(--color-surface-raised);
+.brand > span:last-child {
+  color: var(--green-primary);
+  font-family: var(--font-display);
+  font-size: 15px;
+  letter-spacing: .08em;
 }
 
 .topbar nav {
@@ -2410,8 +2370,10 @@ h4,
 .data-pill svg,
 .donate-button,
 .export-guide-link a,
-.button.is-ready svg {
-  color: var(--chart-3);
+.button.is-ready svg,
+.about-prose a,
+.footer a {
+  color: var(--green-primary);
 }
 
 .donate-button {
@@ -2432,7 +2394,7 @@ h4,
 
 .hero h1 span,
 .hero h1 .hero-training > span {
-  color: var(--chart-2);
+  color: var(--green-primary);
 }
 
 .hero h1 .hero-training {
@@ -2467,17 +2429,26 @@ h4,
   box-shadow: none;
 }
 
+.button:not(.primary):not(.ai-action) > svg {
+  color: var(--green-muted);
+}
+
+.button.primary > svg,
+.button.ai-action > svg {
+  color: #111111;
+}
+
 .button.primary,
 .button.ai-action {
   border-color: transparent;
   color: #111111;
-  background: var(--chart-2);
+  background: var(--green-primary);
   box-shadow: none;
 }
 
 .button.primary:hover,
 .button.ai-action:hover {
-  background: #e0c48e;
+  background: var(--green-bright);
 }
 
 .panel {
@@ -2525,7 +2496,7 @@ h4,
 .leader-name i {
   border-radius: 7px;
   color: var(--color-bg);
-  background: var(--chart-3);
+  background: var(--green-muted);
   box-shadow: none;
 }
 
@@ -2598,8 +2569,8 @@ h4,
 .family-filter button:hover,
 .family-filter button.active {
   color: var(--color-text);
-  border-color: var(--chart-3);
-  background: rgba(145, 182, 202, .12);
+  border-color: var(--green-primary);
+  background: var(--green-surface);
   box-shadow: none;
 }
 
@@ -2630,25 +2601,25 @@ h4,
   box-shadow: none;
 }
 
-.exercise-card.selected { outline: 1px solid rgba(145, 182, 202, .55); }
+.exercise-card.selected { outline: 1px solid rgba(57, 255, 102, .55); }
 .sparkline { color: var(--chart-1); }
 
 .leaderboard-row:hover { background: var(--color-surface-raised); }
 .leaderboard-head { border-color: var(--color-border-strong); font-family: var(--font-ui); }
 .attendance-cell { border-color: var(--color-border); background: #191919; box-shadow: none; }
-.attendance-cell.active { border-color: var(--chart-6); background: rgba(143, 196, 189, .28); }
-.attendance-cell.active.level-2 { background: rgba(143, 196, 189, .55); }
-.attendance-cell.active.level-3 { background: var(--chart-6); }
+.attendance-cell.active { border-color: var(--green-muted); background: rgba(57, 255, 102, .28); }
+.attendance-cell.active.level-2 { background: rgba(57, 255, 102, .55); }
+.attendance-cell.active.level-3 { background: var(--green-primary); }
 .heat-0 { background: #191919; }
-.heat-1 { background: #263a36; }
-.heat-2 { background: #3b635b; }
-.heat-3 { background: #628f84; }
-.heat-4 { background: var(--chart-6); }
+.heat-1 { background: #23402a; }
+.heat-2 { background: #32633d; }
+.heat-3 { background: #4b965a; }
+.heat-4 { background: var(--green-primary); }
 
 .muscle-tracks::before,
 .muscle-tracks::after { background: #262626; }
 .muscle-tracks i.early { background: var(--chart-4); box-shadow: none; }
-.muscle-tracks i.recent { background: var(--chart-6); box-shadow: none; }
+.muscle-tracks i.recent { background: var(--green-primary); box-shadow: none; }
 
 .next-actions {
   border-color: var(--color-border);
@@ -2662,11 +2633,32 @@ h4,
   color: var(--color-text-muted);
 }
 
+.footer::before,
+.sidiousware-lockup {
+  display: none;
+}
+
+.footer-wordmark {
+  color: var(--green-primary);
+  font-family: var(--font-display);
+  font-size: 13px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.footer a {
+  text-shadow: none;
+}
+
+.footer a:hover {
+  color: var(--green-bright);
+}
+
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 select:focus-visible {
-  outline: 2px solid var(--chart-3);
+  outline: 2px solid var(--green-primary);
   outline-offset: 3px;
 }
 

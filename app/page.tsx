@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Image from "next/image";
 import Footer from "./footer";
 import { importTrainingFile } from "../lib/import-training-file";
 import { isTrainingSnapshot, saveTrainingSnapshot, TRAINING_SNAPSHOT_KEY } from "../lib/training-snapshot.mjs";
@@ -275,8 +274,8 @@ export default function Home() {
   const hasUploadedData = data !== demoData;
 
   useEffect(() => {
-    console.log("%c+----------------------+\n|      RIPPER OS       |\n+----------------------+", "font-family: Georgia, serif; font-size: 22px; font-weight: 700; letter-spacing: 2px; line-height: 1.35; color: #f3f7f1;");
-    console.log("%cSo you're a dev! Let me know if you find something fishy around here. Keep ripping!", "font-family: Georgia, serif; font-size: 14px; color: #3fe277;");
+    console.log("%c+----------------------+\n|      RIPPER OS       |\n+----------------------+", "font-family: 'M PLUS U', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: 2px; line-height: 1.35; color: #f3f7f1;");
+    console.log("%cSo you're a dev! Let me know if you find something fishy around here. Keep ripping!", "font-family: 'M PLUS U', sans-serif; font-size: 14px; color: #39ff66;");
   }, []);
 
   // Restore only the normalized dashboard snapshot; raw workbook data and API keys are never stored.
@@ -481,7 +480,6 @@ export default function Home() {
     <main className={data.coverage.totalSessions > 0 ? "" : "empty-dashboard"}>
       <header className="topbar">
         <a className="brand" href="#top" aria-label="Ripper OS home">
-          <span className="brand-mark"><Image src="/brand/ripper-os-logo.png" alt="" width={38} height={38} priority /></span>
           <span>Ripper OS</span>
         </a>
         <nav aria-label="Dashboard sections">
@@ -575,7 +573,7 @@ export default function Home() {
                   <XAxis dataKey="month" tickFormatter={formatMonth} tick={{ fill: "var(--color-text-muted)", fontSize: 16 }} axisLine={false} tickLine={false} tickMargin={12} interval={2} />
                   <YAxis yAxisId="sessions" tick={{ fill: "var(--color-text-muted)", fontSize: 16 }} axisLine={false} tickLine={false} allowDecimals={false} />
                   <YAxis yAxisId="cumulative" orientation="right" tick={{ fill: "var(--color-text-muted)", fontSize: 16 }} axisLine={false} tickLine={false} />
-                  <Tooltip content={<ChartTooltip />} cursor={{ fill: "rgba(145, 182, 202, .08)" }} />
+                  <Tooltip content={<ChartTooltip />} cursor={{ fill: "rgba(57, 255, 102, .08)" }} />
                   <Bar yAxisId="sessions" dataKey="sessions" name="Sessions" fill="var(--chart-1)" radius={[4, 4, 1, 1]} maxBarSize={24} />
                   <Line yAxisId="cumulative" type="monotone" dataKey="cumulative" name="Cumulative" stroke="var(--chart-2)" strokeWidth={2.5} dot={false} />
                 </ComposedChart>
