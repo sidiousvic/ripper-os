@@ -1,11 +1,11 @@
 # Ripper OS
 
-Ripper OS turns a MacroFactor Workouts export into a readable picture of how you train: progress, consistency, gaps, muscle exposure, exercise history, and optional AI-written observations. It is an early beta and does not provide medical advice.
+Ripper OS turns MacroFactor, Strong, and Hevy workout exports into a readable picture of how you train: progress, consistency, gaps, muscle exposure, exercise history, and optional AI-written observations. It is an early beta and does not provide medical advice.
 
 ## Requirements
 
 - Node.js 22.13 or newer
-- A MacroFactor `.xlsx` workbook export or workout `.csv` export
+- A MacroFactor `.xlsx` workbook export, Strong workout `.csv`, or Hevy workout `.csv`
 - An OpenAI API key is optional; charts work without one
 
 ```bash
@@ -15,9 +15,9 @@ npm run dev
 
 Open the local URL printed by Vinext.
 
-## Importing MacroFactor data
+## Importing training data
 
-Export your all-time training history from MacroFactor and upload the `.xlsx` or `.csv` file in the dashboard. Each new upload replaces the previous analysis; it is not appended.
+Upload one or more supported exports in the dashboard. Choose **Add data** to append a newer or different source history; Ripper keeps accepted facts locally and rebuilds one longitudinal dashboard. Use **Replace export** to start over.
 
 In MacroFactor, use **More → Data Management → Data Export**. Granular Export with workout or exercise data gives the most detail. Quick Export also works when MacroFactor Workouts data is included.
 
@@ -53,6 +53,12 @@ The core row-oriented schema is:
 Extra columns such as `Workout ID`, `Workout`, `Set Type`, `Notes`, and `Distance` are allowed. Keep MacroFactor's original headers. FIT and additional file types are planned for a future release.
 
 The local file limit is 25 MB. Files are processed in a browser Web Worker, with cancellation and a 30-second processing timeout. XLSX archive metadata is checked before parsing and worksheet dimensions are checked after decoding.
+
+### Strong and Hevy CSV
+
+Strong exports require an explicit weight unit (kg or lb) and distance unit when those columns are unitless. Hevy exports use the verified workout CSV format with `title`, `start_time`, `end_time`, `exercise_title`, `set_index`, `set_type`, and optional kg/reps/distance/duration/RPE fields. Empty cells remain unavailable; they are not treated as zero.
+
+Canonical training history is stored in this browser's IndexedDB. Use the loaded-export dialog to download a private JSON backup before clearing browser data, and restore it later without uploading the backup.
 
 ## What the dashboard does
 

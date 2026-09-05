@@ -1,11 +1,11 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M5 — Imports become additive and explainable
-Current task: V2-051
-Last completed task: V2-050 — Enforce the derived-summary boundary for optional AI
-Next task: V2-051
+Current task: COMPLETE
+Last completed task: V2-051 — Document supported sources and run the combined beta checkpoint
+Next task: Address blocked V2-045 and remaining launch backlog
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
-Tasks complete: 46
+Tasks complete: 47
 Tasks remaining: 5
 
 Core proof goal:
@@ -3733,7 +3733,9 @@ Implement V2-050 only. Ensure richer canonical history cannot leak into AI reque
 ### V2-051 — Document supported sources and run the combined beta checkpoint
 
 Status:
-TODO
+DONE
+
+Verification note 2026-09-06: README/About now document MacroFactor, Strong and Hevy fixtures, additive local persistence, backups and known limits. Automated tests, typecheck, lint, Next build, Vinext build and release metadata checks pass. Manual browser import/reload/backup smoke and live Vercel footer verification remain pending.
 
 Milestone:
 M9 — Measure and prepare the beta
