@@ -876,7 +876,7 @@ export default function Home() {
               <div><span>All-time peak</span><strong>{formatNumber(toDisplayMetric(selectedPeak, selectedMetric, displayUnit))} <small>{selectedUnit}</small></strong></div>
               <div><span>First → latest</span><strong><Delta value={selectedChange} /></strong></div>
             </div>
-            <BodyweightContext measurements={bodyweightMeasurements} date={selectedLatestRecord?.date ?? data.coverage.lastDate} externalLoadKg={selectedExercise.progress.at(-1)?.heaviestKg ?? null} />
+            <BodyweightContext measurements={bodyweightMeasurements} date={selectedLatestRecord?.date ?? data.coverage.lastDate} externalLoadKg={selectedExercise.progress.at(-1)?.heaviestKg ?? null} eligible={selectedExercise.comparisonKey === selectedExercise.exerciseId} />
             <div className="legend-inline focus-legend"><span><i className="legend-history" /> {selectedMeta.label}</span>{comparisonMeta && <span><i className="legend-latest" /> {comparisonMeta.label}</span>}</div>
             <MeasuredChart className="chart-area focus-chart">
               {selectedSeries.length > 1 ? (
