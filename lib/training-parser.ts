@@ -12,6 +12,9 @@ const family = (name: string) => { const s = name.toLowerCase(); if (s.includes(
 const aliases = new Map([["Wide Grip Pull Up", "Wide Grip Pull-Up"], ["Bench Dips", "Bench Dip"], ["Jumping Rope", "Jump Rope"]]);
 const canonical = (v: unknown) => { const name = clean(v).split(" ∈ ")[0].trim(); return aliases.get(name) ?? name; };
 const MAX_XLSX_EXPANDED_SIZE = 150 * 1024 * 1024;
+const MAX_RECORDS = 250_000;
+const MAX_UNIQUE_EXERCISES = 5_000;
+const MAX_DATE_SPAN_DAYS = 30 * 366;
 const readU16 = (bytes: Uint8Array, offset: number) => bytes[offset] | (bytes[offset + 1] << 8);
 const readU32 = (bytes: Uint8Array, offset: number) => (bytes[offset] | (bytes[offset + 1] << 8) | (bytes[offset + 2] << 16) | (bytes[offset + 3] << 24)) >>> 0;
 const hasSafeZipDirectory = (bytes: Uint8Array) => {
@@ -34,6 +37,7 @@ export const safeParseMessage = (error: unknown) => {
   if (/No workout sessions/i.test(message)) return "No workout sessions were found in this MacroFactor export.";
   if (/Missing required CSV column/i.test(message)) return "This CSV is missing a required Date, Exercise, or Reps column.";
   if (/Unsupported weight unit/i.test(message)) return "This CSV uses an unsupported weight unit. Use kilograms (kg) or pounds (lb).";
+  if (/Export exceeds the supported/i.test(message)) return "This export is too large or spans too much history to process safely in the browser.";
   if (/Missing required MacroFactor sheet/i.test(message)) return "This workbook is missing a required MacroFactor workout sheet.";
   return "Could not parse this export. Confirm it is a supported MacroFactor CSV or XLSX file and try again.";
 };
@@ -66,7 +70,10 @@ export function parseTrainingFile(fileBytes: Uint8Array, fileName: string) {
     } else {
       merge("Exercises - Total Sets", "totalSets"); merge("Exercises - Total Reps", "totalReps"); merge("Exercises - Best Set Reps", "bestSetReps"); merge("Exercises - Heaviest Weight", "heaviestKg"); merge("Exercises - Total Volume", "totalVolumeKg"); merge("Exercises - 1-RM", "e1rmKg"); merge("Exercises - Total Duration", "durationSec");
     }
-    const records = [...map.values()].sort((a, b) => a.date.localeCompare(b.date)); const dates = [...new Set(records.filter((x) => n(x.totalSets) > 0).map((x) => x.date))].sort(); if (!dates.length) throw new Error("No workout sessions were found in this MacroFactor export.");
+    const records = [...map.values()].sort((a, b) => a.date.localeCompare(b.date));
+    if (records.length > MAX_RECORDS || new Set(records.map((record) => record.exercise)).size > MAX_UNIQUE_EXERCISES) throw new Error("Export exceeds the supported record or exercise limit.");
+    const dates = [...new Set(records.filter((x) => n(x.totalSets) > 0).map((x) => x.date))].sort(); if (!dates.length) throw new Error("No workout sessions were found in this MacroFactor export.");
+    if (Date.parse(`${dates.at(-1)}T00:00:00Z`) - Date.parse(`${dates[0]}T00:00:00Z`) > MAX_DATE_SPAN_DAYS * DAY) throw new Error("Export exceeds the supported date span.");
     const sessions = dates.map((date) => { const day = records.filter((x) => x.date === date); return { date, source: "MacroFactor", workout: "MacroFactor workout day", durationMin: null, totalSets: day.reduce((s, x) => s + n(x.totalSets), 0), totalReps: day.reduce((s, x) => s + n(x.totalReps), 0) || null, volumeKg: day.reduce((s, x) => s + n(x.totalVolumeKg), 0) || null }; });
     const first = dates[0], last = dates.at(-1)!; const months: any[] = []; let cumulative = 0; for (const d = new Date(`${first.slice(0, 7)}-01T00:00:00Z`); d.toISOString().slice(0, 7) <= last.slice(0, 7); d.setUTCMonth(d.getUTCMonth() + 1)) { const month = d.toISOString().slice(0, 7); const count = sessions.filter((x) => x.date.startsWith(month)).length; cumulative += count; months.push({ month, sessions: count, cumulative, coverage: month === first.slice(0, 7) || month === last.slice(0, 7) ? "partial" : "complete" }); }
     const gaps = dates.slice(1).map((to, i) => { const daysBetween = Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${dates[i]}T00:00:00Z`)) / DAY); return { from: dates[i], to, daysBetween, daysOff: Math.max(0, daysBetween - 1) }; }).sort((a, b) => b.daysBetween - a.daysBetween).slice(0, 12);

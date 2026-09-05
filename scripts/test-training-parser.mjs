@@ -20,6 +20,7 @@ assert.equal(Math.round(fromPoundsCsv.exercises[0].totalVolumeKg * 10) / 10, 476
 assert.equal(Math.round(fromPoundsCsv.exercises[0].progress[1].heaviestKg * 10) / 10, 49.9);
 assert.throws(() => parseTrainingFile(new TextEncoder().encode("Date,Exercise,Weight (stone),Reps\n2026-01-01,Row,1,5"), "unsupported.csv"), /Unsupported weight unit/);
 assert.throws(() => parseTrainingFile(new TextEncoder().encode("Date,Exercise,Weight (kg)\n2026-01-01,Row,10"), "missing.csv"), /Missing required CSV column/);
+assert.throws(() => parseTrainingFile(new TextEncoder().encode("Date,Exercise,Weight (kg),Reps\n1900-01-01,Row,10,5\n2026-01-01,Row,10,5"), "wide-history.csv"), /supported date span/);
 assert.equal(fromCsv.coverage.firstDate, "2026-01-01");
 assert.ok(!JSON.stringify(fromCsv).includes("private-note-marker"));
 
