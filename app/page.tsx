@@ -229,13 +229,7 @@ export default function Home() {
   const hasUploadedData = data !== demoData;
 
   useEffect(() => {
-    console.log(String.raw`
-RRRR  III  PPPP  PPPP  EEEE  RRRR    OOO   SSS
-R  R   I   P  P  P  P  E     R  R   O   O S
-RRRR   I   PPPP  PPPP  EEE   RRRR   O   O  SSS
-R R    I   P     P     E     R R    O   O    S
-R  R  III  P     P     EEEE  R  R    OOO   SSS
-`);
+    console.log("%c+----------------------+\n|      RIPPER OS       |\n+----------------------+", "font-family: Georgia, serif; font-size: 22px; font-weight: 700; letter-spacing: 2px; line-height: 1.35; color: #f3f7f1;");
     console.log("%cSo you're a dev! Let me know if you find something fishy around here. Keep ripping!", "font-family: Georgia, serif; font-size: 14px; color: #3fe277;");
   }, []);
 
