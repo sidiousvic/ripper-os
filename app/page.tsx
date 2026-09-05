@@ -274,8 +274,8 @@ export default function Home() {
   const hasUploadedData = data !== demoData;
 
   useEffect(() => {
-    console.log("%c+----------------------+\n|      RIPPER OS       |\n+----------------------+", "font-family: 'M PLUS U', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: 2px; line-height: 1.35; color: #f3f7f1;");
-    console.log("%cSo you're a dev! Let me know if you find something fishy around here. Keep ripping!", "font-family: 'M PLUS U', sans-serif; font-size: 14px; color: #39ff66;");
+    console.log("%c+----------------------+\n|      RIPPER OS       |\n+----------------------+", "font-family: 'Google Sans Flex', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: 2px; line-height: 1.35; color: #f3f7f1;");
+    console.log("%cSo you're a dev! Let me know if you find something fishy around here. Keep ripping!", "font-family: 'Google Sans Flex', sans-serif; font-size: 14px; color: #39ff66;");
   }, []);
 
   // Restore only the normalized dashboard snapshot; raw workbook data and API keys are never stored.

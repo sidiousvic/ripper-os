@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=M+PLUS+U:wght@400;500;600;700;800&family=Zen+Dots&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&family=Montaga&family=Zen+Dots&display=swap");
 
 * {
   box-sizing: border-box;
@@ -2224,7 +2224,7 @@ button, .button {
 
 /* Modern dark system: keep the existing component structure, quiet the chrome. */
 :root {
-  --font-ui: "M PLUS U", system-ui, sans-serif;
+  --font-ui: "Google Sans Flex", system-ui, sans-serif;
   --font-body: var(--font-ui);
   --font-display: "Zen Dots", sans-serif;
   --font-display-modern: var(--font-display);
