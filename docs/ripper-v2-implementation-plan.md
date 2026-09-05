@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M1 — Lock down the behavior worth keeping
-Current task: None; V2-003 completed
-Last completed task: V2-003 — Introduce exercise-day and dashboard boundary types
-Next task: V2-004
+Current task: V2-005 — Extract exercise progression and achievement calculations (IN_PROGRESS)
+Last completed task: V2-004 — Extract monthly frequency, coverage and gap calculations
+Next task: V2-005
 Blockers: No verified Strong or Hevy export fixture exists in this checkout. V2-009 and V2-034 require a permission-cleared export with documented units and date interpretation. These do not block V2-001–008.
-Tasks complete: 3
-Tasks remaining: 48
+Tasks complete: 4
+Tasks remaining: 47
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -436,7 +436,7 @@ Implement V2-003 only. Add the small canonical daily model and move the existing
 ### V2-004 — Extract monthly frequency, coverage and gap calculations
 
 Status:
-TODO
+DONE
 
 Milestone:
 M2 — MacroFactor through a small shared model
@@ -504,7 +504,7 @@ Implement V2-004 only. Move the calendar summary block into a pure source-neutra
 ### V2-005 — Extract exercise progression and achievement calculations
 
 Status:
-TODO
+IN_PROGRESS
 
 Milestone:
 M2 — MacroFactor through a small shared model
@@ -3827,3 +3827,4 @@ Date/number validation is the exception to accepting invalid legacy behavior: V2
 - 2026-09-05: V2-001 completed with deterministic synthetic MacroFactor CSV/workbook fixtures, optional-sheet coverage, alias coverage and parser acceptance checks. No real user data was added.
 - 2026-09-05: V2-002 completed with independently checked baseline assertions for coverage, monthly frequency, gaps, exercise totals, peak/latest achievements and source-reported muscle summaries. Current metric semantics remain unchanged.
 - 2026-09-05: V2-003 completed with source-neutral exercise-day/domain types and shared dashboard view types. Existing page behavior and parser output remain unchanged.
+- 2026-09-05: V2-004 completed by extracting consistency dates, monthly summaries and gaps into `lib/analytics/consistency.ts`; MacroFactor output remains at baseline parity.

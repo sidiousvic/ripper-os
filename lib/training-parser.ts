@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import * as XLSX from "xlsx";
 import { MAX_IMPORT_BYTES } from "./import-limits.mjs";
+import { calculateConsistencySummary } from "./analytics/consistency.ts";
 
 const DAY = 86400000;
 const epoch = Date.UTC(1899, 11, 30);
@@ -72,11 +73,11 @@ export function parseTrainingFile(fileBytes: Uint8Array, fileName: string) {
     }
     const records = [...map.values()].sort((a, b) => a.date.localeCompare(b.date));
     if (records.length > MAX_RECORDS || new Set(records.map((record) => record.exercise)).size > MAX_UNIQUE_EXERCISES) throw new Error("Export exceeds the supported record or exercise limit.");
-    const dates = [...new Set(records.filter((x) => n(x.totalSets) > 0).map((x) => x.date))].sort(); if (!dates.length) throw new Error("No workout sessions were found in this MacroFactor export.");
+    const consistency = calculateConsistencySummary(records.map((record) => ({ date: record.date, totalSets: record.totalSets })));
+    const dates = consistency.dates;
     if (Date.parse(`${dates.at(-1)}T00:00:00Z`) - Date.parse(`${dates[0]}T00:00:00Z`) > MAX_DATE_SPAN_DAYS * DAY) throw new Error("Export exceeds the supported date span.");
     const sessions = dates.map((date) => { const day = records.filter((x) => x.date === date); return { date, source: "MacroFactor", workout: "MacroFactor workout day", durationMin: null, totalSets: day.reduce((s, x) => s + n(x.totalSets), 0), totalReps: day.reduce((s, x) => s + n(x.totalReps), 0) || null, volumeKg: day.reduce((s, x) => s + n(x.totalVolumeKg), 0) || null }; });
-    const first = dates[0], last = dates.at(-1)!; const months: any[] = []; let cumulative = 0; for (const d = new Date(`${first.slice(0, 7)}-01T00:00:00Z`); d.toISOString().slice(0, 7) <= last.slice(0, 7); d.setUTCMonth(d.getUTCMonth() + 1)) { const month = d.toISOString().slice(0, 7); const count = sessions.filter((x) => x.date.startsWith(month)).length; cumulative += count; months.push({ month, sessions: count, cumulative, coverage: month === first.slice(0, 7) || month === last.slice(0, 7) ? "partial" : "complete" }); }
-    const gaps = dates.slice(1).map((to, i) => { const daysBetween = Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${dates[i]}T00:00:00Z`)) / DAY); return { from: dates[i], to, daysBetween, daysOff: Math.max(0, daysBetween - 1) }; }).sort((a, b) => b.daysBetween - a.daysBetween).slice(0, 12);
+    const first = consistency.first, last = consistency.last; const months = consistency.months; const gaps = consistency.gaps;
     const exercises = [...new Set(records.map((x) => x.exercise))].map((name) => { const history = records.filter((x) => x.exercise === name); const availableMetrics = ["heaviestKg", "e1rmKg", "bestSetReps", "totalVolumeKg", "totalReps", "totalSets", "durationSec"].filter((k) => history.some((x) => n(x[k]) > 0)); const cardio = /rope|run|walk|bike|cycling|cardio|rowing|rower/i.test(name); const metric = cardio && availableMetrics.includes("durationSec") ? "durationSec" : !cardio && availableMetrics.includes("heaviestKg") ? "heaviestKg" : availableMetrics.includes("bestSetReps") ? "bestSetReps" : availableMetrics.includes("totalReps") ? "totalReps" : "totalSets"; return { name, family: family(name), defaultMetric: metric, availableMetrics, firstDate: history[0].date, lastDate: history.at(-1).date, sessions: new Set(history.map((x) => x.date)).size, totalSets: r(history.reduce((s, x) => s + n(x.totalSets), 0)), totalReps: r(history.reduce((s, x) => s + n(x.totalReps), 0)), totalVolumeKg: r(history.reduce((s, x) => s + n(x.totalVolumeKg), 0)), progress: history.map(({ source, ...x }) => x) }; }).sort((a, b) => b.totalSets - a.totalSets || a.name.localeCompare(b.name));
     const achievements = exercises.filter((x) => x.progress.length > 1).map((x) => { const firstPoint = x.progress[0], latest = x.progress.at(-1), value = (p: any) => r(n(p[x.defaultMetric])); const peak = x.progress.reduce((best, point) => value(point) > value(best) ? point : best, firstPoint); const percentChange = value(firstPoint) ? r((value(peak) / value(firstPoint) - 1) * 100, 0) : 0; return { exercise: x.name, metric: x.defaultMetric, first: { date: firstPoint.date, value: value(firstPoint) }, latest: { date: latest.date, value: value(latest) }, peak: { date: peak.date, value: value(peak) }, percentChange }; }).filter((achievement) => achievement.percentChange > 0).slice(0, 4);
     // MacroFactor's muscle sheet is a dated set-equivalent ledger. Keep the two
