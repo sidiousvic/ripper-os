@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M3 — Strong drives the existing dashboard
-Current task: V2-020
-Last completed task: V2-019 — Expose Add data for the first unified history
-Next task: V2-020
+Current task: V2-021
+Last completed task: V2-020 — Allow explicit exercise mappings and keep-custom choices
+Next task: V2-021
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
-Tasks complete: 17
-Tasks remaining: 34
+Tasks complete: 18
+Tasks remaining: 33
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -1557,7 +1557,7 @@ Implement V2-019 only. Allow a second non-overlapping import to extend the curre
 ### V2-020 — Allow explicit exercise mappings and keep-custom choices
 
 Status:
-TODO
+DONE
 
 Milestone:
 M4 — One exercise history across two sources

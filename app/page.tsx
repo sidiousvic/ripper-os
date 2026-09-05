@@ -7,6 +7,8 @@ import type { ImportOutcome } from "../lib/import/parse-import";
 import type { StrongNormalizationOptions } from "../lib/import/adapters/strong";
 import { buildDashboard } from "../lib/analytics/build-dashboard";
 import { combineImports, type HistoryImport } from "../lib/history/combine-imports";
+import { exerciseOverrideKey, resolveExercise, type ExerciseOverride, type ExerciseOverrideMap } from "../lib/exercises/resolve";
+import ExerciseMappingDialog, { type MappingCandidate } from "../components/import/exercise-mapping-dialog";
 import { isTrainingSnapshot, saveTrainingSnapshot, TRAINING_SNAPSHOT_KEY } from "../lib/training-snapshot.mjs";
 import { isCurrentRequest } from "../lib/request-guard.mjs";
 import type { DashboardData, Exercise, MetricKey, ProgressRecord } from "../lib/analytics/dashboard-types";
@@ -197,6 +199,8 @@ export default function Home() {
   const [loadedImport, setLoadedImport] = useState<ReadyImport["importData"] | null>(null);
   const [loadedSource, setLoadedSource] = useState<string>("");
   const [historyImports, setHistoryImports] = useState<HistoryImport[]>([]);
+  const [exerciseOverrides, setExerciseOverrides] = useState<ExerciseOverrideMap>({});
+  const [mappingCandidate, setMappingCandidate] = useState<MappingCandidate | null>(null);
   const [importing, setImporting] = useState(false);
   const importController = useRef<AbortController | null>(null);
   useEffect(() => () => { importController.current?.abort(); aiController.current?.abort(); datasetRevision.current += 1; }, []);
@@ -211,14 +215,15 @@ export default function Home() {
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const [loadedExportOpen, setLoadedExportOpen] = useState(false);
   const [recommendationError, setRecommendationError] = useState("");
-  const activeModal = recommendationError ? "recommendation-error" : connectOpen ? "connect" : loadedExportOpen ? "loaded-export" : aiConsentOpen ? "ai-consent" : clearConfirmOpen ? "clear" : "";
+  const activeModal = recommendationError ? "recommendation-error" : connectOpen ? "connect" : loadedExportOpen ? "loaded-export" : aiConsentOpen ? "ai-consent" : clearConfirmOpen ? "clear" : mappingCandidate ? "exercise-mapping" : "";
   const closeActiveModal = useCallback(() => {
     if (recommendationError) setRecommendationError("");
     else if (connectOpen) setConnectOpen(false);
     else if (loadedExportOpen) setLoadedExportOpen(false);
     else if (aiConsentOpen) setAiConsentOpen(false);
     else if (clearConfirmOpen) setClearConfirmOpen(false);
-  }, [recommendationError, connectOpen, loadedExportOpen, aiConsentOpen, clearConfirmOpen]);
+    else if (mappingCandidate) setMappingCandidate(null);
+  }, [recommendationError, connectOpen, loadedExportOpen, aiConsentOpen, clearConfirmOpen, mappingCandidate]);
   useEffect(() => {
     if (!activeModal) return;
     const previous = document.activeElement as HTMLElement | null;
@@ -247,6 +252,18 @@ export default function Home() {
   const [visibleCount, setVisibleCount] = useState(24);
   const [attendanceYear, setAttendanceYear] = useState(Number(data.coverage.lastDate.slice(0, 4)));
   const hasUploadedData = data !== demoData || loadedImport !== null;
+  const mappingCandidates = useMemo<MappingCandidate[]>(() => {
+    const seen = new Set<string>();
+    const result: MappingCandidate[] = [];
+    for (const input of historyImports) for (const day of input.exerciseDays) {
+      if (!day.exerciseId.startsWith("custom_")) continue;
+      const key = exerciseOverrideKey(day.source, day.rawExerciseName);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      result.push({ key, source: day.source, rawName: day.rawExerciseName, currentName: day.displayName });
+    }
+    return result;
+  }, [historyImports]);
 
   useEffect(() => {
     console.log("%c+----------------------+\n|      RIPPER OS       |\n+----------------------+", "font-family: 'Google Sans Flex', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: 2px; line-height: 1.35; color: #f3f7f1;");
@@ -270,6 +287,7 @@ export default function Home() {
       setLoadedImport(null);
       setLoadedSource("");
       setHistoryImports([]);
+      setExerciseOverrides({});
       setLastExportName(snapshot.fileName ?? ""); setLastExportAt(snapshot.uploadedAt ?? "");
       setRecommendations(snapshot.recommendations ?? []); setAiInsight(snapshot.aiInsight ?? null);
       setSelectedExerciseId(featured ? exerciseSeriesId(featured) : "");
@@ -291,7 +309,7 @@ export default function Home() {
     setImporting(true);
     setUploadState("Detecting and processing your export on this device…");
     try {
-      let options: StrongNormalizationOptions = {};
+      let options: StrongNormalizationOptions = { exerciseOverrides };
       let outcome = await importTrainingFile(file, controller.signal, options);
       if (outcome.status === "needs-input") {
         if (outcome.needs.includes("weight-unit")) {
@@ -349,6 +367,32 @@ export default function Home() {
     }
   };
 
+  const applyExerciseMapping = (override: ExerciseOverride | null) => {
+    if (!mappingCandidate) return;
+    const nextOverrides = { ...exerciseOverrides };
+    if (override) nextOverrides[mappingCandidate.key] = override;
+    else delete nextOverrides[mappingCandidate.key];
+    const nextImports = historyImports.map((input) => ({
+      ...input,
+      exerciseDays: input.exerciseDays.map((day) => {
+        if (exerciseOverrideKey(day.source, day.rawExerciseName) !== mappingCandidate.key) return day;
+        const resolved = resolveExercise(day.source, day.rawExerciseName, override ?? undefined);
+        return { ...day, exerciseId: resolved.exerciseId, displayName: resolved.displayName };
+      }),
+    }));
+    const payload = buildDashboard(nextImports) as UploadPayload;
+    setExerciseOverrides(nextOverrides);
+    setHistoryImports(nextImports);
+    setData(payload);
+    setRecommendations([]);
+    setAiInsight(null);
+    setRecommendationState("");
+    setRecommendationError("");
+    setMappingCandidate(null);
+    const snapshot = { data: payload, fileName: lastExportName, uploadedAt: new Date().toISOString(), recommendations: [], aiInsight: null };
+    saveTrainingSnapshot(JSON.stringify(snapshot), () => localStorage);
+  };
+
   const clearUploadedData = () => {
     importController.current?.abort();
     aiController.current?.abort();
@@ -358,6 +402,7 @@ export default function Home() {
     setLoadedImport(null);
     setLoadedSource("");
     setHistoryImports([]);
+    setExerciseOverrides({});
     setRecommendations([]);
     setAiInsight(null);
     setRecommendationError("");
@@ -846,9 +891,11 @@ export default function Home() {
           <p className="loaded-export-name">{lastExportName || "Training export"}</p>
           {lastExportAt && <p className="muted small">Loaded {new Date(lastExportAt).toLocaleString()}</p>}
           {historyImports.length > 0 ? <p className="muted small">Sources in this history: {loadedSource || "training exports"}. Add accepts imports with dates not already present.</p> : <p className="muted small">This result was restored from a dashboard snapshot. Reimport the source before adding another file.</p>}
-          <div className="connect-actions"><button className="button secondary" onClick={() => setLoadedExportOpen(false)}>Close</button>{historyImports.length > 0 && <label className="button secondary upload-button">Add data<input type="file" accept=".xlsx,.csv" onChange={(event) => { setLoadedExportOpen(false); handleUpload(event, "add"); }} /></label>}<label className="button primary upload-button">Replace export<input type="file" accept=".xlsx,.csv" onChange={(event) => { setLoadedExportOpen(false); handleUpload(event, "replace"); }} /></label></div>
+          <div className="connect-actions"><button className="button secondary" onClick={() => setLoadedExportOpen(false)}>Close</button>{mappingCandidates.length > 0 && <button className="button secondary" onClick={() => { setLoadedExportOpen(false); setMappingCandidate(mappingCandidates[0]); }}>Map exercises ({mappingCandidates.length})</button>}{historyImports.length > 0 && <label className="button secondary upload-button">Add data<input type="file" accept=".xlsx,.csv" onChange={(event) => { setLoadedExportOpen(false); handleUpload(event, "add"); }} /></label>}<label className="button primary upload-button">Replace export<input type="file" accept=".xlsx,.csv" onChange={(event) => { setLoadedExportOpen(false); handleUpload(event, "replace"); }} /></label></div>
         </section>
       </div>}
+
+      <ExerciseMappingDialog candidate={mappingCandidate} onClose={() => setMappingCandidate(null)} onSave={(override) => applyExerciseMapping(override)} onKeepCustom={() => applyExerciseMapping({ keepCustom: true })} onReset={() => applyExerciseMapping(null)} />
 
       {aiConsentOpen && <div className="connect-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setAiConsentOpen(false); }}>
         <section className="connect-dialog panel" role="dialog" aria-modal="true" aria-labelledby="ai-consent-title">

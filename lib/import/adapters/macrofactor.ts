@@ -3,7 +3,7 @@ import type { InspectedInput } from "../inspect-input.ts";
 import type { CanonicalExerciseDay, DailyMetric, DailyMetrics } from "../../domain/training.ts";
 import type { AggregateImport, ImportIssue } from "../types.ts";
 import { assertValidImport, isCalendarDate } from "../validation.ts";
-import { resolveExercise } from "../../exercises/resolve.ts";
+import { exerciseOverrideKey, resolveExercise, type ExerciseOverrideMap } from "../../exercises/resolve.ts";
 
 const DAY = 86_400_000;
 const clean = (value: unknown) => String(value ?? "").replace(/ \((kg|sets|reps|sec)\)$/i, "").trim();
@@ -31,7 +31,7 @@ function sourceDate(value: unknown, date1904: boolean): string | null {
 }
 
 /** Source mapping only: no dashboard calculations or display zero-filling. */
-export function normalizeMacroFactor(workbook: InspectedInput, filename: string): AggregateImport {
+export function normalizeMacroFactor(workbook: InspectedInput, filename: string, options: { exerciseOverrides?: ExerciseOverrideMap } = {}): AggregateImport {
   // Import-local identity, not a deduplication fingerprint (reconciliation is a later task).
   const importId = `macrofactor:${globalThis.crypto.randomUUID()}`;
   const result: AggregateImport = { schemaVersion: 1, importId, source: "macrofactor", filename, adapterVersion: "aggregate-v2", exerciseDays: [], muscleDays: [], issues: [], sourceSheets: {}, sourceRows: [] };
@@ -64,7 +64,7 @@ export function normalizeMacroFactor(workbook: InspectedInput, filename: string)
     const key = JSON.stringify([date, rawExerciseName]);
     let entry = days.get(key);
     if (!entry) {
-      const resolved = resolveExercise("macrofactor", rawExerciseName);
+      const resolved = resolveExercise("macrofactor", rawExerciseName, options.exerciseOverrides?.[exerciseOverrideKey("macrofactor", rawExerciseName)]);
       entry = { id: `${importId}:${key}`, importId, source: "macrofactor", rawExerciseName, exerciseId: resolved.exerciseId, displayName: displayName(rawExerciseName), date, metrics: emptyMetrics(), origin: "source-aggregate", sourceRefs: [], comparisonKey: resolved.comparisonKey };
       days.set(key, entry);
     }

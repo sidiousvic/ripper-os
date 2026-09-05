@@ -4,6 +4,7 @@ import { sourceMappingByKey, sourceMappingKey } from "./source-mappings.ts";
 
 export type ResolutionMethod = "user-override" | "source-mapping" | "canonical-name" | "alias" | "custom";
 export interface ExerciseOverride { exerciseId?: string; keepCustom?: boolean; comparisonKey?: string }
+export type ExerciseOverrideMap = Record<string, ExerciseOverride>;
 export interface ExerciseResolution {
   exerciseId: string;
   displayName: string;
@@ -19,6 +20,7 @@ export function normalizeExerciseName(rawName: string) {
 }
 const slug = (value: string) => normalizeExerciseName(value).replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "") || "unnamed";
 const stableCustomId = (source: TrainingSource, rawName: string) => `custom_${source}_${slug(rawName)}`;
+export const exerciseOverrideKey = (source: TrainingSource, rawName: string) => `${source}:${normalizeExerciseName(rawName)}`;
 
 export function resolveExercise(source: TrainingSource, rawName: string, override?: ExerciseOverride): ExerciseResolution {
   const normalized = normalizeExerciseName(rawName);

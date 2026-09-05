@@ -6,11 +6,12 @@ import { assertValidDetailedImport } from "../validation.ts";
 import { strongDuration } from "../value-parsing.ts";
 import { parseStrongRows, type StrongOptions, type StrongRowsResult } from "./strong-rows.ts";
 import { groupStrongSessions } from "./strong-sessions.ts";
-import { resolveExercise } from "../../exercises/resolve.ts";
+import { exerciseOverrideKey, resolveExercise, type ExerciseOverrideMap } from "../../exercises/resolve.ts";
 
 export interface StrongNormalizationOptions extends StrongOptions {
   /** Explicit user/source evidence only; never inferred from the exercise name. */
   loadSemantics?: Record<string, Pick<RecordedLoad, "component" | "basis">>;
+  exerciseOverrides?: ExerciseOverrideMap;
 }
 export type StrongImportOutcome =
   | { status: "ready"; data: DetailedImport }
@@ -41,7 +42,7 @@ export function normalizeStrong(input: InspectedInput, filename: string, options
       ...session, durationSeconds: durations.length === 1 ? durations[0] : null, notes: notes || undefined,
       exercises: session.exercises.map(exercise => {
         const semantics = options.loadSemantics?.[exercise.rawExerciseName] ?? { component: "unknown" as const, basis: "unknown" as const };
-        const resolved = resolveExercise("strong", exercise.rawExerciseName);
+        const resolved = resolveExercise("strong", exercise.rawExerciseName, options.exerciseOverrides?.[exerciseOverrideKey("strong", exercise.rawExerciseName)]);
         const exerciseId = resolved.exerciseId;
         const comparisonKey = semantics.component === "unknown" || semantics.basis === "unknown" ? `${resolved.exerciseId}:${semantics.component}:${semantics.basis}` : resolved.comparisonKey;
         return {

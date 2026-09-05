@@ -18,7 +18,7 @@ export function parseImport(fileBytes: Uint8Array, fileName: string, options: St
   if (detected.format === "ambiguous") throw new Error("Ambiguous training export format. Use one source format per file.");
   if (detected.format === "unknown") throw new Error("We don't recognize this training export yet.");
   if (detected.format === "macrofactor") {
-    const importData = normalizeMacroFactor(input, fileName);
+    const importData = normalizeMacroFactor(input, fileName, options);
     return { status: "ready", source: "macrofactor", dashboard: buildDashboard(importData, input.inputKind === "csv" ? "csv" : "workbook"), importData };
   }
   const normalized = normalizeStrong(input, fileName, options);
