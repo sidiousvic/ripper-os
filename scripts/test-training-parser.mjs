@@ -165,6 +165,7 @@ console.log("Detection: source signatures, BOM, renamed files, unknown and ambig
 const { parseStrongRows } = await import("../lib/import/adapters/strong-rows.ts");
 const { parseHevyRows } = await import("../lib/import/adapters/hevy-rows.ts");
 const { normalizeHevy } = await import("../lib/import/adapters/hevy.ts");
+const { resolveExercise: resolveExerciseForFixture } = await import("../lib/exercises/resolve.ts");
 const { parseImport } = await import('../lib/import/parse-import.ts');
 const strongInput = inspectInput(strongFixtureBytes, "strong.csv");
 assert.equal(parseImport(strongFixtureBytes, "strong.csv").status, "needs-input");
@@ -180,6 +181,7 @@ assert.equal(normalizedHevy.sessions.length > 1, true);
 assert.equal(normalizedHevy.sessions.flatMap(session => session.exercises).flatMap(exercise => exercise.sets).length, 330);
 const hevyImport = parseImport(hevyFixtureBytes, "hevy.csv");
 assert.equal(hevyImport.source, "hevy");
+for (const name of ["Wide Grip Pull Up", "Jumping Rope"]) assert.notEqual(resolveExerciseForFixture("macrofactor", name).method, "custom");
 assert.equal(parsedStrong.status, "ready");
 assert.equal(parsedStrong.source, "strong");
 assert.equal(parsedStrong.dashboard.coverage.totalSessions, 86);

@@ -18,6 +18,9 @@ export const exerciseCatalog: CanonicalExercise[] = [
   { id: "barbell_front_squat", displayName: "Barbell Front Squat", aliases: ["Front Squat (Barbell)"], equipment: "barbell", movementPattern: "squat", primaryMuscles: ["quads"], secondaryMuscles: ["glutes", "posterior chain"] },
   { id: "barbell_deadlift", displayName: "Barbell Deadlift", aliases: ["Deadlift (Barbell)"], equipment: "barbell", movementPattern: "deadlift", primaryMuscles: ["posterior chain"], secondaryMuscles: ["back"] },
   { id: "barbell_romanian_deadlift", displayName: "Barbell Romanian Deadlift", aliases: ["Romanian Deadlift (Barbell)"], equipment: "barbell", movementPattern: "hinge", primaryMuscles: ["posterior chain"], secondaryMuscles: ["back"] },
+  { id: "wide_grip_pull_up", displayName: "Wide Grip Pull-Up", aliases: ["Wide Grip Pull Up"], equipment: "bodyweight", movementPattern: "vertical-pull", primaryMuscles: ["back"], secondaryMuscles: ["biceps"] },
+  { id: "standing_dumbbell_lateral_raise", displayName: "Standing Dumbbell Lateral Raise", aliases: ["Lateral Raise (Dumbbell)"], equipment: "dumbbell", movementPattern: "shoulder-isolation", primaryMuscles: ["side delts"] },
+  { id: "jump_rope", displayName: "Jump Rope", aliases: ["Jumping Rope"], equipment: "unknown", movementPattern: "conditioning", primaryMuscles: [] },
 ];
 
 export const canonicalById = new Map(exerciseCatalog.map(exercise => [exercise.id, exercise]));

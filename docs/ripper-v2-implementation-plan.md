@@ -3830,6 +3830,8 @@ Date/number validation is the exception to accepting invalid legacy behavior: V2
 
 ## Roadmap changes
 
+- 2026-09-06: Reported bug: MacroFactor exercise names are broadly falling through to `custom_*` identities, making manual resolution of roughly 70 exercises impractical. Treat this as a high-priority mapping investigation before asking users to resolve imported names; inspect MacroFactor source mappings, normalization keys and fixture coverage. No automatic fuzzy merge is authorized.
+
 - 2026-09-06: V2-025 higher-model review completed. Added same-source session/observation reconciliation, retained session evidence through projection, and combined new same-day facts without overwriting prior metrics. Verified real Strong superset/reordering, edited and missing records, two-a-day sessions, alias changes, MacroFactor CSV/XLSX and muscle observations. Cross-source overlaps and projections without session evidence remain conflicts; V2-026 is not started. Local history is scoped to one account per source.
 
 - 2026-09-05: Created this incremental roadmap from the prior engineering plan and a fresh working-tree inspection. Accounted for committed UI modernization and pending typography/branding/version changes without modifying them.
