@@ -158,3 +158,29 @@ assert.equal(detectFormat(inspectCsv("foo,bar\nx,y")).format, "unknown");
 assert.deepEqual(detectFormat(inspectCsv("Date,Exercise,Reps,Workout Name,Duration,Exercise Name,Set Order,Weight\n")), {format:"ambiguous", candidates:["macrofactor","strong"]});
 assert.throws(() => inspectInput(new Uint8Array([80,75,0,0]), "zip.csv"), /archive/);
 console.log("Detection: source signatures, BOM, renamed files, unknown and ambiguous input passed");
+
+const { parseStrongRows } = await import("../lib/import/adapters/strong-rows.ts");
+const strongInput = inspectInput(strongFixtureBytes, "strong.csv");
+const stagedStrong = parseStrongRows(strongInput);
+assert.equal(stagedStrong.rows.length, 1903);
+assert.deepEqual(stagedStrong.needs, ["weight-unit", "distance-unit"]);
+assert.equal(stagedStrong.rows[0].localTimestamp, "2020-12-30 18:51:52");
+assert.equal(stagedStrong.rows[0].ref, "Sheet1!2");
+const strongHeader = 'Date,Workout Name,Duration,Exercise Name,Set Order,Weight,Reps,Distance,Seconds,Notes,Workout Notes,RPE\n';
+const stagedSynthetic = parseStrongRows(inspectCsv(strongHeader + [
+ '2026-01-02 12:30:00,Test,1h 20m,Bench,1,,5,0,0,"line 1\nline 2",,8',
+ '2026-01-02 12:30:00,Test,1h 20m,Bench,2,0,5,0,0,,,',
+ '2026-02-30 12:30:00,Test,1h,Bench,1,100,5,0,0,,,',
+ '2026-01-02 12:30:00,Test,1h,Bench,3,100,-1,0,0,,,',
+ '01/02/2026 12:30:00,Test,1h,Bench,4,100,5,0,0,,,',
+ '2026-01-02 12:30:00,Test,1h,,5,100,5,0,0,,,',
+ '2026-01-02 12:30:00,Test,1h,Bench,6,Infinity,NaN,0,0,,,',
+].join('\n')));
+assert.equal(stagedSynthetic.rows.length, 2);
+assert.equal(stagedSynthetic.rows[0].weight, null);
+assert.equal(stagedSynthetic.rows[1].weight, 0);
+assert.equal(stagedSynthetic.rows[0].notes, 'line 1\nline 2');
+assert.equal(stagedSynthetic.sourceRows[1].row, 3, "row numbers count CSV records, not quoted physical lines");
+assert.ok(stagedSynthetic.needs.includes('date-format'));
+assert.equal(parseStrongRows(strongInput, {weightUnit:'kg', distanceUnit:'km'}).status, 'ready');
+console.log('Strong rows: real fixture, explicit options, notes, zero/blank and malformed data passed');

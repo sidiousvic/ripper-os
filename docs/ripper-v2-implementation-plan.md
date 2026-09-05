@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M3 — Strong drives the existing dashboard
-Current task: V2-011
-Last completed task: V2-010 — Detect MacroFactor and Strong from content signatures
-Next task: V2-011
+Current task: V2-012
+Last completed task: V2-011 — Parse and validate Strong rows with explicit issues
+Next task: V2-012
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures; unit evidence still must be documented.
-Tasks complete: 9
-Tasks remaining: 42
+Tasks complete: 10
+Tasks remaining: 41
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -924,7 +924,7 @@ Implement V2-010 only. Introduce a small pure detector using verified worksheet/
 ### V2-011 — Parse and validate Strong rows with explicit issues
 
 Status:
-TODO
+DONE
 
 Milestone:
 M3 — Strong drives the existing dashboard
@@ -3841,3 +3841,5 @@ Date/number validation is the exception to accepting invalid legacy behavior: V2
 - 2026-09-05: V2-009: Committed the approved original Strong fixture and observed schema manifest. Unitless Weight/Distance require explicit options; no source settings are guessed.
 
 - 2026-09-05: V2-010: Detect source signatures using decoded content, including BOM, renamed files and ambiguous candidates. Strong upload remains disabled; unknown CSV retains MF compatibility errors.
+
+- 2026-09-05: V2-011: Parsed all 1,903 original Strong rows into typed staging records; preserve wall time, CSV records and multiline notes. Invalid required fields are skipped with issues; missing units and alternate date grammars request input.
