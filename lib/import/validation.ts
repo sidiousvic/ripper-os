@@ -30,3 +30,38 @@ export function assertValidImport(data: AggregateImport) {
   if (data.exerciseDays.some(day => day.importId !== data.importId || day.source !== data.source)) issues.push("Mismatched import identity");
   if (issues.length) throw new Error(`Invalid normalized training records: ${issues[0]}`);
 }
+
+/** Runtime gate before any detailed source may feed shared analytics. */
+export function assertValidDetailedImport(data: import("../domain/strength.ts").DetailedImport) {
+  const ids = new Set<string>();
+  const refs = new Set(data.sourceRows.map(row => row.ref));
+  const fail = () => { throw new Error("Invalid normalized detailed training records."); };
+  const id = (value: string) => { if (!value || ids.has(value)) fail(); ids.add(value); };
+  const number = (value: number | null) => { if (value !== null && (typeof value !== "number" || !Number.isFinite(value) || value < 0)) fail(); };
+  const sourceRefs = (values: string[]) => { if (!values.length || values.some(value => !refs.has(value))) fail(); };
+  if (data.schemaVersion !== 1 || data.representation !== "detailed" || !data.importId || !["macrofactor", "strong", "hevy"].includes(data.source) || !data.sessions.length) fail();
+  for (const session of data.sessions) {
+    id(session.id);
+    if (session.importId !== data.importId || session.source !== data.source || !isCalendarDate(session.date) || !["date", "local-datetime", "instant"].includes(session.timePrecision) || !["source-id", "timestamp-and-title", "confirmed"].includes(session.boundary)) fail();
+    number(session.durationSeconds);
+    sourceRefs(session.sourceRefs);
+    if (!session.exercises.length) fail();
+    for (const [order, exercise] of session.exercises.entries()) {
+      id(exercise.id);
+      if (exercise.order !== order || !exercise.exerciseId || !exercise.rawExerciseName || !exercise.displayName || !exercise.comparisonKey || !exercise.sets.length) fail();
+      for (const [index, set] of exercise.sets.entries()) {
+        id(set.id);
+        if (set.index !== index || !["normal", "warmup", "drop", "failure", "other", "unknown"].includes(set.kind) || !["total", "per-side", "unknown"].includes(set.repsBasis) || set.completed !== null && typeof set.completed !== "boolean") fail();
+        for (const value of [set.reps, set.durationSeconds, set.distanceMeters, set.rpe, set.rir]) number(value);
+        if (set.rpe !== null && set.rpe > 10) fail();
+        sourceRefs(set.sourceRefs);
+        if (set.load !== null) {
+          number(set.load.kg); number(set.load.originalValue);
+          if (!Number.isFinite(set.load.kg) || !Number.isFinite(set.load.originalValue) || !["kg", "lb"].includes(set.load.originalUnit) || !["external", "assistance", "combined", "unknown"].includes(set.load.component) || !["total", "per-implement", "per-side", "machine-setting", "unknown"].includes(set.load.basis)) fail();
+          const expected = set.load.originalValue * (set.load.originalUnit === "lb" ? 0.45359237 : 1);
+          if (Math.abs(expected - set.load.kg) > Math.max(1, expected) * 1e-12) fail();
+        }
+      }
+    }
+  }
+}

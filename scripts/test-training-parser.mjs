@@ -205,3 +205,47 @@ const missingBoundary = groupStrongSessions(parseStrongRows(inspectCsv(strongHea
 assert.equal(missingBoundary.sessions.length, 0);
 assert.equal(missingBoundary.ambiguousRowRefs.length, 1);
 console.log('Strong grouping: 86 sessions, all sets, two-a-day, repeated blocks and ambiguity passed');
+
+const { normalizeStrong } = await import('../lib/import/adapters/strong.ts');
+const { kilograms, meters } = await import('../lib/import/units.ts');
+const { assertValidDetailedImport } = await import('../lib/import/validation.ts');
+assert.ok(Math.abs(kilograms(100, 'lb') - 45.359237) < 1e-10);
+assert.ok(Math.abs(kilograms(100, 'lb') / 0.45359237 - 100) < 1e-10);
+assert.equal(meters(1, 'mi'), 1609.344);
+assert.equal(meters(1.5, 'km'), 1500);
+assert.throws(()=>kilograms(100, 'stone'), /unit/);
+assert.equal(normalizeStrong(strongInput, 'strong.csv').status, 'needs-input');
+const normalizedStrong = normalizeStrong(strongInput, 'strong.csv', {weightUnit:'kg', distanceUnit:'km'});
+assert.equal(normalizedStrong.status, 'ready');
+assert.equal(normalizedStrong.data.sessions.length, 86);
+assert.equal(normalizedStrong.data.sourceRows.length, 1903);
+assert.equal(normalizedStrong.data.sessions[0].durationSeconds, 9480);
+assert.equal(normalizedStrong.data.sessions[0].exercises[0].sets[0].durationSeconds, 0);
+assert.equal(normalizedStrong.data.sessions[0].exercises[0].sets[0].load.component, 'unknown');
+assert.equal(normalizedStrong.data.sessions[0].startedAt, undefined);
+assert.equal(normalizedStrong.data.sessions[0].exercises[0].sets[0].completed, null);
+assertValidDetailedImport(normalizedStrong.data);
+const measurementCsv = inspectCsv(strongHeader + [
+ '2026-01-02 12:30:00,Test,1h,Pull-Up,1,100,5,0,0,,,',
+ '2026-01-02 12:30:00,Test,1h,Pull-Up,2,0,5,0,0,,,',
+ '2026-01-02 12:30:00,Test,1h,Pull-Up,3,,5,0,0,,,',
+ '2026-01-02 12:30:00,Test,1h,Plank,1,,,0,60,,,',
+ '2026-01-02 12:30:00,Test,1h,Walk,1,,,2,0,,,',
+].join('\n'));
+const measurements = normalizeStrong(measurementCsv, 'measurements.csv', {weightUnit:'lb', distanceUnit:'km', loadSemantics:{'Pull-Up':{component:'assistance',basis:'machine-setting'}}});
+assert.equal(measurements.status, 'ready');
+const measuredExercises = measurements.data.sessions[0].exercises;
+assert.ok(Math.abs(measuredExercises[0].sets[0].load.kg - 45.359237)<1e-10);
+assert.equal(measuredExercises[0].sets[0].load.component,'assistance');
+assert.equal(measuredExercises[0].sets[0].load.originalValue,100);
+assert.equal(measuredExercises[0].sets[1].load.kg,0);
+assert.equal(measuredExercises[0].sets[2].load,null);
+assert.equal(measuredExercises[1].sets[0].reps,null);
+assert.equal(measuredExercises[1].sets[0].durationSeconds,60);
+assert.equal(measuredExercises[2].sets[0].distanceMeters,2000);
+const conflictInput = inspectCsv(strongHeader.trimEnd() + ',Weight Unit\n2026-01-02 12:30:00,Test,1h,Bench,1,100,5,0,0,,,,lb');
+assert.ok(normalizeStrong(conflictInput,'mixed.csv',{weightUnit:'kg'}).needs.includes('row-unit-conventions'));
+const corrupt = structuredClone(normalizedStrong.data);
+corrupt.sessions[0].exercises[0].sets[0].load.kg = Infinity;
+assert.throws(()=>assertValidDetailedImport(corrupt), /Invalid normalized/);
+console.log('Strong canonical units: fixture, lb/kg, zero/missing, timed/distance, assistance and conflicts passed');

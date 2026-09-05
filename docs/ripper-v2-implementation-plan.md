@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M3 — Strong drives the existing dashboard
-Current task: V2-013
-Last completed task: V2-012 — Reconstruct Strong sessions and preserve detailed sets
-Next task: V2-013
+Current task: V2-014
+Last completed task: V2-013 — Normalize Strong measurements into canonical units
+Next task: V2-014
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures; unit evidence still must be documented.
-Tasks complete: 11
-Tasks remaining: 40
+Tasks complete: 12
+Tasks remaining: 39
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -1059,7 +1059,7 @@ Implement V2-012 only. Group typed Strong rows into source-faithful sessions, re
 ### V2-013 — Normalize Strong measurements into canonical units
 
 Status:
-TODO
+DONE
 
 Milestone:
 M3 — Strong drives the existing dashboard
@@ -3845,3 +3845,5 @@ Date/number validation is the exception to accepting invalid legacy behavior: V2
 - 2026-09-05: V2-011: Parsed all 1,903 original Strong rows into typed staging records; preserve wall time, CSV records and multiline notes. Invalid required fields are skipped with issues; missing units and alternate date grammars request input.
 
 - 2026-09-05: V2-012: Grouped original Strong rows into 86 contiguous timestamp/title sessions with all 1,903 sets preserved. A/B/A blocks and equal sets remain distinct; resets and missing/reappearing workout boundaries require review. Introduced detailed domain types without converting measurements.
+
+- 2026-09-05: V2-013: Strong now emits validated detailed imports using explicit mass/distance choices, without fabricating reps, completion, timezone, load basis or bodyweight. Positive assistance supported only via explicit exercise semantics; row-unit conflicts and ambiguous sessions require input. 86 workouts and 1,903 sets retained. Next task V2-014 projects these facts into shared daily analytics.
