@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
-Current milestone: M8 — Improve meaning after preserving behavior
-Current task: V2-046 COMPLETE
-Last completed task: V2-046 — Add explicit bodyweight lookup and a limited relative-load view
-Next task: Address remaining optional analytics tasks
-Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. V2-046 now depends on the completed bodyweight series import. Strong unitless columns are documented and require explicit import options.
-Tasks complete: 49
-Tasks remaining: 3
+Current milestone: M9 — Measure and prepare the beta
+Current task: V2-051 COMPLETE
+Last completed task: V2-051 — Document supported sources and run the combined beta checkpoint
+Next task: Maintain the launch backlog and address newly observed product issues
+Blockers: No v2 architecture tasks remain. Live Vercel footer verification and independent launch-backlog items remain outside the completed browser checkpoint. Strong unitless columns still require explicit import options.
+Tasks complete: 51
+Tasks remaining: 0
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -709,9 +709,9 @@ Implement V2-007 only. Move muscle windows and heatmap calculation behind a pure
 ### V2-008 — Route MacroFactor through the canonical import boundary
 
 Status:
-IN_PROGRESS
+DONE
 
-Implementation and automated verification complete; browser worker smoke verification pending extension file URL permission.
+Implementation and automated verification complete. User-confirmed browser smoke verification passed for MacroFactor import and replacement behavior.
 
 Milestone:
 M2 — MacroFactor through a small shared model
@@ -1201,7 +1201,9 @@ Implement V2-014 only. Add a source-independent detailed-session-to-exercise-day
 ### V2-015 — Render Strong imports in the existing dashboard
 
 Status:
-IN_PROGRESS
+DONE
+
+Verification note 2026-09-06: User confirmed the Strong fixture imports successfully in the browser and renders correctly in the shared dashboard.
 
 Milestone:
 M3 — Strong drives the existing dashboard
@@ -3841,6 +3843,8 @@ These are not hidden prerequisites and must not be implemented opportunistically
 Date/number validation is the exception to accepting invalid legacy behavior: V2-008 rejects/omits malformed facts explicitly, while valid-input analytics remain equal. Regression tests should name this distinction.
 
 ## Roadmap changes
+
+- 2026-09-06: User-confirmed browser smoke passed for MacroFactor and Strong import/replacement flows, closing V2-008 and V2-015. The v2 architecture task list is complete; future work returns to the launch backlog and observed product issues.
 
 - 2026-09-06: Added `npm run report:unresolved` to inventory real MacroFactor custom fallbacks by name and set count without uploading the source file. This is the input for the broader deterministic mapping expansion.
 
