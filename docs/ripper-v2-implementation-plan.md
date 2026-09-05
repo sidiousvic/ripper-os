@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M5 — Imports become additive and explainable
-Current task: V2-030
-Last completed task: V2-029 — Exercise real cancellation and stale-result races
-Next task: V2-030
+Current task: V2-031
+Last completed task: V2-030 — Add a small transactional canonical-history store
+Next task: V2-031
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
-Tasks complete: 27
-Tasks remaining: 24
+Tasks complete: 28
+Tasks remaining: 23
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -2252,12 +2252,14 @@ Implement V2-029 only. Harden the import controller with tests that simulate the
 ### V2-030 — Add a small transactional canonical-history store
 
 Status:
-TODO
+DONE
 
 Milestone:
 M6 — Keep canonical history between visits
 
 **REQUIRES HIGHER-MODEL REVIEW**
+
+Higher-model review completed 2026-09-06: use one schemaVersion:1 state document in native IndexedDB, preserve aggregate imports as aggregate facts and detailed imports as nested sessions, and defer page restore to V2-031. No raw files or general migration framework are introduced.
 
 Manual checkpoint: NO
 
