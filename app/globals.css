@@ -3756,15 +3756,21 @@ button:hover {
 /* Keep every hero action in an equal geometric slot as actions are added. */
 .hero-actions {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   width: min(100%, 840px);
   margin-inline: auto;
 }
 
 .hero-actions .button {
+  grid-column: span 2;
   width: 100%;
   max-width: none;
   flex: none;
+}
+
+.hero-actions .ai-action {
+  grid-column: 2 / span 2;
+  width: 100%;
 }
 
 @media (max-width: 760px) {
@@ -3773,12 +3779,6 @@ button:hover {
     margin-inline: 0;
     grid-template-columns: 1fr;
   }
-}
-
-.hero-actions .ai-action {
-  grid-column: 1 / -1;
-  justify-self: center;
-  width: calc(50% - 5px);
 }
 
 .export-guide-link {
@@ -3799,8 +3799,9 @@ button:hover {
 }
 
 @media (max-width: 760px) {
+  .hero-actions .button,
   .hero-actions .ai-action {
-    grid-column: auto;
+    grid-column: 1;
     width: 100%;
   }
 }
