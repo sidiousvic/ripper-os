@@ -64,7 +64,7 @@ export function normalizeMacroFactor(workbook: InspectedInput, filename: string,
     const key = JSON.stringify([date, rawExerciseName]);
     let entry = days.get(key);
     if (!entry) {
-      const resolverName = displayName(rawExerciseName);
+      const resolverName = rawExerciseName.includes(" ∈ ") ? displayName(rawExerciseName) : rawExerciseName;
       const resolved = resolveExercise("macrofactor", resolverName, options.exerciseOverrides?.[exerciseOverrideKey("macrofactor", resolverName)]);
       entry = { id: `${importId}:${key}`, importId, source: "macrofactor", rawExerciseName, exerciseId: resolved.exerciseId, displayName: displayName(rawExerciseName), date, metrics: emptyMetrics(), origin: "source-aggregate", sourceRefs: [], comparisonKey: resolved.comparisonKey };
       days.set(key, entry);
