@@ -7,7 +7,7 @@ const round = (value: number, digits = 1) => Math.round(value * 10 ** digits) / 
 
 export function calculateConsistencySummary(days: DailyActivity[]) {
   const dates = [...new Set(days.filter((day) => finite(day.totalSets) > 0).map((day) => day.date))].sort();
-  if (!dates.length) throw new Error("No workout sessions were found in this MacroFactor export.");
+  if (!dates.length) throw new Error("No workout sessions were found in this training export.");
   const first = dates[0];
   const last = dates.at(-1)!;
   const months: { month: string; sessions: number; cumulative: number; coverage: string }[] = [];

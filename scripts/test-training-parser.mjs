@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import * as XLSX from "xlsx";
 import { parseTrainingFile } from "../lib/training-parser.ts";
-import { createMacroFactorImport } from "../lib/import/adapters/macrofactor.ts";
+import { normalizeMacroFactor } from "../lib/import/adapters/macrofactor.ts";
+import { inspectInput } from "../lib/import/inspect-input.ts";
+import { buildDashboard } from "../lib/analytics/build-dashboard.ts";
 import { validateCanonicalExerciseDays } from "../lib/import/validation.ts";
 import { buildWorkbookFixtures } from "../tests/fixtures/macrofactor/build-workbooks.mjs";
 const nullMetric = { totalSets: 0, totalReps: null, bestSetReps: null, heaviestKg: null, totalVolumeKg: null, e1rmKg: null, durationSec: null };
@@ -30,7 +32,7 @@ assert.throws(() => parseTrainingFile(new TextEncoder().encode("Date,Exercise,We
 assert.throws(() => parseTrainingFile(new TextEncoder().encode("Date,Exercise,Weight (kg),Reps\n1900-01-01,Row,10,5\n2026-01-01,Row,10,5"), "wide-history.csv"), /supported date span/);
 assert.equal(fromCsv.coverage.firstDate, "2026-01-01");
 assert.ok(!JSON.stringify(fromCsv).includes("private-note-marker"));
-const csvImport = createMacroFactorImport(fromCsv, "training.csv");
+const csvImport = normalizeMacroFactor(inspectInput(new TextEncoder().encode(csv), "training.csv"), "training.csv");
 assert.equal(csvImport.schemaVersion, 1);
 assert.equal(csvImport.source, "macrofactor");
 assert.ok(csvImport.exerciseDays.length > 0);
@@ -109,3 +111,38 @@ for (const name of ["six-months.csv", ...generatedWorkbooks.keys()]) {
   }
 }
 console.log("Synthetic six-month fixtures: reproducible workbooks, optional sheets, aliases and CSV acceptance passed");
+
+// V2-008: normalization precedes analytics; canonical facts are independently rebuildable.
+const normalizeCsv = (text) => normalizeMacroFactor(inspectInput(new TextEncoder().encode(text), "sample.csv"), "sample.csv");
+const withoutTime = (data) => { const copy = { ...data }; delete copy.generatedAt; return copy; };
+assert.deepEqual(withoutTime(buildDashboard(csvImport, "csv")), withoutTime(fromCsv));
+const changed = structuredClone(csvImport);
+changed.exerciseDays[0].metrics.totalSets = 9;
+assert.equal(buildDashboard(changed).exercises[0].totalSets, 10, "dashboard must read canonical facts");
+assert.ok(!("dashboard" in csvImport));
+assert.ok(csvImport.sourceRows.some(row => row.cells.includes("private-note-marker")));
+assert.ok(!JSON.stringify(buildDashboard(csvImport)).includes("private-note-marker"));
+assert.ok(csvImport.sourceRows.some(row => csvImport.exerciseDays[0].sourceRefs.includes(row.ref)));
+const rawAlias = normalizeCsv("Date,Exercise,Weight (kg),Reps\n2026-01-01,Bench Dips,0,5\n");
+assert.equal(rawAlias.exerciseDays[0].rawExerciseName, "Bench Dips");
+assert.equal(rawAlias.exerciseDays[0].displayName, "Bench Dip");
+const invalid = normalizeCsv("Date,Exercise,Weight (kg),Reps\n2026-02-30,Bench,100,5\n2026-02-01,Bench,100,-5\n2026-02-02,Bench,100,abc\n2026-02-03,Bench,,5\n2026-02-04,Bench,0,5\n");
+assert.deepEqual(invalid.exerciseDays.map(day => day.date), ["2026-02-03", "2026-02-04"]);
+assert.equal(invalid.exerciseDays[0].metrics.heaviestKg, null);
+assert.equal(invalid.exerciseDays[0].metrics.totalVolumeKg, null);
+assert.equal(invalid.exerciseDays[1].metrics.heaviestKg, 0);
+assert.ok(invalid.issues.some(issue => issue.code === "invalid-date"));
+assert.ok(invalid.issues.some(issue => issue.code === "invalid-reps"));
+for (const patch of [{ date: "2026-02-30" }, { metrics: { ...csvImport.exerciseDays[0].metrics, totalSets: -1 } }]) {
+  const malformed = structuredClone(csvImport);
+  Object.assign(malformed.exerciseDays[0], patch);
+  assert.throws(() => buildDashboard(malformed), /Invalid normalized/);
+}
+for (const [name, bytes] of generatedWorkbooks) {
+  const imported = normalizeMacroFactor(inspectInput(bytes, name), name);
+  assert.ok(!("sessions" in imported), "aggregate workbook must not invent sessions");
+  assert.deepEqual(withoutTime(buildDashboard(imported, "workbook")), withoutTime(parseTrainingFile(bytes, name)));
+  if (name === "six-months.xlsx") assert.ok(imported.muscleDays.length > 0);
+  assert.ok(imported.sourceRows.every(row => row.sheet.startsWith("Exercises -") || row.sheet === "Muscle Groups - Sets"));
+}
+console.log("Canonical boundary: rebuild, provenance, muscle ledger, null/zero and invalid-input checks passed");

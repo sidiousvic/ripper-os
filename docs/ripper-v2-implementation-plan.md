@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
-Current milestone: M1 — Lock down the behavior worth keeping
-Current task: V2-009 — Add a verified anonymized Strong export fixture (BLOCKED: fixture provenance/permission confirmation required)
+Current milestone: M3 — Strong drives the existing dashboard
+Current task: V2-009 — Add a verified anonymized Strong export fixture
 Last completed task: V2-008 — Route MacroFactor through the canonical import boundary
 Next task: V2-009
-Blockers: No verified Strong or Hevy export fixture exists in this checkout. V2-009 and V2-034 require a permission-cleared export with documented units and date interpretation. These do not block V2-001–008.
-Tasks complete: 8
-Tasks remaining: 43
+Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures; unit evidence still must be documented.
+Tasks complete: 7
+Tasks remaining: 44
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -709,7 +709,9 @@ Implement V2-007 only. Move muscle windows and heatmap calculation behind a pure
 ### V2-008 — Route MacroFactor through the canonical import boundary
 
 Status:
-DONE
+IN_PROGRESS
+
+Implementation and automated verification complete; browser worker smoke verification pending extension file URL permission.
 
 Milestone:
 M2 — MacroFactor through a small shared model
@@ -3833,3 +3835,5 @@ Date/number validation is the exception to accepting invalid legacy behavior: V2
 - 2026-09-05: V2-007 completed by extracting source-reported muscle windows and heatmap calculations into `lib/analytics/muscles.ts`; workbook parsing and baseline output remain unchanged.
 - 2026-09-05: V2-008 completed with a transitional MacroFactor import envelope, canonical exercise-day provenance, validation, and a dashboard boundary. Detailed source adapter extraction remains intentionally deferred until verified source fixtures require it.
 - 2026-09-05: V2-009 is waiting on confirmation that the newly appearing untracked `fixtures/raw-strong.csv` and `fixtures/raw-hevy.csv` files are permission-cleared, anonymized, and intended for repository use. They were inspected only and were not copied or staged.
+
+- 2026-09-05: Higher-model review reopened V2-008. Replaced dashboard pass-through with canonical-driven composition, isolated MacroFactor mapping, retained training rows and muscle ledger, and validated dates/numbers before analytics. Valid regression fixtures, typecheck, lint and both builds pass; Next home/About show v0.2.37. Browser upload blocked by extension permission, so V2-008 stays IN_PROGRESS for that verification. CSV legacy zero-fill and workbook zero omission are presentation-only until V2-042. Multiple imports explicitly rejected until additive reconciliation; V2-019 removes this guard. User confirmed original Strong/Hevy CSVs anonymized and approved.
