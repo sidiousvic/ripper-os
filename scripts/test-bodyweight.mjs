@@ -1,0 +1,12 @@
+import assert from "node:assert/strict";
+import { lookupBodyweight } from "../lib/analytics/bodyweight.ts";
+const measurement = (id, date, kind = "scale", kg = 70) => ({ id, importId: "i", source: "macrofactor", date, kg, kind, originalValue: kg, originalUnit: "kg", sourceRefs: [`${id}!B`] });
+const values = [measurement("a", "2026-01-01", "scale", 70), measurement("b", "2026-01-08", "scale", 71), measurement("t", "2026-01-08", "trend", 70.5)];
+assert.equal(lookupBodyweight(values, "2026-01-08").status, "found");
+assert.equal(lookupBodyweight(values, "2026-01-08").ageDays, 0);
+assert.equal(lookupBodyweight(values, "2026-01-12").ageDays, 4);
+assert.equal(lookupBodyweight(values, "2026-01-20").status, "missing");
+assert.equal(lookupBodyweight(values, "2025-12-20").status, "missing");
+assert.equal(lookupBodyweight([...values, measurement("c", "2026-01-08")], "2026-01-08").status, "missing");
+assert.equal(lookupBodyweight(values, "2026-01-08").measurement.kind, "scale");
+console.log("Bodyweight lookup: same-day, prior, stale, future and ambiguity policies passed");

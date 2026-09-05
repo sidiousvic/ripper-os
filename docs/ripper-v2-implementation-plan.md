@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
-Current milestone: M5 — Imports become additive and explainable
-Current task: COMPLETE
-Last completed task: V2-051 — Document supported sources and run the combined beta checkpoint
-Next task: Complete V2-046 limited bodyweight-relative view
+Current milestone: M8 — Improve meaning after preserving behavior
+Current task: V2-046 COMPLETE
+Last completed task: V2-046 — Add explicit bodyweight lookup and a limited relative-load view
+Next task: Address remaining optional analytics tasks
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. V2-046 now depends on the completed bodyweight series import. Strong unitless columns are documented and require explicit import options.
-Tasks complete: 48
-Tasks remaining: 4
+Tasks complete: 49
+Tasks remaining: 3
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -3384,7 +3384,9 @@ Implement V2-045 only. Preserve bodyweight history when an actual supported expo
 ### V2-046 — Add explicit bodyweight lookup and a limited relative-load view
 
 Status:
-TODO
+DONE
+
+Verification note 2026-09-06: Added same-day/prior-scale lookup with a seven-day maximum age, future/stale/ambiguous handling, and an external-load/bodyweight context panel for known load records. Trend weight is never used for the ratio.
 
 Milestone:
 M8 — Improve meaning after preserving behavior

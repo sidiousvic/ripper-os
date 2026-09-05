@@ -16,6 +16,7 @@ import ImportConflicts from "../components/import/import-conflicts";
 import { ImportController } from "../lib/import/import-controller";
 import ImportReportDialog from "../components/import/import-report";
 import ComparisonContextControls from "../components/dashboard/comparison-context-controls";
+import BodyweightContext from "../components/dashboard/bodyweight-context";
 import AmbientWireframe from "../components/ambient-wireframe";
 import { createImportReport, type ImportReport } from "../lib/import/import-report";
 import { TRAINING_SNAPSHOT_KEY } from "../lib/training-snapshot.mjs";
@@ -313,6 +314,7 @@ export default function Home() {
   const [lastExportAt, setLastExportAt] = useState("");
   const [selectedExerciseId, setSelectedExerciseId] = useState(() => { const featured = featuredExercise(exercises); return featured ? exerciseSeriesId(featured) : ""; });
   const selectedExercise = exercises.find((exercise) => exerciseSeriesId(exercise) === selectedExerciseId) ?? featuredExercise(exercises) ?? emptyExercise;
+  const bodyweightMeasurements = historyImports.flatMap((input) => "bodyweightMeasurements" in input ? input.bodyweightMeasurements ?? [] : []);
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>(selectedExercise.defaultMetric);
   const [displayUnit, setDisplayUnit] = useState<"kg" | "lb">(() => { try { const saved = typeof window !== "undefined" ? localStorage.getItem("ripper-display-unit") : null; return saved === "lb" ? "lb" : "kg"; } catch { return "kg"; } });
   useEffect(() => { try { localStorage.setItem("ripper-display-unit", displayUnit); } catch {} }, [displayUnit]);
@@ -632,7 +634,8 @@ export default function Home() {
     comparisonValue: comparisonByDate.has(record.date) && comparisonMetric ? toDisplayMetric(comparisonByDate.get(record.date)!, comparisonMetric, displayUnit) : null,
   }));
   const selectedFirst = selectedSeries[0]?.value ?? 0;
-  const selectedLatest = selectedSeries.at(-1)?.value ?? 0;
+  const selectedLatestRecord = selectedSeries.at(-1);
+  const selectedLatest = selectedLatestRecord?.value ?? 0;
   const selectedPeak = Math.max(...selectedSeries.map((record) => record.value), 0);
   const selectedChange = selectedFirst ? ((selectedLatest / selectedFirst) - 1) * 100 : 0;
   const selectedMeta = metricMeta[selectedMetric];
@@ -873,6 +876,7 @@ export default function Home() {
               <div><span>All-time peak</span><strong>{formatNumber(toDisplayMetric(selectedPeak, selectedMetric, displayUnit))} <small>{selectedUnit}</small></strong></div>
               <div><span>First → latest</span><strong><Delta value={selectedChange} /></strong></div>
             </div>
+            <BodyweightContext measurements={bodyweightMeasurements} date={selectedLatestRecord?.date ?? data.coverage.lastDate} externalLoadKg={selectedExercise.progress.at(-1)?.heaviestKg ?? null} />
             <div className="legend-inline focus-legend"><span><i className="legend-history" /> {selectedMeta.label}</span>{comparisonMeta && <span><i className="legend-latest" /> {comparisonMeta.label}</span>}</div>
             <MeasuredChart className="chart-area focus-chart">
               {selectedSeries.length > 1 ? (
