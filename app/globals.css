@@ -1,4 +1,27 @@
-@import url("https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&family=Montaga&family=Zen+Dots&display=swap");
+/* Keep typography available in production builds without a runtime stylesheet request. */
+@font-face {
+  font-family: "Google Sans Flex";
+  src: url("/fonts/GoogleSansFlex-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Zen Dots";
+  src: url("/fonts/ZenDots-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Montaga";
+  src: url("/fonts/Montaga-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
 
 * {
   box-sizing: border-box;
@@ -1951,7 +1974,7 @@ button {
   left: 50%;
   width: 100vw;
   transform: translateX(-50%);
-  background: linear-gradient(to bottom, #09150d 0, rgba(2, 6, 3, .72) 38px, #000 88px);
+  background: linear-gradient(to bottom, rgba(9, 21, 13, 0) 0, rgba(9, 21, 13, .72) 72px, rgba(2, 6, 3, .94) 150px, rgba(0, 0, 0, .78) calc(100% - 64px), rgba(0, 0, 0, 0) 100%);
   content: "";
 }
 
@@ -2723,7 +2746,7 @@ h4,
 .next-card h3,
 .principle h3 {
   font-family: var(--font-ui);
-  font-weight: 550;
+  font-weight: 500;
   letter-spacing: -.025em;
 }
 
