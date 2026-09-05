@@ -2239,22 +2239,18 @@ button, .button {
   --color-text: #eceeea;
   --color-text-secondary: #a2a6a0;
   --color-text-muted: #737770;
-  --green-primary: #9bc7a7;
-  --green-bright: #aed8b7;
-  --green-muted: #688f72;
-  --green-subtle: rgba(155, 199, 167, .14);
-  --green-surface: rgba(155, 199, 167, .08);
-  --color-success: var(--green-muted);
-  --color-warning: var(--green-muted);
+  --accent: #9bc7a7;
+  --color-success: var(--accent);
+  --color-warning: var(--accent);
   --color-danger: #d99898;
-  --color-info: var(--green-muted);
-  --chart-1: #9fc4a8;
-  --chart-2: #c1d6c6;
-  --chart-3: #7f9e86;
-  --chart-4: #66856e;
-  --chart-5: #526e59;
-  --chart-6: #405744;
-  --chart-7: #304333;
+  --color-info: var(--accent);
+  --chart-1: var(--accent);
+  --chart-2: var(--accent);
+  --chart-3: var(--accent);
+  --chart-4: var(--accent);
+  --chart-5: var(--accent);
+  --chart-6: var(--accent);
+  --chart-7: var(--accent);
   --bg: var(--color-bg);
   --bg-raised: var(--color-surface);
   --panel: var(--color-surface);
@@ -2264,8 +2260,8 @@ button, .button {
   --text: var(--color-text);
   --muted: var(--color-text-secondary);
   --muted-2: var(--color-text-muted);
-  --green: var(--green-primary);
-  --lime: var(--green-bright);
+  --green: var(--accent);
+  --lime: var(--accent);
   --red: var(--color-danger);
   --shadow-soft: none;
   --shadow-soft-raised: none;
@@ -2333,7 +2329,7 @@ h4,
 }
 
 .brand > span:last-child {
-  color: var(--green-primary);
+  color: var(--accent);
   font-family: var(--font-display);
   font-size: 15px;
   letter-spacing: .08em;
@@ -2373,7 +2369,7 @@ h4,
 .button.is-ready svg,
 .about-prose a,
 .footer a {
-  color: var(--green-primary);
+  color: var(--accent);
 }
 
 .donate-button {
@@ -2394,7 +2390,7 @@ h4,
 
 .hero h1 span,
 .hero h1 .hero-training > span {
-  color: var(--green-primary);
+  color: var(--accent);
 }
 
 .hero h1 .hero-training {
@@ -2430,7 +2426,7 @@ h4,
 }
 
 .button:not(.primary):not(.ai-action) > svg {
-  color: var(--green-muted);
+  color: color-mix(in srgb, var(--accent) 70%, transparent);
 }
 
 .button.primary > svg,
@@ -2442,13 +2438,13 @@ h4,
 .button.ai-action {
   border-color: transparent;
   color: #111111;
-  background: var(--green-primary);
+  background: var(--accent);
   box-shadow: none;
 }
 
 .button.primary:hover,
 .button.ai-action:hover {
-  background: var(--green-bright);
+  background: var(--accent);
 }
 
 .panel {
@@ -2496,7 +2492,7 @@ h4,
 .leader-name i {
   border-radius: 7px;
   color: var(--color-bg);
-  background: var(--green-muted);
+  background: color-mix(in srgb, var(--accent) 70%, transparent);
   box-shadow: none;
 }
 
@@ -2569,8 +2565,8 @@ h4,
 .family-filter button:hover,
 .family-filter button.active {
   color: var(--color-text);
-  border-color: var(--green-primary);
-  background: var(--green-surface);
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
   box-shadow: none;
 }
 
@@ -2607,19 +2603,19 @@ h4,
 .leaderboard-row:hover { background: var(--color-surface-raised); }
 .leaderboard-head { border-color: var(--color-border-strong); font-family: var(--font-ui); }
 .attendance-cell { border-color: var(--color-border); background: #191919; box-shadow: none; }
-.attendance-cell.active { border-color: var(--green-muted); background: rgba(57, 255, 102, .28); }
+.attendance-cell.active { border-color: color-mix(in srgb, var(--accent) 70%, transparent); background: color-mix(in srgb, var(--accent) 28%, transparent); }
 .attendance-cell.active.level-2 { background: rgba(57, 255, 102, .55); }
-.attendance-cell.active.level-3 { background: var(--green-primary); }
+.attendance-cell.active.level-3 { background: var(--accent); }
 .heat-0 { background: #191919; }
 .heat-1 { background: #23402a; }
 .heat-2 { background: #32633d; }
 .heat-3 { background: #4b965a; }
-.heat-4 { background: var(--green-primary); }
+.heat-4 { background: var(--accent); }
 
 .muscle-tracks::before,
 .muscle-tracks::after { background: #262626; }
 .muscle-tracks i.early { background: var(--chart-4); box-shadow: none; }
-.muscle-tracks i.recent { background: var(--green-primary); box-shadow: none; }
+.muscle-tracks i.recent { background: var(--accent); box-shadow: none; }
 
 .next-actions {
   border-color: var(--color-border);
@@ -2639,7 +2635,7 @@ h4,
 }
 
 .footer-wordmark {
-  color: var(--green-primary);
+  color: var(--accent);
   font-family: var(--font-display);
   font-size: 13px;
   letter-spacing: .08em;
@@ -2651,14 +2647,14 @@ h4,
 }
 
 .footer a:hover {
-  color: var(--green-bright);
+  color: var(--accent);
 }
 
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 select:focus-visible {
-  outline: 2px solid var(--green-primary);
+  outline: 2px solid var(--accent);
   outline-offset: 3px;
 }
 
@@ -2706,7 +2702,7 @@ h4,
 
 .hero h1 span,
 .hero h1 .hero-training > span {
-  color: var(--green-muted);
+  color: color-mix(in srgb, var(--accent) 70%, transparent);
 }
 
 .hero h1 .hero-training {
@@ -2763,12 +2759,12 @@ h4,
 .export-guide-link a,
 .about-prose a,
 .footer a {
-  color: var(--green-muted);
+  color: color-mix(in srgb, var(--accent) 70%, transparent);
 }
 
 .data-pill svg,
 .button:not(.primary):not(.ai-action) > svg {
-  color: var(--green-muted);
+  color: color-mix(in srgb, var(--accent) 70%, transparent);
 }
 
 .hero-actions .upload-button {
@@ -2784,17 +2780,17 @@ h4,
 }
 
 .hero-actions .upload-button.is-ready {
-  color: var(--green-muted);
+  color: color-mix(in srgb, var(--accent) 70%, transparent);
 }
 
 .hero-actions .button.primary,
 .hero-actions .button.ai-action {
-  background: var(--green-muted);
+  background: color-mix(in srgb, var(--accent) 70%, transparent);
 }
 
 .hero-actions .button.primary:hover,
 .hero-actions .button.ai-action:hover {
-  background: var(--green-primary);
+  background: var(--accent);
 }
 
 .button {
@@ -2818,7 +2814,7 @@ h4,
   min-width: 0;
   min-height: 0;
   border-radius: 0;
-  color: var(--green-muted);
+  color: color-mix(in srgb, var(--accent) 70%, transparent);
   background: transparent;
 }
 
@@ -2859,7 +2855,7 @@ h4,
 .delta {
   border: 0;
   padding: 0;
-  color: var(--green-primary);
+  color: var(--accent);
   background: transparent;
   font-weight: 500;
 }
@@ -2904,7 +2900,7 @@ h4,
 
 .exercise-card.selected {
   outline: 0;
-  box-shadow: inset 2px 0 0 var(--green-muted);
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--accent) 70%, transparent);
 }
 
 .exercise-card-top,
@@ -2926,7 +2922,7 @@ h4,
 }
 
 .sparkline {
-  color: var(--green-muted);
+  color: color-mix(in srgb, var(--accent) 70%, transparent);
 }
 
 .chart-area.tall,
@@ -2947,7 +2943,7 @@ h4,
 .legend-inline .legend-line,
 .legend-inline .legend-history,
 .legend-inline .legend-latest {
-  background: var(--green-muted);
+  background: color-mix(in srgb, var(--accent) 70%, transparent);
   box-shadow: none;
 }
 
@@ -2977,7 +2973,7 @@ h4,
 
 .rank-row strong,
 .gap-row > b {
-  color: var(--green-primary);
+  color: var(--accent);
   font-weight: 550;
 }
 
@@ -2999,4 +2995,68 @@ h4,
   .hero h1 {
     font-size: clamp(36px, 10vw, 54px);
   }
+}
+
+/* Final control pass: one accent token, opacity for emphasis, no glow. */
+:root {
+  --accent: #9bc7a7;
+}
+
+*,
+*::before,
+*::after {
+  text-shadow: none;
+}
+
+.button,
+button {
+  border: 1px solid var(--color-border-strong);
+  box-shadow: none;
+}
+
+.topbar button,
+.topbar .button {
+  border-color: transparent;
+}
+
+.hero-actions .upload-button {
+  border-color: var(--color-border);
+}
+
+.button.primary,
+.button.ai-action {
+  border-color: var(--color-border-strong);
+}
+
+.button:hover,
+button:hover,
+.button:active,
+button:active,
+.button svg,
+button svg {
+  box-shadow: none;
+  filter: none;
+}
+
+.button.primary:hover,
+.button.ai-action:hover {
+  border-color: var(--accent);
+}
+
+.hero-actions .button.primary,
+.hero-actions .button.ai-action {
+  background: var(--accent);
+}
+
+.hero-actions .button.primary:hover,
+.hero-actions .button.ai-action:hover {
+  background: var(--accent);
+  opacity: .88;
+}
+
+.delta,
+.delta.positive,
+.delta.negative {
+  border: 0;
+  box-shadow: none;
 }
