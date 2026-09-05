@@ -1,6 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
-import BuildVersion from "../build-version";
+import Footer from "../footer";
 import "../globals.css";
 
 export default function AboutPage() {
@@ -32,12 +31,6 @@ export default function AboutPage() {
       <h2>Privacy</h2><p>The original workbook is processed in the app and is not retained. A rendered summary and generated insights are kept in this browser so you can come back to the last export&apos;s result, and we show that as &quot;loaded&quot;. Your API key is never stored, so you have to enter it every time you want to render a new AI summary.</p>
       <h2>Limitations</h2><p>Ripper OS is a training-data visualization tool, not medical advice. Uploads are limited to 25 MB, CSV exports cannot provide muscle-group analysis unless that data is included, and comparisons are only as reliable as the exercise names, units, and logging consistency in the export.</p>
     </section>
-      <footer className="shell footer">
-        <div className="sidiousware-lockup">
-          <Image src="/brand/sidiousware-logo.png" alt="Sidiousware" width={330} height={191} />
-        </div>
-        <p><a href="https://github.com/sidiousvic/ripper-os/issues/new?title=Bug%3A%20&body=%23%23%20What%20happened%3F%0A%0A%23%23%20How%20can%20we%20reproduce%20it%3F%0A%0A%23%23%20Browser%20and%20device%0A" target="_blank" rel="noreferrer">Report a bug 🪲</a></p>
-        <BuildVersion />
-      </footer>
+      <Footer />
   </main>;
 }
