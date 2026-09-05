@@ -1,6 +1,6 @@
 {
   "name": "ripper-os",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": false,
   "engines": {
     "node": ">=22.13.0"
@@ -10,7 +10,7 @@
     "build": "vinext build",
     "start": "vinext start",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "test": "node scripts/test-data-shape.mjs",
+    "test": "node scripts/test-data-shape.mjs && node scripts/test-training-snapshot.mjs",
     "test:parser": "node --experimental-strip-types scripts/test-training-parser.mjs",
     "refresh:data": "node scripts/refresh-training-data.mjs"
   },

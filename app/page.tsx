@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Footer from "./footer";
 import { importTrainingFile } from "../lib/import-training-file";
+import { saveTrainingSnapshot, TRAINING_SNAPSHOT_KEY } from "../lib/training-snapshot.mjs";
 import {
   Bar,
   CartesianGrid,
@@ -65,10 +66,8 @@ type Recommendation = { title: string; summary: string; evidence: string[]; acti
 type AiInsight = { sustainedPractice: string; nextYearRule: string; sectionInsights: Record<string, string> };
 type UploadPayload = typeof demoData & { error?: string; recommendations?: Recommendation[]; sustainedPractice?: string; nextYearRule?: string; sectionInsights?: Record<string, string> };
 
-let data = demoData;
-let exercises = data.exercises as Exercise[];
 const emptyExercise: Exercise = { name: "No exercise selected", family: "—", defaultMetric: "totalSets", availableMetrics: ["totalSets"], firstDate: "1970-01-01", lastDate: "1970-01-01", sessions: 0, totalSets: 0, totalReps: 0, totalVolumeKg: 0, progress: [] };
-const sessionDataKey = "ripper-os-training-data-v3";
+const sessionDataKey = TRAINING_SNAPSHOT_KEY;
 const metricMeta: Record<MetricKey, { label: string; short: string; unit: string }> = {
   heaviestKg: { label: "Heaviest load", short: "Load", unit: "kg" },
   e1rmKg: { label: "Estimated 1RM", short: "e1RM", unit: "kg" },
@@ -204,11 +203,13 @@ function MeasuredChart({ className, children }: { className: string; children: R
 }
 
 export default function Home() {
-  const [dataVersion, redraw] = useState(0);
+  const [data, setData] = useState(demoData);
+  const exercises = data.exercises as Exercise[];
+  const datasetRevision = useRef(0);
   const [uploadState, setUploadState] = useState<string>("");
   const [importing, setImporting] = useState(false);
   const importController = useRef<AbortController | null>(null);
-  useEffect(() => () => importController.current?.abort(), []);
+  useEffect(() => () => { importController.current?.abort(); datasetRevision.current += 1; }, []);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [aiInsight, setAiInsight] = useState<AiInsight | null>(null);
   const [recommendationState, setRecommendationState] = useState<string>("");
@@ -246,16 +247,17 @@ export default function Home() {
       const saved = localStorage.getItem(sessionDataKey);
       if (!saved) return;
       const snapshot = JSON.parse(saved);
-      data = snapshot.data;
-      exercises = data.exercises as Exercise[];
+      const restored = snapshot.data;
+      const restoredExercises = restored.exercises as Exercise[];
+      const featured = featuredExercise(restoredExercises);
+      const year = Number(restored.coverage.lastDate.slice(0, 4));
+      setData(restored);
       setLastExportName(snapshot.fileName ?? ""); setLastExportAt(snapshot.uploadedAt ?? "");
       setRecommendations(snapshot.recommendations ?? []); setAiInsight(snapshot.aiInsight ?? null);
-      const featured = featuredExercise(exercises);
       setSelectedExerciseName(featured?.name ?? "");
       setSelectedMetric(featured?.defaultMetric ?? "totalSets");
-      setAttendanceYear(Number(data.coverage.lastDate.slice(0, 4)));
-      redraw((value) => value + 1);
-    } catch { localStorage.removeItem(sessionDataKey); }
+      setAttendanceYear(year);
+    } catch { try { localStorage.removeItem(sessionDataKey); } catch { /* Storage can be disabled. */ } }
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
 
@@ -272,23 +274,27 @@ export default function Home() {
     try {
       const payload = await importTrainingFile(file, controller.signal) as unknown as UploadPayload;
       if (controller.signal.aborted) return;
-      data = payload;
-      exercises = data.exercises as Exercise[];
+      const nextExercises = payload.exercises as Exercise[];
+      const featured = featuredExercise(nextExercises);
       const uploadedAt = new Date().toISOString();
       const snapshot = { data: payload, fileName: file.name, uploadedAt, recommendations: [], aiInsight: null };
-      const serialized = JSON.stringify(snapshot);
-      if (serialized.length <= 4_000_000) localStorage.setItem(sessionDataKey, serialized);
-      else setUploadState(`Loaded ${file.name}; this rendered snapshot is too large for browser storage.`);
+      datasetRevision.current += 1;
+      setData(payload);
       setLastExportName(file.name); setLastExportAt(uploadedAt);
-      const featured = featuredExercise(exercises);
       setSelectedExerciseName(featured?.name ?? "");
       setSelectedMetric(featured?.defaultMetric ?? "totalSets");
-      setAttendanceYear(Number(data.coverage.lastDate.slice(0, 4)));
-      setUploadState("");
+      setAttendanceYear(Number(payload.coverage.lastDate.slice(0, 4)));
+      setSearch("");
+      setFamily("All");
+      setComparisonMetric("");
+      setVisibleCount(24);
       setRecommendations([]);
       setAiInsight(null);
       setRecommendationError("");
-      redraw((value) => value + 1);
+      setRecommendationState("");
+      setAiConsentOpen(false);
+      const saved = saveTrainingSnapshot(JSON.stringify(snapshot), () => localStorage);
+      setUploadState(saved === "saved" ? `Loaded ${file.name}.` : `Loaded ${file.name}. This result could not be saved in this browser; keep this page open or import the file again after refreshing.`);
     } catch (error) {
       if (!controller.signal.aborted) setUploadState(error instanceof Error ? error.message : "Could not parse the workbook.");
     } finally {
@@ -301,9 +307,9 @@ export default function Home() {
 
   const clearUploadedData = () => {
     importController.current?.abort();
-    localStorage.removeItem(sessionDataKey);
-    data = demoData;
-    exercises = data.exercises as Exercise[];
+    try { localStorage.removeItem(sessionDataKey); } catch { /* Clearing the visible dashboard must still work. */ }
+    datasetRevision.current += 1;
+    setData(demoData);
     setRecommendations([]);
     setAiInsight(null);
     setRecommendationError("");
@@ -312,8 +318,8 @@ export default function Home() {
     setRecommendationState("");
     setSelectedExerciseName("");
     setSelectedMetric("totalSets");
-    setAttendanceYear(Number(data.coverage.lastDate.slice(0, 4)));
-    redraw((value) => value + 1);
+    setAttendanceYear(Number(demoData.coverage.lastDate.slice(0, 4)));
+    setSearch(""); setFamily("All"); setComparisonMetric(""); setVisibleCount(24);
   };
 
   const generateRecommendations = async () => {
@@ -339,6 +345,7 @@ export default function Home() {
   };
 
   const requestRecommendations = async () => {
+    const revision = datasetRevision.current;
     setAiConsentOpen(false);
     setRecommendationError("");
     setRecommendationState("Generating recommendations…");
@@ -348,6 +355,7 @@ export default function Home() {
       if (openAIKey) headers["x-openai-api-key"] = openAIKey;
       const response = await fetch("/api/recommendations", { method: "POST", headers, body: JSON.stringify(summary) });
       const payload = await response.json() as unknown as UploadPayload;
+      if (revision !== datasetRevision.current) return;
       if (!response.ok) throw new Error(payload.error ?? "Recommendation generation failed.");
       setRecommendations(payload.recommendations ?? []);
       setAiInsight({ sustainedPractice: payload.sustainedPractice ?? "", nextYearRule: payload.nextYearRule ?? "", sectionInsights: payload.sectionInsights ?? {} });
@@ -355,6 +363,7 @@ export default function Home() {
       if (saved) localStorage.setItem(sessionDataKey, JSON.stringify({ ...JSON.parse(saved), recommendations: payload.recommendations ?? [], aiInsight: { sustainedPractice: payload.sustainedPractice ?? "", nextYearRule: payload.nextYearRule ?? "", sectionInsights: payload.sectionInsights ?? {} } }));
       setRecommendationState("Recommendations updated from this dataset.");
     } catch (error) {
+      if (revision !== datasetRevision.current) return;
       const message = error instanceof Error ? error.message : "Recommendation generation failed.";
       setRecommendationState("");
       setRecommendationError(/^Recommendation limit reached|^Too many requests/i.test(message)
@@ -372,11 +381,11 @@ export default function Home() {
     document.getElementById("exercise-focus")?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
-  const families = useMemo(() => ["All", ...Array.from(new Set(exercises.map((exercise) => exercise.family))).sort()], [dataVersion]);
+  const families = useMemo(() => ["All", ...Array.from(new Set(exercises.map((exercise) => exercise.family))).sort()], [exercises]);
   const filteredExercises = useMemo(() => exercises.filter((exercise) => {
     const matchesSearch = exercise.name.toLowerCase().includes(search.toLowerCase());
     return matchesSearch && (family === "All" || exercise.family === family);
-  }).sort((a, b) => exerciseSort === "recent" ? b.lastDate.localeCompare(a.lastDate) || b.sessions - a.sessions : b.totalSets - a.totalSets || b.sessions - a.sessions), [search, family, exerciseSort, dataVersion]);
+  }).sort((a, b) => exerciseSort === "recent" ? b.lastDate.localeCompare(a.lastDate) || b.sessions - a.sessions : b.totalSets - a.totalSets || b.sessions - a.sessions), [search, family, exerciseSort, exercises]);
 
   const selectedSeries = metricSeries(selectedExercise, selectedMetric);
   const latestWindowStart = new Date(new Date(`${data.coverage.lastDate}T00:00:00Z`).valueOf() - (27 * 86_400_000)).toISOString().slice(0, 10);

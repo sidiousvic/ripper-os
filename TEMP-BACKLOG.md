@@ -11,8 +11,8 @@ Created 2026-09-05 from the app assessment. Work through one focused fix at a ti
 | 4 | Before sharing | Correct achievement peaks. | Pending. Synthetic 100 kg then 80 kg history incorrectly reports an 80 kg peak. |
 | 5 | Before sharing | Handle unsupported CSV units and required columns explicitly. | Pending. Pounds-based CSV silently loses weight and volume. |
 | 6 | Before sharing | Correct privacy and persistence copy. | File privacy resolved in v0.2.0: browser-only processing makes the privacy claim true. README/About and initial import copy updated. Remaining persistence edge cases belong to item 7. |
-| 7 | Before sharing | Make snapshot storage/restore safe and independent of successful uploads. | Pending. Validate stored data, handle quota/unavailable storage, clear stale snapshots, preserve warnings. |
-| 8 | Before sharing | Prevent stale upload and AI responses from updating another dataset. | Local imports now cancel on replacement, clear, and unmount (v0.2.0). AI response/dataset identity checks remain pending. |
+| 7 | Before sharing | Make snapshot storage/restore safe and independent of successful uploads. | Partial in v0.2.1: storage failures no longer interrupt replacement; quota retry, stale snapshot removal, and persistent warnings verified. Full stored-data schema validation remains pending. |
+| 8 | Before sharing | Prevent stale upload and AI responses from updating another dataset. | Local imports cancel on replacement, clear, and unmount (v0.2.0). v0.2.1 adds dataset revision checks for AI responses on replacement, clear, and unmount; dedicated AI race verification remains pending. |
 | 9 | Before sharing | Handle malformed multipart requests and bound parser work. | Multipart endpoint removed in v0.2.0. Local worker terminates on cancellation/timeout. Further date/expansion/memory bounds remain pending. |
 | 10 | Before sharing | Use trusted Vercel client identity and durable abuse limits. | Pending. Current maps are per process and prioritize a Cloudflare header. External configuration may be needed. |
 | 11 | Before sharing | Restore meaningful type validation and a lightweight CI release check. | Pending. Real dashboard type errors and generated-route conflicts; Next.js ignores type errors. Keep tests targeted. |
@@ -20,5 +20,7 @@ Created 2026-09-05 from the app assessment. Work through one focused fix at a ti
 | 13 | Beta UX | Improve modal keyboard access, loading/cancellation, and optional-AI onboarding. | Pending. Escape did not close connection dialog; focus trap absent. |
 | 14 | Beta UX | Offer a sample preview before requiring an upload. | Pending. Product choice; avoid publishing personal training data. |
 | 15 | Release verification | Complete live and browser upload smoke checks with synthetic data. | Pending. Local API checks and mobile landing inspection passed; browser upload blocked by extension file access. |
+| 16 | User-requested follow-up | Keep About directly accessible before upload and at every screen width. | Pending. About currently shares the dashboard navigation's visibility rules; it should remain available independently of imported data. |
+| 17 | User-reported bug | Replace export must replace the entire current render. | Complete in v0.2.1. Reproduced mixed old/new dashboard under storage quota failure. Moved dataset into React state, reset filters/comparison, decoupled saving, and verified replacement plus refresh with synthetic exports. |
 
 Unrelated local leftovers (`public/favicon.svg` deletion and Finder metadata) remain outside these fixes unless intentionally included later.
