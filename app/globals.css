@@ -3115,3 +3115,53 @@ button:hover {
   border-color: var(--accent);
   background: color-mix(in srgb, var(--accent) 10%, transparent);
 }
+
+/* Keep the last visual remnants of the old glow and crowded deltas out of the UI. */
+body * {
+  text-shadow: none !important;
+  filter: none !important;
+}
+
+body * {
+  box-shadow: none !important;
+}
+
+.delta,
+.delta.positive,
+.delta.negative {
+  display: inline-flex;
+  min-width: max-content;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent !important;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.delta.negative {
+  color: var(--color-danger);
+}
+
+.achievement-bottom {
+  align-items: center;
+  min-width: 0;
+  gap: 12px;
+}
+
+.achievement-bottom > span:last-child {
+  min-width: 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+.heat-0 { background: var(--color-surface); }
+.heat-1 { background: color-mix(in srgb, var(--accent) 10%, var(--color-surface)); }
+.heat-2 { background: color-mix(in srgb, var(--accent) 22%, var(--color-surface)); }
+.heat-3 { background: color-mix(in srgb, var(--accent) 38%, var(--color-surface)); }
+.heat-4 { background: var(--accent); }
