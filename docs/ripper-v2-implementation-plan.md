@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M5 — Imports become additive and explainable
-Current task: V2-034
-Last completed task: V2-033 — Export and restore a private local backup
-Next task: V2-034
+Current task: V2-035
+Last completed task: V2-034 — Add a verified anonymized Hevy export fixture
+Next task: V2-035
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
-Tasks complete: 31
-Tasks remaining: 20
+Tasks complete: 32
+Tasks remaining: 19
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -2536,7 +2536,7 @@ Implement V2-033 only. Provide a downloadable versioned JSON backup of current c
 ### V2-034 — Add a verified anonymized Hevy export fixture
 
 Status:
-TODO
+DONE
 
 Milestone:
 M7 — Hevy proves the adapter boundary
