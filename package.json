@@ -1,6 +1,6 @@
 {
   "name": "ripper-os",
-  "version": "0.2.51",
+  "version": "0.2.52",
   "private": false,
   "engines": {
     "node": ">=22.13.0"
@@ -13,7 +13,7 @@
     "test": "node scripts/test-data-shape.mjs && node scripts/test-training-snapshot.mjs && node --experimental-strip-types scripts/test-security.mjs",
     "test:parser": "node --experimental-strip-types scripts/test-training-parser.mjs",
     "check:release": "node scripts/check-release.mjs",
-    "refresh:data": "node scripts/refresh-training-data.mjs"
+    "refresh:data": "node --experimental-strip-types scripts/refresh-training-data.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.38.0",

@@ -81,17 +81,17 @@ AI routes require same-origin browser requests, limit summary sizes, sanitize mo
 
 The in-memory limiter is suitable for a beta, not a complete DDoS solution. For a larger public launch, add a durable Vercel WAF/Redis limit, monitoring, and alerting. Never put a user's API key in `OPENAI_API_KEY` on a public deployment.
 
-## Refresh the checked-in demo data
+## Refresh a local dashboard export
 
-The checked-in dataset is only the demo/starting state. Do not commit personal training history.
+The checked-in dataset is only the demo/starting state. Refresh writes a local dashboard JSON and refuses the tracked demo path, so personal training history is not bundled accidentally.
 
 ```bash
 npm run refresh:data -- \
   "/path/to/latest-MacroFactor-export.xlsx" \
-  "app/training-data.json"
+  "/tmp/ripper-training-dashboard.json"
 ```
 
-The script normalizes aliases, merges daily metrics, and writes the generated JSON. It does not modify the source workbook.
+The script uses the same detector, adapter, normalization, validation, and dashboard builder as browser imports. It does not modify the source workbook.
 
 ## Checks
 
@@ -122,7 +122,7 @@ Open a pull request with a focused change and a short description; I will review
 - `app/globals.css` — visual system and responsive layout
 - `app/training-data.json` — generated demo dataset
 - `lib/security.ts` — same-origin and in-memory request safeguards
-- `scripts/refresh-training-data.mjs` — workbook normalization script
+- `scripts/refresh-training-data.mjs` — shared-pipeline local dashboard export script
 - `scripts/test-data-shape.mjs` — data-shape check
 - `public/brand/` — local visual assets
 

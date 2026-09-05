@@ -3774,3 +3774,33 @@ button:hover {
     grid-template-columns: 1fr;
   }
 }
+
+.hero-actions .ai-action {
+  grid-column: 1 / -1;
+  justify-self: center;
+  width: calc(50% - 5px);
+}
+
+.export-guide-link {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+.export-guide-link .button {
+  width: min(100%, 360px);
+  min-height: 44px;
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+
+.export-guide-link .button:hover {
+  color: var(--color-text);
+}
+
+@media (max-width: 760px) {
+  .hero-actions .ai-action {
+    grid-column: auto;
+    width: 100%;
+  }
+}

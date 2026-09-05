@@ -555,7 +555,7 @@ export default function Home() {
             {hasUploadedData && <a className="button primary" href="#progress">Explore all exercises <ChevronRight size={17} /></a>}
             {hasUploadedData && <button className="button ai-action" onClick={generateRecommendations} disabled={recommendationState.startsWith("Generating")}><Sparkles size={16} /> Generate AI insights</button>}
           </div>
-          <p className="export-guide-link"><a href="/about">How to export your training data</a></p>
+          <p className="export-guide-link"><a className="button secondary" href="/about">How to export my data <ChevronRight size={17} /></a></p>
           <p className="muted small">Your file stays on this device. AI insights are optional.</p>
           {uploadState && <p className="upload-status" role="status">{uploadState}</p>}
           {importing && <button className="button secondary" onClick={() => { importController.current?.abort(); setUploadState("Import cancelled."); }}>Cancel import</button>}
