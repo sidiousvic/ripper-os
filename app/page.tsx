@@ -20,8 +20,10 @@ import { createImportReport, type ImportReport } from "../lib/import/import-repo
 import { TRAINING_SNAPSHOT_KEY } from "../lib/training-snapshot.mjs";
 import { clearTrainingHistory, loadTrainingHistory, saveTrainingHistory } from "../lib/storage/training-store";
 import { parseBackup, serializeBackup } from "../lib/storage/backup";
+import { buildAiSummary } from "../lib/ai/summary";
 import { isCurrentRequest } from "../lib/request-guard.mjs";
 import type { DashboardData, Exercise, MetricKey, ProgressRecord } from "../lib/analytics/dashboard-types";
+import { trainingSourceLabel } from "../lib/domain/training";
 import {
   Bar,
   CartesianGrid,
@@ -61,7 +63,6 @@ const demoData = demoDataJson as unknown as DashboardData;
 type UploadPayload = DashboardData & { error?: string; recommendations?: Recommendation[]; sustainedPractice?: string; nextYearRule?: string; sectionInsights?: Record<string, string> };
 type ReadyImport = Extract<ImportOutcome, { status: "ready" }>;
 type UnitPromptKind = "weight" | "distance";
-type UnitPromptValue = "kg" | "lb" | "m" | "km" | "mi";
 type UnitPromptRequest = { resolve: (value: string | null) => void; cleanup: () => void };
 
 const emptyExercise: Exercise = { exerciseId: "empty", comparisonKey: "empty", seriesId: "empty", name: "No exercise selected", family: "—", defaultMetric: "totalSets", availableMetrics: ["totalSets"], firstDate: "1970-01-01", lastDate: "1970-01-01", sessions: 0, totalSets: 0, totalReps: 0, totalVolumeKg: 0, progress: [] };
@@ -304,6 +305,7 @@ export default function Home() {
   const [visibleCount, setVisibleCount] = useState(24);
   const [attendanceYear, setAttendanceYear] = useState(Number(data.coverage.lastDate.slice(0, 4)));
   const hasUploadedData = data !== demoData || loadedImport !== null;
+  const loadedSourceLabel = trainingSourceLabel(loadedSource);
   const mappingCandidates = useMemo<MappingCandidate[]>(() => {
     const seen = new Set<string>();
     const result: MappingCandidate[] = [];
@@ -543,7 +545,7 @@ export default function Home() {
     setRecommendationError("");
     setRecommendationState("Generating recommendations…");
     try {
-      const summary = { coverage: data.coverage, muscles: data.muscles, gaps: data.gaps, achievements: data.achievements, busiestMonths: data.busiestMonths, quietestMonths: data.quietestMonths };
+      const summary = buildAiSummary(data);
       const headers: HeadersInit = { "content-type": "application/json" };
       if (openAIKey) headers["x-openai-api-key"] = openAIKey;
       const response = await fetch("/api/recommendations", { method: "POST", headers, body: JSON.stringify(summary), signal: controller.signal });
@@ -646,7 +648,7 @@ export default function Home() {
           <h1><b>RIPPER <span>OS</span></b><span className="hero-training">Training, <span>Analyzed.</span></span></h1>
           <p>Upload your training data and Ripper OS organizes it into progress, consistency, muscle balance, highlights, and next opportunities. It&apos;s like Spotify Wrapped for training.</p>
           <div className="hero-actions" aria-label="Dashboard actions">
-            {hasUploadedData ? <button className="button upload-button is-ready" onClick={() => setLoadedExportOpen(true)}><Check size={17} aria-hidden="true" />{loadedSource ? `${loadedSource[0].toUpperCase()}${loadedSource.slice(1)} export uploaded` : "Training export uploaded"}</button> : <label className="button upload-button"><CircleDot size={17} aria-hidden="true" />Upload training data<input type="file" accept=".xlsx,.csv" multiple onChange={handleUpload} /></label>}
+            {hasUploadedData ? <button className="button upload-button is-ready" onClick={() => setLoadedExportOpen(true)}><Check size={17} aria-hidden="true" />{loadedSourceLabel ? `${loadedSourceLabel} export uploaded` : "Training export uploaded"}</button> : <label className="button upload-button"><CircleDot size={17} aria-hidden="true" />Upload training data<input type="file" accept=".xlsx,.csv" multiple onChange={handleUpload} /></label>}
             <button className={`button upload-button ${openAIKey ? "is-ready" : ""}`} onClick={() => { setKeyDraft(openAIKey); setConnectionState(""); setConnectOpen(true); }}><KeyRound size={17} aria-hidden="true" />{openAIKey ? "OpenAI connected" : "Connect OpenAI"}</button>
             {hasUploadedData && <button className="button upload-button" onClick={() => setClearConfirmOpen(true)}><Trash2 size={17} aria-hidden="true" />Clear uploaded data</button>}
             {hasUploadedData && <a className="button primary" href="#progress">Explore all exercises <ChevronRight size={17} /></a>}
@@ -993,8 +995,28 @@ export default function Home() {
           <h2 id="loaded-export-title">Training data is loaded</h2>
           <p className="loaded-export-name">{lastExportName || "Training export"}</p>
           {lastExportAt && <p className="muted small">Loaded {new Date(lastExportAt).toLocaleString()}</p>}
-          {historyImports.length > 0 ? <p className="muted small">Sources in this history: {loadedSource || "training exports"}. Add a newer export from the same account to extend your history; unchanged records are skipped.</p> : <p className="muted small">This result was restored from a dashboard snapshot. Reimport the source before adding another file.</p>}
+          {historyImports.length > 0 ? <p className="muted small">Sources in this history: {loadedSourceLabel || "training exports"}. Add a newer export from the same account to extend your history; unchanged records are skipped.</p> : <p className="muted small">This result was restored from a dashboard snapshot. Reimport the source before adding another file.</p>}
           <div className="connect-actions"><button className="button secondary" onClick={() => setLoadedExportOpen(false)}>Close</button>{historyImports.length > 0 && <button className="button secondary" onClick={downloadBackup}>Download backup</button>}<label className="button secondary upload-button">Restore backup<input type="file" accept="application/json,.json" onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ""; if (file) { setLoadedExportOpen(false); void restoreBackup(file); } }} /></label>{mappingCandidates.length > 0 && <button className="button secondary" onClick={() => { setLoadedExportOpen(false); setMappingCandidate(mappingCandidates[0]); }}>Map exercises ({mappingCandidates.length})</button>}{historyImports.length > 0 && <label className="button secondary upload-button">Add data<input type="file" accept=".xlsx,.csv" multiple onChange={(event) => { setLoadedExportOpen(false); handleUpload(event, "add"); }} /></label>}<label className="button primary upload-button">Replace export<input type="file" accept=".xlsx,.csv" multiple onChange={(event) => { setLoadedExportOpen(false); handleUpload(event, "replace"); }} /></label></div>
+        </section>
+      </div>}
+
+      {unitPrompt && <div className="connect-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) resolveUnitPrompt(null); }}>
+        <section className="connect-dialog panel unit-dialog" role="dialog" aria-modal="true" aria-labelledby="unit-prompt-title">
+          <p className="eyebrow accent">Import setup</p>
+          <h2 id="unit-prompt-title">Confirm the units</h2>
+          <p className="loaded-export-name">{unitPrompt.fileName}</p>
+          <p>{unitPrompt.kind === "weight" ? "Strong did not label the Weight column. Which unit does this export use?" : "Strong did not label the Distance column. Which unit does this export use?"}</p>
+          <div className="unit-options">
+            {unitPrompt.kind === "weight" ? <>
+              <button className="button secondary unit-option" onClick={() => resolveUnitPrompt("kg")}><strong>kg</strong><span>Kilograms</span></button>
+              <button className="button secondary unit-option" onClick={() => resolveUnitPrompt("lb")}><strong>lb</strong><span>Pounds</span></button>
+            </> : <>
+              <button className="button secondary unit-option" onClick={() => resolveUnitPrompt("m")}><strong>m</strong><span>Metres</span></button>
+              <button className="button secondary unit-option" onClick={() => resolveUnitPrompt("km")}><strong>km</strong><span>Kilometres</span></button>
+              <button className="button secondary unit-option" onClick={() => resolveUnitPrompt("mi")}><strong>mi</strong><span>Miles</span></button>
+            </>}
+          </div>
+          <button className="button secondary unit-cancel" onClick={() => resolveUnitPrompt(null)}>Cancel import</button>
         </section>
       </div>}
 
