@@ -497,7 +497,7 @@ export default function Home() {
 
       <section className="hero shell" id="top">
         <div className="hero-copy">
-          <h1><b style={{marginBottom: "30px", fontFamily: "BiauKaiHK"}}>RIPPER <span>OS</span></b>.<br /><span className="hero-training">Training, <span>Analyzed.</span></span></h1>
+          <h1><b>RIPPER <span>OS</span></b>.<br /><span className="hero-training">Training, <span>Analyzed.</span></span></h1>
           <p>Upload your training data and Ripper OS organizes it into progress, consistency, muscle balance, highlights, and next opportunities. It&apos;s like Spotify Wrapped for training.</p>
           <div className="hero-actions" aria-label="Dashboard actions">
             {hasUploadedData ? <button className="button upload-button is-ready" onClick={() => setLoadedExportOpen(true)}><Check size={17} aria-hidden="true" />MacroFactor export uploaded</button> : <label className="button upload-button"><CircleDot size={17} aria-hidden="true" />Upload MacroFactor export<input type="file" accept=".xlsx,.csv" onChange={handleUpload} /></label>}
@@ -571,13 +571,13 @@ export default function Home() {
             <MeasuredChart className="chart-area tall">
               <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={280} debounce={50}>
                 <ComposedChart data={monthlyChart} margin={{ top: 12, right: 4, left: -24, bottom: 16 }}>
-                  <CartesianGrid stroke="#1c3425" vertical={false} />
-                  <XAxis dataKey="month" tickFormatter={formatMonth} tick={{ fill: "#789080", fontSize: 16 }} axisLine={false} tickLine={false} tickMargin={12} interval={2} />
-                  <YAxis yAxisId="sessions" tick={{ fill: "#789080", fontSize: 16 }} axisLine={false} tickLine={false} allowDecimals={false} />
-                  <YAxis yAxisId="cumulative" orientation="right" tick={{ fill: "#789080", fontSize: 16 }} axisLine={false} tickLine={false} />
-                  <Tooltip content={<ChartTooltip />} cursor={{ fill: "rgba(67, 255, 126, .04)" }} />
-                  <Bar yAxisId="sessions" dataKey="sessions" name="Sessions" fill="#3fe277" radius={[5, 5, 1, 1]} maxBarSize={24} />
-                  <Line yAxisId="cumulative" type="monotone" dataKey="cumulative" name="Cumulative" stroke="#c7ff4a" strokeWidth={2.5} dot={false} />
+                  <CartesianGrid stroke="var(--color-border)" vertical={false} />
+                  <XAxis dataKey="month" tickFormatter={formatMonth} tick={{ fill: "var(--color-text-muted)", fontSize: 16 }} axisLine={false} tickLine={false} tickMargin={12} interval={2} />
+                  <YAxis yAxisId="sessions" tick={{ fill: "var(--color-text-muted)", fontSize: 16 }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <YAxis yAxisId="cumulative" orientation="right" tick={{ fill: "var(--color-text-muted)", fontSize: 16 }} axisLine={false} tickLine={false} />
+                  <Tooltip content={<ChartTooltip />} cursor={{ fill: "rgba(145, 182, 202, .08)" }} />
+                  <Bar yAxisId="sessions" dataKey="sessions" name="Sessions" fill="var(--chart-1)" radius={[4, 4, 1, 1]} maxBarSize={24} />
+                  <Line yAxisId="cumulative" type="monotone" dataKey="cumulative" name="Cumulative" stroke="var(--chart-2)" strokeWidth={2.5} dot={false} />
                 </ComposedChart>
               </ResponsiveContainer>
             </MeasuredChart>
@@ -680,14 +680,14 @@ export default function Home() {
               {selectedSeries.length > 1 ? (
                 <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={300} debounce={50}>
                   <LineChart data={selectedChartData} margin={{ top: 20, right: 8, left: -12, bottom: 16 }}>
-                    <defs><linearGradient id="exercise-line-gradient" x1="0" y1="0" x2="1" y2="0"><stop offset={`${recentFadeStart}%`} stopColor="#3fe277" /><stop offset={`${recentFadeEnd}%`} stopColor="#c7ff4a" /></linearGradient></defs>
-                    <CartesianGrid stroke="#1c3425" vertical={false} />
-                    <XAxis dataKey="date" tickFormatter={(value) => formatDate(value, { month: "short", year: "2-digit" })} tick={{ fill: "#789080", fontSize: 16 }} axisLine={false} tickLine={false} tickMargin={12} minTickGap={42} />
-                    <YAxis tick={{ fill: "#789080", fontSize: 16 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
-                    {comparisonMeta && <YAxis yAxisId="comparison" orientation="right" tick={{ fill: "#c7ff4a", fontSize: 14 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />}
-                    <Tooltip content={<ChartTooltip unit={selectedMeta.unit} comparisonUnit={comparisonMeta?.unit} />} cursor={{ stroke: "#31523b", strokeDasharray: "3 3" }} />
-                    <Line type="monotone" dataKey="primaryValue" name={selectedMeta.label} stroke="url(#exercise-line-gradient)" strokeWidth={3.5} connectNulls dot={{ r: 2.5, fill: "#07100a", strokeWidth: 2 }} activeDot={{ r: 5 }} />
-                    {comparisonMeta && <Line yAxisId="comparison" type="monotone" dataKey="comparisonValue" name={comparisonMeta.label} stroke="#c7ff4a" strokeWidth={2.5} strokeDasharray="5 4" connectNulls dot={{ r: 2, fill: "#07100a", strokeWidth: 2 }} activeDot={{ r: 5 }} />}
+                    <defs><linearGradient id="exercise-line-gradient" x1="0" y1="0" x2="1" y2="0"><stop offset={`${recentFadeStart}%`} stopColor="var(--chart-1)" /><stop offset={`${recentFadeEnd}%`} stopColor="var(--chart-2)" /></linearGradient></defs>
+                    <CartesianGrid stroke="var(--color-border)" vertical={false} />
+                    <XAxis dataKey="date" tickFormatter={(value) => formatDate(value, { month: "short", year: "2-digit" })} tick={{ fill: "var(--color-text-muted)", fontSize: 16 }} axisLine={false} tickLine={false} tickMargin={12} minTickGap={42} />
+                    <YAxis tick={{ fill: "var(--color-text-muted)", fontSize: 16 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
+                    {comparisonMeta && <YAxis yAxisId="comparison" orientation="right" tick={{ fill: "var(--chart-2)", fontSize: 14 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />}
+                    <Tooltip content={<ChartTooltip unit={selectedMeta.unit} comparisonUnit={comparisonMeta?.unit} />} cursor={{ stroke: "var(--color-border-strong)", strokeDasharray: "3 3" }} />
+                    <Line type="monotone" dataKey="primaryValue" name={selectedMeta.label} stroke="url(#exercise-line-gradient)" strokeWidth={3.5} connectNulls dot={{ r: 2.5, fill: "var(--color-bg)", strokeWidth: 2 }} activeDot={{ r: 5 }} />
+                    {comparisonMeta && <Line yAxisId="comparison" type="monotone" dataKey="comparisonValue" name={comparisonMeta.label} stroke="var(--chart-2)" strokeWidth={2.5} strokeDasharray="5 4" connectNulls dot={{ r: 2, fill: "var(--color-bg)", strokeWidth: 2 }} activeDot={{ r: 5 }} />}
                   </LineChart>
                 </ResponsiveContainer>
               ) : <div className="empty-state">Only one measurable point is available for this metric.</div>}
