@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M1 — Lock down the behavior worth keeping
-Current task: V2-002 — Assert current dashboard analytics against the baseline (IN_PROGRESS)
-Last completed task: V2-001 — Add a representative MacroFactor regression dataset
-Next task: V2-002
+Current task: None; V2-002 completed
+Last completed task: V2-002 — Assert current dashboard analytics against the baseline
+Next task: V2-003
 Blockers: No verified Strong or Hevy export fixture exists in this checkout. V2-009 and V2-034 require a permission-cleared export with documented units and date interpretation. These do not block V2-001–008.
-Tasks complete: 1
-Tasks remaining: 50
+Tasks complete: 2
+Tasks remaining: 49
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -295,7 +295,7 @@ Implement V2-001 only. Commit a deterministic, privacy-safe MF CSV and workbook 
 ### V2-002 — Assert current dashboard analytics against the baseline
 
 Status:
-IN_PROGRESS
+DONE
 
 Milestone:
 M1 — Lock down the behavior worth keeping
@@ -3825,3 +3825,4 @@ Date/number validation is the exception to accepting invalid legacy behavior: V2
 - 2026-09-05: No implementation tasks started. Real Strong and Hevy fixtures remain explicit evidence gates. Future changes must append dated reasons here and preserve task IDs.
 - 2026-09-05: Final working-tree recheck captured concurrent UI commits through a23ac11/v0.2.20. Updated the repository context to preserve the current Google Sans Flex, muted palette and thinner chart treatment; task boundaries are unchanged.
 - 2026-09-05: V2-001 completed with deterministic synthetic MacroFactor CSV/workbook fixtures, optional-sheet coverage, alias coverage and parser acceptance checks. No real user data was added.
+- 2026-09-05: V2-002 completed with independently checked baseline assertions for coverage, monthly frequency, gaps, exercise totals, peak/latest achievements and source-reported muscle summaries. Current metric semantics remain unchanged.
