@@ -3,10 +3,10 @@
 Current milestone: M5 — Imports become additive and explainable
 Current task: COMPLETE
 Last completed task: V2-051 — Document supported sources and run the combined beta checkpoint
-Next task: Address blocked V2-045 and remaining launch backlog
-Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
-Tasks complete: 47
-Tasks remaining: 5
+Next task: Complete V2-046 limited bodyweight-relative view
+Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. V2-046 now depends on the completed bodyweight series import. Strong unitless columns are documented and require explicit import options.
+Tasks complete: 48
+Tasks remaining: 4
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -3311,7 +3311,9 @@ Implement V2-044 only. Estimate muscle exposure for a limited verified catalog w
 ### V2-045 — Import verified bodyweight measurements as a separate series
 
 Status:
-TODO (BLOCKED — no approved bodyweight fixture)
+DONE
+
+Verification note 2026-09-06: Inspected the supplied MacroFactor workbook's `Scale Weight` and `Weight Trend` sheets. Added separate validated bodyweight measurements to MacroFactor aggregate imports and an anonymized fixture covering both series. No workout load values are inferred or altered.
 
 Milestone:
 M8 — Improve meaning after preserving behavior
@@ -3846,7 +3848,7 @@ Date/number validation is the exception to accepting invalid legacy behavior: V2
 - 2026-09-06: Mapping correction follow-up: manually overridden exercises remain in the mapping queue, allowing a mistaken choice to be reopened and reset to deterministic automatic resolution.
 - 2026-09-06: Tested the real 45-workout MacroFactor CSV supplied by the user. Before the final `Bench Dip` mapping it had 2 unresolved names (`Bench Dip` and `Bench Dip ∈ SS2`); after the deterministic source mapping, the unresolved report is zero.
 
-- 2026-09-06: V2-045 is blocked pending an approved anonymized MacroFactor bodyweight export fixture. No bodyweight values will be inferred from workout loads; independent tasks continue with V2-047.
+- 2026-09-06: V2-045 unblocked and completed after inspecting the user-supplied MacroFactor workbook. `Scale Weight` and `Weight Trend` are retained as separate kg measurements with source references; an anonymized fixture covers both sheets. No bodyweight values are inferred from workout loads.
 
 - 2026-09-06: Reported bug: MacroFactor exercise names are broadly falling through to `custom_*` identities, making manual resolution of roughly 70 exercises impractical. Treat this as a high-priority mapping investigation before asking users to resolve imported names; inspect MacroFactor source mappings, normalization keys and fixture coverage. No automatic fuzzy merge is authorized.
 - 2026-09-06: Added deterministic catalog coverage for the known MacroFactor fixture aliases (pull-up, bench dip, lateral raise and jump rope) with regression assertions. The broader real-export mapping audit remains open.

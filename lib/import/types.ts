@@ -1,4 +1,5 @@
 import type { CanonicalExerciseDay, SourceMuscleDay, TrainingSource } from "../domain/training.ts";
+import type { BodyweightMeasurement } from "../domain/bodyweight.ts";
 
 export interface ImportIssue {
   code: string;
@@ -26,6 +27,7 @@ export interface AggregateImport {
   knownWorkoutCount?: number;
   exerciseDays: CanonicalExerciseDay[];
   muscleDays: SourceMuscleDay[];
+  bodyweightMeasurements?: BodyweightMeasurement[];
   issues: ImportIssue[];
   sourceSheets: Record<string, string[]>;
   sourceRows: SourceRow[];

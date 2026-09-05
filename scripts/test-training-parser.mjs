@@ -113,6 +113,16 @@ for (const name of ["six-months.csv", ...generatedWorkbooks.keys()]) {
 }
 console.log("Synthetic six-month fixtures: reproducible workbooks, optional sheets, aliases and CSV acceptance passed");
 
+const bodyweightFixture = await readFile(new URL("bodyweight/bodyweight.xlsx", fixtureRoot));
+const bodyweightImport = normalizeMacroFactor(inspectInput(bodyweightFixture, "bodyweight.xlsx"), "bodyweight.xlsx");
+assert.deepEqual(bodyweightImport.bodyweightMeasurements?.map(({ kind, date, kg, originalUnit }) => ({ kind, date, kg, originalUnit })), [
+  { kind: "scale", date: "2026-01-01", kg: 70.5, originalUnit: "kg" },
+  { kind: "scale", date: "2026-02-01", kg: 71.1, originalUnit: "kg" },
+  { kind: "trend", date: "2026-01-01", kg: 70.6, originalUnit: "kg" },
+  { kind: "trend", date: "2026-02-01", kg: 70.9, originalUnit: "kg" },
+]);
+console.log("MacroFactor bodyweight sheets: scale and trend measurements preserved separately");
+
 // V2-008: normalization precedes analytics; canonical facts are independently rebuildable.
 const normalizeCsv = (text) => normalizeMacroFactor(inspectInput(new TextEncoder().encode(text), "sample.csv"), "sample.csv");
 const withoutTime = (data) => { const copy = { ...data }; delete copy.generatedAt; return copy; };

@@ -12,6 +12,7 @@ const sourceSlug = (name: string) => name.normalize("NFKC").toLowerCase().replac
 for (const rawName of macroFactorKnownNames) sourceMappings.push({ source: "macrofactor", rawName, exerciseId: `macrofactor_${sourceSlug(rawName)}`, comparable: false });
 
 export function sourceMappingKey(source: TrainingSource, rawName: string) {
-  return `${source}:${rawName.trim().toLocaleLowerCase()}`;
+  const cleaned = source === "macrofactor" ? rawName.split(" ∈ ")[0].trim() : rawName.trim();
+  return `${source}:${cleaned.toLocaleLowerCase()}`;
 }
 export const sourceMappingByKey = new Map(sourceMappings.map(mapping => [sourceMappingKey(mapping.source, mapping.rawName), mapping]));

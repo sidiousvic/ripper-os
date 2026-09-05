@@ -34,7 +34,7 @@ function sourceDate(value: unknown, date1904: boolean): string | null {
 export function normalizeMacroFactor(workbook: InspectedInput, filename: string, options: { exerciseOverrides?: ExerciseOverrideMap } = {}): AggregateImport {
   // Import-local identity, not a deduplication fingerprint (reconciliation is a later task).
   const importId = `macrofactor:${globalThis.crypto.randomUUID()}`;
-  const result: AggregateImport = { schemaVersion: 1, importId, source: "macrofactor", filename, adapterVersion: "aggregate-v2", exerciseDays: [], muscleDays: [], issues: [], sourceSheets: {}, sourceRows: [] };
+  const result: AggregateImport = { schemaVersion: 1, importId, source: "macrofactor", filename, adapterVersion: "aggregate-v2", exerciseDays: [], muscleDays: [], bodyweightMeasurements: [], issues: [], sourceSheets: {}, sourceRows: [] };
   const days = new Map<string, CanonicalExerciseDay>();
   const issue = (code: string, ref: string, action: ImportIssue["action"], message: string) => {
     if (result.issues.length < 1000) result.issues.push({ code, severity: "warning", rowRefs: [ref], action, message });
@@ -127,6 +127,15 @@ export function normalizeMacroFactor(workbook: InspectedInput, filename: string,
         const value = number(cells[column], `${ref}:${XLSX.utils.encode_col(column)}`);
         const rawMuscleName = clean(result.sourceSheets[sheet][column]);
         if (value !== null && rawMuscleName) result.muscleDays.push({ importId, source: "macrofactor", date: parsedDate, rawMuscleName, setEquivalents: value });
+      }
+    }
+    for (const [sheetName, kind] of [["Scale Weight", "scale"], ["Weight Trend", "trend"]] as const) {
+      for (const { cells, ref } of rows(sheetName)) {
+        const parsedDate = date(cells[0], ref);
+        if (!parsedDate) continue;
+        const value = number(cells[1], `${ref}:B`);
+        if (value === null) continue;
+        result.bodyweightMeasurements?.push({ id: `${importId}:bodyweight:${kind}:${ref}`, importId, source: "macrofactor", date: parsedDate, kg: value, kind, originalValue: value, originalUnit: "kg", sourceRefs: [ref] });
       }
     }
   }

@@ -27,6 +27,9 @@ export function assertValidImport(data: AggregateImport) {
   for (const row of data.muscleDays) {
     if (!isCalendarDate(row.date) || !row.rawMuscleName || row.importId !== data.importId || row.source !== data.source || !Number.isFinite(row.setEquivalents) || row.setEquivalents < 0) issues.push("Invalid muscle day");
   }
+  for (const measurement of data.bodyweightMeasurements ?? []) {
+    if (!measurement.id || !measurement.importId || measurement.importId !== data.importId || measurement.source !== data.source || !isCalendarDate(measurement.date) || !Number.isFinite(measurement.kg) || measurement.kg < 0 || !Number.isFinite(measurement.originalValue) || measurement.originalValue < 0 || measurement.originalUnit !== "kg" || !["scale", "trend"].includes(measurement.kind) || !measurement.sourceRefs.length) issues.push("Invalid bodyweight measurement");
+  }
   if (data.exerciseDays.some(day => day.importId !== data.importId || day.source !== data.source)) issues.push("Mismatched import identity");
   if (issues.length) throw new Error(`Invalid normalized training records: ${issues[0]}`);
 }
