@@ -39,6 +39,10 @@ next-env.d.ts
 /outputs/
 /work/
 
+# Local planning notes are useful during development but are not release artifacts.
+/docs/ripper-v2-implementation-plan.md
+/BACKLOG.md
+
 # Local training archives and generated personal-data baselines must never ship.
 /app/historical-training-data.json
 /app/training-data.json
