@@ -23,7 +23,19 @@ function legacyPresentationRecords(imports: AggregateImport[], presentation?: Le
       for (const field of Object.keys(metrics) as (keyof typeof metrics)[]) if (metrics[field] === 0) metrics[field] = null;
       if (Object.values(metrics).every(value => value === null)) continue;
     }
-    records.set(key, { ...previous, date: day.date, exercise: day.displayName, family: legacyExerciseFamily(day.displayName), ...metrics });
+    if (previous && presentation === "csv") {
+      for (const field of ["totalSets", "totalReps", "totalVolumeKg"] as const) {
+        metrics[field] = previous[field] === null && metrics[field] === null ? null : (previous[field] ?? 0) + (metrics[field] ?? 0);
+      }
+      for (const field of ["bestSetReps", "heaviestKg", "e1rmKg"] as const) {
+        metrics[field] = previous[field] === null && metrics[field] === null ? null : Math.max(previous[field] ?? 0, metrics[field] ?? 0);
+      }
+      metrics.durationSec ??= previous.durationSec;
+    } else if (previous && presentation === "workbook") {
+      // Old worksheet mapping overwrote supplied nonzero cells only.
+      for (const field of Object.keys(metrics) as (keyof typeof metrics)[]) metrics[field] ??= previous[field];
+    }
+    records.set(key, { date: day.date, exercise: day.displayName, family: legacyExerciseFamily(day.displayName), ...metrics });
   }
   return [...records.values()].sort((a, b) => a.date.localeCompare(b.date));
 }

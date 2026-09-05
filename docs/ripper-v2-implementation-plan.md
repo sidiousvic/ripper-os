@@ -4,7 +4,7 @@ Current milestone: M3 — Strong drives the existing dashboard
 Current task: V2-014
 Last completed task: V2-013 — Normalize Strong measurements into canonical units
 Next task: V2-014
-Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures; unit evidence still must be documented.
+Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
 Tasks complete: 12
 Tasks remaining: 39
 
@@ -3847,3 +3847,5 @@ Date/number validation is the exception to accepting invalid legacy behavior: V2
 - 2026-09-05: V2-012: Grouped original Strong rows into 86 contiguous timestamp/title sessions with all 1,903 sets preserved. A/B/A blocks and equal sets remain distinct; resets and missing/reappearing workout boundaries require review. Introduced detailed domain types without converting measurements.
 
 - 2026-09-05: V2-013: Strong now emits validated detailed imports using explicit mass/distance choices, without fabricating reps, completion, timezone, load basis or bodyweight. Positive assistance supported only via explicit exercise semantics; row-unit conflicts and ambiguous sessions require input. 86 workouts and 1,903 sets retained. Next task V2-014 projects these facts into shared daily analytics.
+
+- 2026-09-05: V2-008 final regression review found simultaneous legacy aliases could lose CSV totals or complementary workbook metrics in the compatibility projection. Corrected presentation merging while retaining distinct raw canonical facts; added focused CSV/workbook collision tests. Released locally as v0.2.43 after parser/unit tests, typecheck, lint and both builds. V2-014 is next; browser worker smoke still pending file permission.

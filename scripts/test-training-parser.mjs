@@ -249,3 +249,21 @@ const corrupt = structuredClone(normalizedStrong.data);
 corrupt.sessions[0].exercises[0].sets[0].load.kg = Infinity;
 assert.throws(()=>assertValidDetailedImport(corrupt), /Invalid normalized/);
 console.log('Strong canonical units: fixture, lb/kg, zero/missing, timed/distance, assistance and conflicts passed');
+
+const collidingAliasesCsv = 'Date,Exercise,Weight (kg),Reps\n2026-01-02,Bench Dips,0,5\n2026-01-02,Bench Dip,0,8\n';
+const collidingAliasesImport = normalizeCsv(collidingAliasesCsv);
+assert.equal(collidingAliasesImport.exerciseDays.length, 2, 'raw alias facts remain distinct');
+const aliasView = buildDashboard(collidingAliasesImport, 'csv');
+assert.equal(aliasView.exercises.length, 1);
+assert.equal(aliasView.exercises[0].totalSets, 2);
+assert.equal(aliasView.exercises[0].totalReps, 13);
+assert.equal(aliasView.exercises[0].progress[0].bestSetReps, 8);
+const aliasWorkbook = XLSX.utils.book_new();
+for (const [sheet, a, b] of [['Exercises - Total Sets',2,null], ['Exercises - Total Reps',null,13]]) {
+  XLSX.utils.book_append_sheet(aliasWorkbook, XLSX.utils.aoa_to_sheet([['Date','Bench Dips','Bench Dip'],['2026-01-02',a,b]]),sheet);
+}
+const aliasWorkbookBytes = new Uint8Array(XLSX.write(aliasWorkbook,{type:'array',bookType:'xlsx',compression:true}));
+const workbookAliasView = parseTrainingFile(aliasWorkbookBytes,'aliases.xlsx');
+assert.equal(workbookAliasView.exercises[0].totalSets,2);
+assert.equal(workbookAliasView.exercises[0].totalReps,13);
+console.log('Legacy alias collisions: canonical names retained and CSV/workbook presentation parity passed');
