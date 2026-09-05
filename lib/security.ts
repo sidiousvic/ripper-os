@@ -1,11 +1,15 @@
 const windows = new Map<string, number[]>();
 const MAX_BUCKETS = 10_000;
 
-const clientId = (request: Request) =>
-  request.headers.get("cf-connecting-ip")
-  ?? request.headers.get("x-real-ip")
-  ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim()
-  ?? "unknown";
+export const clientId = (request: Request) => {
+  // Vercel terminates the request and rewrites x-forwarded-for. Cloudflare's
+  // header is accepted only when the deployment explicitly declares that it
+  // is the trusted edge, so a direct caller cannot choose their own bucket.
+  const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  if (forwarded) return forwarded;
+  if (process.env.TRUST_CLOUDFLARE_HEADERS === "true") return request.headers.get("cf-connecting-ip")?.trim() ?? "unknown";
+  return request.headers.get("x-real-ip")?.trim() ?? "unknown";
+};
 
 /** A lightweight fallback. Configure a durable Vercel WAF or Redis limit in production. */
 export const takeRateLimit = (request: Request, scope: string, limit: number, windowMs: number) => {

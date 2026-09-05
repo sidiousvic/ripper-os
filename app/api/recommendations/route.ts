@@ -1,5 +1,5 @@
 import OpenAI from "openai";
-import { isSameOrigin, takeRateLimit, tooManyRequests } from "../../../lib/security";
+import { clientId, isSameOrigin, takeRateLimit, tooManyRequests } from "../../../lib/security";
 
 export const runtime = "nodejs";
 
@@ -9,8 +9,7 @@ const promptVersion = "2026-09-03.1";
 const internalField = /allTimeSets|recentWeekly|earlyWeekly|percentChange|heaviestKg|bestSetReps|totalVolumeKg|durationSec|e1rmKg|totalReps|totalSets|muscleHeatmap|busiestMonths|quietestMonths/i;
 const requestLog = new Map<string, number[]>();
 const allowed = (request: Request, apiKey: string) => {
-  const key = request.headers.get("cf-connecting-ip") ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  const identity = `${key}:${apiKey.slice(-10)}`;
+  const identity = `${clientId(request)}:${apiKey.slice(-10)}`;
   const now = Date.now();
   const recent = (requestLog.get(identity) ?? []).filter((timestamp) => now - timestamp < 10 * 60 * 1000);
   if (requestLog.size > 10_000) for (const [bucket, timestamps] of requestLog) if (!timestamps.some((timestamp) => now - timestamp < 10 * 60 * 1000)) requestLog.delete(bucket);
