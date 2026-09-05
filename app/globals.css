@@ -4263,6 +4263,24 @@ button:hover {
   margin-left: auto;
 }
 
+.stat-card .eyebrow {
+  width: max-content;
+  max-width: 100%;
+  white-space: nowrap;
+  font-size: clamp(12px, 1.25vw, 16px);
+  letter-spacing: .08em;
+}
+
+.exercise-card {
+  border-radius: 14px;
+}
+
+.exercise-card:hover:not(.selected) {
+  transform: none;
+  background: var(--color-surface-hover);
+  box-shadow: none;
+}
+
 /* Attendance hover copy uses the same quiet, raised treatment as chart tooltips. */
 .attendance-cell[data-tooltip]::after {
   min-width: 155px;
