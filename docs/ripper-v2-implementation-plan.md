@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M3 — Strong drives the existing dashboard
-Current task: V2-024
-Last completed task: V2-023 — Stage replacement and addition behind an import preview
-Next task: V2-024
+Current task: V2-025
+Last completed task: V2-024 — Skip identical file imports using content hashes
+Next task: V2-025
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
-Tasks complete: 21
-Tasks remaining: 30
+Tasks complete: 22
+Tasks remaining: 29
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -1828,7 +1828,7 @@ Implement V2-023 only. Add a candidate preview that commits changes only after e
 ### V2-024 — Skip identical file imports using content hashes
 
 Status:
-TODO
+DONE
 
 Milestone:
 M5 — Imports become additive and explainable

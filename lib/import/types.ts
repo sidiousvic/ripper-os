@@ -20,6 +20,8 @@ export interface AggregateImport {
   source: TrainingSource;
   filename: string;
   adapterVersion: string;
+  /** SHA-256 of the original file bytes, recorded only after an import is accepted. */
+  contentHash?: string;
   /** Number of source workouts when the adapter has session-level fidelity. */
   knownWorkoutCount?: number;
   exerciseDays: CanonicalExerciseDay[];

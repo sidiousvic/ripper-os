@@ -50,6 +50,7 @@ export function projectStrengthImport(data: DetailedImport): AggregateImport {
     source: data.source,
     filename: data.filename,
     adapterVersion: `${data.adapterVersion}:daily-v1`,
+    contentHash: data.contentHash,
     knownWorkoutCount: data.sessions.length,
     exerciseDays: [...grouped.values()].sort((a, b) => a.date.localeCompare(b.date) || a.displayName.localeCompare(b.displayName)),
     muscleDays: [],

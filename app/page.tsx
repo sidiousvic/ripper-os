@@ -350,6 +350,11 @@ export default function Home() {
 
   const applyPendingImport = () => {
     if (!pendingImport) return;
+    if (pendingImport.noOp) {
+      setPendingImport(null);
+      setUploadState("This file was already imported; your dashboard is unchanged.");
+      return;
+    }
     const payload = pendingImport.nextDashboard as UploadPayload;
     const nextExercises = payload.exercises as Exercise[];
     const featured = featuredExercise(nextExercises);
@@ -561,8 +566,8 @@ export default function Home() {
             {hasUploadedData && <button className="button upload-button" onClick={() => setClearConfirmOpen(true)}><Trash2 size={17} aria-hidden="true" />Clear uploaded data</button>}
             {hasUploadedData && <a className="button primary" href="#progress">Explore all exercises <ChevronRight size={17} /></a>}
             {hasUploadedData && <button className="button ai-action" onClick={generateRecommendations} disabled={recommendationState.startsWith("Generating")}><Sparkles size={16} /> Generate AI insights</button>}
+            <a className="button secondary export-guide-button" href="/about">How to export my data <ChevronRight size={17} /></a>
           </div>
-          <p className="export-guide-link"><a className="button secondary" href="/about">How to export my data <ChevronRight size={17} /></a></p>
           <p className="muted small">Your file stays on this device. AI insights are optional.</p>
           {uploadState && <p className="upload-status" role="status">{uploadState}</p>}
           {importing && <button className="button secondary" onClick={() => { importController.current?.abort(); setUploadState("Import cancelled."); }}>Cancel import</button>}

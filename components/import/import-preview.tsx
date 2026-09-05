@@ -20,7 +20,8 @@ export default function ImportPreviewDialog({ preview, onCancel, onAccept }: { p
         </div>
         {preview.action === "add" && <p className="muted small">Adding builds one chronological history. Dates already present cannot be added yet.</p>}
         {preview.action === "replace" && <p className="muted small">Replacing removes the currently loaded history after you confirm.</p>}
-        <div className="connect-actions"><button className="button secondary" onClick={onCancel}>Cancel</button><button className="button primary" onClick={onAccept}>Import valid rows</button></div>
+        {preview.noOp && <p className="muted small">These exact file bytes were already accepted. No changes are needed.</p>}
+        <div className="connect-actions"><button className="button secondary" onClick={onCancel}>Cancel</button><button className="button primary" onClick={onAccept} disabled={preview.noOp}>{preview.noOp ? "Already imported" : "Import valid rows"}</button></div>
       </section>
     </div>
   );

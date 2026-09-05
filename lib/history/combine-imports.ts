@@ -9,6 +9,10 @@ export type CombineResult = { ok: true; imports: HistoryImport[] } | { ok: false
 const asAggregate = (input: AggregateImport | DetailedImport): AggregateImport =>
   "representation" in input && input.representation === "detailed" ? projectStrengthImport(input) : input as AggregateImport;
 
+export function hasImportedContentHash(existing: HistoryImport[], contentHash?: string) {
+  return Boolean(contentHash && existing.some((input) => input.contentHash === contentHash));
+}
+
 /** Combine only disjoint imports. Inputs are never mutated when an overlap is found. */
 export function combineImports(existing: HistoryImport[], addition: AggregateImport | DetailedImport): CombineResult {
   const current = existing.map(asAggregate);

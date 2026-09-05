@@ -57,6 +57,8 @@ export interface DetailedImport {
   source: TrainingSource;
   filename: string;
   adapterVersion: string;
+  /** SHA-256 of the original file bytes, recorded only after an import is accepted. */
+  contentHash?: string;
   representation: "detailed";
   sessions: StrengthSession[];
   issues: ImportIssue[];
