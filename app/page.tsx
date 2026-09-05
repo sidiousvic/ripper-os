@@ -5,6 +5,7 @@ import Image from "next/image";
 import Footer from "./footer";
 import { importTrainingFile } from "../lib/import-training-file";
 import { isTrainingSnapshot, saveTrainingSnapshot, TRAINING_SNAPSHOT_KEY } from "../lib/training-snapshot.mjs";
+import { isCurrentRequest } from "../lib/request-guard.mjs";
 import {
   Bar,
   CartesianGrid,
@@ -206,10 +207,11 @@ export default function Home() {
   const [data, setData] = useState(demoData);
   const exercises = data.exercises as Exercise[];
   const datasetRevision = useRef(0);
+  const aiController = useRef<AbortController | null>(null);
   const [uploadState, setUploadState] = useState<string>("");
   const [importing, setImporting] = useState(false);
   const importController = useRef<AbortController | null>(null);
-  useEffect(() => () => { importController.current?.abort(); datasetRevision.current += 1; }, []);
+  useEffect(() => () => { importController.current?.abort(); aiController.current?.abort(); datasetRevision.current += 1; }, []);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [aiInsight, setAiInsight] = useState<AiInsight | null>(null);
   const [recommendationState, setRecommendationState] = useState<string>("");
@@ -268,6 +270,7 @@ export default function Home() {
     if (!file) return;
     input.value = "";
     importController.current?.abort();
+    aiController.current?.abort();
     const controller = new AbortController();
     importController.current = controller;
     setImporting(true);
@@ -308,6 +311,7 @@ export default function Home() {
 
   const clearUploadedData = () => {
     importController.current?.abort();
+    aiController.current?.abort();
     try { localStorage.removeItem(sessionDataKey); } catch { /* Clearing the visible dashboard must still work. */ }
     datasetRevision.current += 1;
     setData(demoData);
@@ -347,6 +351,9 @@ export default function Home() {
 
   const requestRecommendations = async () => {
     const revision = datasetRevision.current;
+    aiController.current?.abort();
+    const controller = new AbortController();
+    aiController.current = controller;
     setAiConsentOpen(false);
     setRecommendationError("");
     setRecommendationState("Generating recommendations…");
@@ -354,9 +361,9 @@ export default function Home() {
       const summary = { coverage: data.coverage, muscles: data.muscles, gaps: data.gaps, achievements: data.achievements, busiestMonths: data.busiestMonths, quietestMonths: data.quietestMonths };
       const headers: HeadersInit = { "content-type": "application/json" };
       if (openAIKey) headers["x-openai-api-key"] = openAIKey;
-      const response = await fetch("/api/recommendations", { method: "POST", headers, body: JSON.stringify(summary) });
+      const response = await fetch("/api/recommendations", { method: "POST", headers, body: JSON.stringify(summary), signal: controller.signal });
       const payload = await response.json() as unknown as UploadPayload;
-      if (revision !== datasetRevision.current) return;
+      if (!isCurrentRequest(revision, datasetRevision.current, controller.signal)) return;
       if (!response.ok) throw new Error(payload.error ?? "Recommendation generation failed.");
       setRecommendations(payload.recommendations ?? []);
       setAiInsight({ sustainedPractice: payload.sustainedPractice ?? "", nextYearRule: payload.nextYearRule ?? "", sectionInsights: payload.sectionInsights ?? {} });
@@ -364,14 +371,16 @@ export default function Home() {
       if (saved) localStorage.setItem(sessionDataKey, JSON.stringify({ ...JSON.parse(saved), recommendations: payload.recommendations ?? [], aiInsight: { sustainedPractice: payload.sustainedPractice ?? "", nextYearRule: payload.nextYearRule ?? "", sectionInsights: payload.sectionInsights ?? {} } }));
       setRecommendationState("Recommendations updated from this dataset.");
     } catch (error) {
-      if (revision !== datasetRevision.current) return;
+      if (!isCurrentRequest(revision, datasetRevision.current, controller.signal)) return;
       const message = error instanceof Error ? error.message : "Recommendation generation failed.";
       setRecommendationState("");
       setRecommendationError(/^Recommendation limit reached|^Too many requests/i.test(message)
         ? "Ripper OS is temporarily rate-limiting requests to protect your connected API key. Please wait a few minutes, then try again."
         : /OpenAI is rate-limiting|account has reached a limit/i.test(message)
           ? "OpenAI returned a usage or rate limit for this key. This is separate from Ripper OS; check the key’s OpenAI project limits, billing, and regional network access."
-          : "Recommendations could not be generated right now. Check your OpenAI connection and try again.");
+        : "Recommendations could not be generated right now. Check your OpenAI connection and try again.");
+    } finally {
+      if (aiController.current === controller) aiController.current = null;
     }
   };
 

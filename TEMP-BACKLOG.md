@@ -6,7 +6,7 @@ The import path is browser-only, production dependencies have zero audit finding
 
 | # | Priority | Task | Evidence / acceptance criteria |
 | --- | --- | --- | --- |
-| 1 | Before sharing | Prevent stale upload and AI responses from updating another dataset. | Import cancellation and dataset revision guards exist. Complete dedicated AI race verification for success, error, replacement, clear, and unmount; ensure stale responses cannot change visible recommendations or loading state. |
+| 1 | Before sharing | Prevent stale upload and AI responses from updating another dataset. | Complete in v0.2.9. AI requests are abortable on replacement, clear, and unmount; revision plus abort guards reject stale success and error paths, and a focused request-guard test covers current, changed, and aborted requests. |
 | 2 | Before sharing | Bound parser work beyond file size and ZIP expansion checks. | Add explicit limits for row counts, date span, and high-cardinality exports; reject pathological inputs in the worker with a clear local message while keeping normal MacroFactor exports working. |
 | 3 | Before sharing | Restore meaningful type validation and a lightweight CI release check. | Resolve or isolate current dashboard/generated-route type errors, stop relying on ignored build errors for touched code, and add a GitHub check for tests, both builds, version/tag alignment, and unstaged release artifacts. |
 | 4 | Before sharing | Use trusted Vercel client identity and durable abuse limits. | Replace the Cloudflare-header preference and per-process-only limits with a documented trusted-proxy strategy and durable rate limiting for AI routes, or explicitly disable public AI access until configured. |

@@ -1,10 +1,16 @@
 import assert from "node:assert/strict";
 import { isTrainingSnapshot, saveTrainingSnapshot, TRAINING_SNAPSHOT_KEY } from "../lib/training-snapshot.mjs";
+import { isCurrentRequest } from "../lib/request-guard.mjs";
 
 const validData = { data: { coverage: { firstDate: "2026-01-01", lastDate: "2026-01-02" }, monthly: [], attendance: [], exercises: [], muscles: [], achievements: [] } };
 assert.equal(isTrainingSnapshot(validData), true);
 assert.equal(isTrainingSnapshot({ data: { coverage: {}, exercises: [] } }), false);
 assert.equal(isTrainingSnapshot(null), false);
+const requestController = new AbortController();
+assert.equal(isCurrentRequest(3, 3, requestController.signal), true);
+requestController.abort();
+assert.equal(isCurrentRequest(3, 3, requestController.signal), false);
+assert.equal(isCurrentRequest(3, 4, new AbortController().signal), false);
 
 const values = new Map([[TRAINING_SNAPSHOT_KEY, "old-export"]]);
 const storage = {
