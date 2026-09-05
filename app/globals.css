@@ -26,6 +26,33 @@ body {
   font-feature-settings: "ss01" 1, "cv05" 1;
 }
 
+/* Optional ambient delight: fixed, non-interactive, and visually behind the dashboard. */
+.ambient-wireframe {
+  position: fixed;
+  z-index: -1;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  opacity: .72;
+  contain: strict;
+}
+
+.ambient-wireframe canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+main {
+  isolation: isolate;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ambient-wireframe {
+    opacity: .5;
+  }
+}
+
 .empty-dashboard .data-dependent {
   display: none;
 }
@@ -353,6 +380,17 @@ button {
   line-height: 1.65;
   transform-origin: center;
   text-wrap: initial;
+}
+
+/* Keep uncontained copy legible when the ambient wireframe passes behind it. */
+.hero-copy > h1,
+.hero-copy > p,
+.hero-copy > .muted,
+.section-heading h2,
+.section-heading p:not(.eyebrow),
+.about-copy h1,
+.about-copy > p:last-child {
+  mix-blend-mode: plus-lighter;
 }
 
 .hero-actions {
@@ -3766,11 +3804,18 @@ button:hover {
   width: 100%;
   max-width: none;
   flex: none;
+  order: 1;
 }
 
+.hero-actions .button.primary,
 .hero-actions .ai-action {
-  grid-column: 2 / span 2;
+  order: 2;
+  grid-column: span 2;
   width: 100%;
+}
+
+.hero-actions .export-guide-button {
+  order: 1;
 }
 
 @media (max-width: 760px) {
@@ -3781,38 +3826,367 @@ button:hover {
   }
 }
 
-.export-guide-link {
-  display: flex;
-  justify-content: center;
-  margin-top: 14px;
-  width: min(100%, 840px);
-  margin-inline: auto;
-}
-
-.export-guide-link .button {
-  width: calc(50% - 5px);
+.hero-actions .export-guide-button {
+  grid-column: span 2;
+  width: 100%;
   max-width: none;
   min-height: 44px;
   color: var(--color-text-secondary);
   text-decoration: none;
 }
 
-.export-guide-link .button:hover {
+.hero-actions .export-guide-button:hover {
   color: var(--color-text);
 }
 
 @media (max-width: 760px) {
-  .export-guide-link {
-    width: 100%;
-  }
-
-  .export-guide-link .button {
-    width: 100%;
-  }
-
   .hero-actions .button,
   .hero-actions .ai-action {
     grid-column: 1;
     width: 100%;
+  }
+}
+
+@media (max-width: 1050px) {
+  .topbar {
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    column-gap: 16px;
+  }
+}
+
+.hero h1 > b {
+  display: block;
+  color: var(--accent);
+  font-size: clamp(36px, 8.8vw, 86px);
+  letter-spacing: .035em;
+  line-height: .92;
+  white-space: nowrap;
+}
+
+.hero h1 > b span {
+  color: inherit;
+}
+
+.hero h1 .hero-training {
+  display: block;
+  margin-top: 18px;
+  font-size: clamp(24px, 3.4vw, 42px);
+}
+
+/* Mobile hero controls use one fixed component size; the mark follows the current wordmark. */
+@media (max-width: 760px) {
+  .hero-actions .button {
+    height: 56px;
+    min-height: 56px;
+    font-size: 18px;
+  }
+
+  .hero h1 > b {
+    display: block;
+    color: var(--accent);
+    font-size: clamp(36px, 10vw, 52px);
+    letter-spacing: .035em;
+    line-height: .92;
+    white-space: nowrap;
+  }
+
+  .hero h1 > b span {
+    color: inherit;
+  }
+
+  .hero h1 .hero-training {
+    display: block;
+    margin-top: 14px;
+    font-size: clamp(25px, 7vw, 36px);
+  }
+}
+
+/* Modal actions must wrap as the import history grows. */
+.connect-dialog {
+  width: min(100%, 620px);
+}
+
+.connect-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  justify-content: stretch;
+  gap: 10px;
+}
+
+.connect-actions .button {
+  width: 100%;
+  min-width: 0;
+  min-height: 52px;
+  padding-inline: 14px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.12;
+}
+
+@media (max-width: 460px) {
+  .connect-dialog {
+    padding: 22px 18px;
+  }
+
+  .connect-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* The comparison series is dashed in the chart; keep the legend honest at a glance. */
+.legend-inline .legend-history {
+  background: var(--green);
+  box-shadow: none;
+}
+
+.legend-inline .legend-latest {
+  background: repeating-linear-gradient(90deg, var(--lime) 0 7px, transparent 7px 11px);
+  box-shadow: none;
+}
+
+/* Keep the muscle bars aligned with their two-color legend. */
+.muscle-tracks i.early,
+.legend-inline .legend-early {
+  background: #3b6245;
+  box-shadow: none;
+}
+
+.muscle-tracks i.recent,
+.legend-inline .legend-recent {
+  background: var(--accent);
+  box-shadow: 0 0 9px rgba(198, 255, 25, .28);
+}
+
+/* Give otherwise-empty attendance cells a clear, local hover target. */
+.attendance-cell:not(.active):not(.outside):hover,
+.attendance-cell:not(.active):not(.outside):focus-visible {
+  background: #343b34;
+  outline: 2px solid color-mix(in srgb, var(--accent) 62%, transparent);
+  outline-offset: 2px;
+  box-shadow: 0 0 12px rgba(198, 255, 25, .14);
+}
+
+/* A gap is one fact; show the time off once and keep the dates as context. */
+.gap-row {
+  grid-template-columns: 28px minmax(0, 1fr);
+}
+
+.gap-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.gap-summary strong {
+  color: var(--color-text);
+  font-size: 18px;
+  font-weight: 680;
+  letter-spacing: -.02em;
+}
+
+.gap-summary span {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}
+
+.unit-options {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.unit-option {
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 78px;
+  padding: 14px 16px;
+  text-align: left;
+}
+
+.unit-option strong {
+  color: var(--accent);
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+.unit-option span {
+  margin-top: 4px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+}
+
+.unit-cancel {
+  width: 100%;
+  margin-top: 10px;
+}
+
+@media (max-width: 460px) {
+  .unit-options {
+    grid-template-columns: 1fr;
+  }
+
+  .unit-option {
+    min-height: 58px;
+  }
+}
+
+/* Unit resolution is a compact choice sheet, not a full-width content dialog. */
+.unit-dialog {
+  width: min(100%, 520px);
+  padding: 26px;
+}
+
+.unit-dialog h2 {
+  margin-top: 5px;
+  font-size: clamp(28px, 5vw, 38px);
+}
+
+.unit-dialog > p:not(.eyebrow) {
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.unit-dialog .loaded-export-name {
+  margin-top: 12px;
+  margin-bottom: 6px;
+  font-size: 18px;
+}
+
+.unit-option {
+  flex-direction: column;
+  min-height: 64px;
+  padding: 11px 14px;
+}
+
+.unit-option strong {
+  font-size: 18px;
+}
+
+.unit-option span {
+  margin-top: 2px;
+  font-size: 12px;
+}
+
+@media (max-width: 460px) {
+  .unit-dialog {
+    padding: 22px 18px;
+  }
+}
+
+/* Give short attendance histories a fixed, readable cell size instead of letting one week fill the panel. */
+.attendance-grid {
+  align-content: start;
+}
+
+/* The sticky bar yields viewport space while scrolling down and remains revealable from the top edge. */
+.topbar {
+  transition: transform 220ms ease, opacity 180ms ease;
+}
+
+.topbar.is-hidden {
+  transform: translateY(calc(-100% + 10px));
+  opacity: .02;
+}
+
+.topbar.is-hidden:hover,
+.topbar.is-hidden:focus-within {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .topbar {
+    transition: none;
+  }
+}
+
+/* Metric controls are quiet inputs inside the focus panel, not raised cards. */
+.metric-controls {
+  display: grid;
+  gap: 18px;
+}
+
+.metric-controls .metric-select {
+  gap: 8px;
+}
+
+.metric-controls .metric-select select {
+  box-shadow: none;
+}
+
+.metric-controls {
+  grid-template-columns: auto repeat(2, minmax(0, 1fr));
+  align-items: end;
+}
+
+.metric-controls .metric-select select {
+  min-width: 0;
+}
+
+.unit-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 42px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--color-surface);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+}
+
+.unit-toggle > span {
+  padding: 0 7px 0 9px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.unit-toggle button {
+  min-width: 35px;
+  min-height: 34px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 9px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.unit-toggle button:hover {
+  color: var(--color-text);
+  background: var(--color-surface-hover);
+}
+
+.unit-toggle button.active {
+  color: #0d0f0d;
+  background: var(--accent);
+}
+
+@media (max-width: 760px) and (min-width: 461px) {
+  .metric-controls {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .metric-controls .unit-toggle {
+    grid-row: span 2;
+  }
+}
+
+@media (max-width: 460px) {
+  .metric-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .metric-controls .unit-toggle {
+    justify-self: start;
+    width: max-content;
   }
 }

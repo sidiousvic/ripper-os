@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { ImportReport } from "../../lib/import/import-report";
+import { trainingSourceLabel } from "../../lib/domain/training";
 
 export default function ImportReportDialog({ report, onClose }: { report: ImportReport | null; onClose: () => void }) {
   const [copied, setCopied] = useState(false);
@@ -14,7 +15,7 @@ export default function ImportReportDialog({ report, onClose }: { report: Import
       <p className="eyebrow accent">Import complete</p>
       <h2 id="import-report-title">{report.action === "add" ? "Training data added" : "Training data loaded"}</h2>
       <p className="loaded-export-name">{report.filename}</p>
-      <p className="muted small">{report.source} · {report.trainingDays} training days · {report.setsInFile} sets in file</p>
+      <p className="muted small">{trainingSourceLabel(report.source)} · {report.trainingDays} training days · {report.setsInFile} sets in file</p>
       <div className="schema-card schema-inline">
         <p><strong>{report.addedRecords}</strong> added · <strong>{report.unchangedRecords}</strong> unchanged or duplicate</p>
         <p><strong>{report.mappedExercises}</strong> mapped exercises · <strong>{report.customExercises}</strong> custom or unresolved</p>

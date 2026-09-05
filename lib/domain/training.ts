@@ -1,5 +1,10 @@
 export type TrainingSource = "macrofactor" | "strong" | "hevy";
 
+export const trainingSourceLabel = (source: string) => source.split("+").map((part) => {
+  const value = part.trim();
+  return value.toLowerCase() === "macrofactor" ? "MacroFactor" : value ? `${value[0].toUpperCase()}${value.slice(1)}` : value;
+}).filter(Boolean).join(" + ");
+
 export type DailyMetric =
   | "totalSets"
   | "totalReps"

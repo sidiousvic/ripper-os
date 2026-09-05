@@ -1,6 +1,7 @@
 "use client";
 
 import type { ImportPreview } from "../../lib/import/import-preview";
+import { trainingSourceLabel } from "../../lib/domain/training";
 
 export default function ImportPreviewDialog({ preview, onCancel, onAccept }: { preview: ImportPreview | null; onCancel: () => void; onAccept: () => void }) {
   if (!preview) return null;
@@ -12,7 +13,7 @@ export default function ImportPreviewDialog({ preview, onCancel, onAccept }: { p
         <h2 id="import-preview-title">{preview.action === "add" ? "Add training data" : "Replace training data"}</h2>
         <p className="loaded-export-name">{preview.filename}</p>
         {preview.batchFailures?.length ? <p className="muted small">{preview.batchFailures.length} file{preview.batchFailures.length === 1 ? "" : "s"} could not be staged; valid files remain ready to import.</p> : null}
-        <p className="muted small">{preview.source} detected · {preview.candidateDashboard.coverage.firstDate} → {preview.candidateDashboard.coverage.lastDate}</p>
+        <p className="muted small">{trainingSourceLabel(preview.source)} detected · {preview.candidateDashboard.coverage.firstDate} → {preview.candidateDashboard.coverage.lastDate}</p>
         <div className="schema-card schema-inline">
           <p><strong>{preview.trainingDays}</strong> training days · <strong>{preview.sets}</strong> recorded sets</p>
           <p><strong>{preview.knownWorkouts ?? "—"}</strong> {basis}</p>

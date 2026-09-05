@@ -1,6 +1,6 @@
 {
   "name": "ripper-os",
-  "version": "0.2.93",
+  "version": "0.2.94",
   "private": false,
   "engines": {
     "node": ">=22.13.0"

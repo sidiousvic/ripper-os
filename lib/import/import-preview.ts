@@ -6,7 +6,7 @@ import type { ImportOutcome } from "./parse-import.ts";
 
 export type ImportPreview = {
   action: "replace" | "add";
-  source: ImportOutcome["source"];
+  source: string;
   filename: string;
   candidateDashboard: DashboardData;
   nextDashboard: DashboardData;
@@ -66,7 +66,7 @@ export function combineImportPreviews(previews: ImportPreview[], action: "replac
     unit: "workouts" as const,
   } : undefined;
   return {
-    ...last, action, filename: previews.map(preview => preview.filename).join(" + "), candidateDashboard: dashboard, nextDashboard: dashboard, nextImports: imports,
+    ...last, action, source: [...new Set(previews.map((preview) => preview.source))].join(" + "), filename: previews.map(preview => preview.filename).join(" + "), candidateDashboard: dashboard, nextDashboard: dashboard, nextImports: imports,
     trainingDays: previews.reduce((sum, preview) => sum + preview.trainingDays, 0), sets: previews.reduce((sum, preview) => sum + preview.sets, 0),
     mappedExercises: previews.reduce((sum, preview) => sum + preview.mappedExercises, 0), customExercises: previews.reduce((sum, preview) => sum + preview.customExercises, 0),
     warnings: previews.reduce((sum, preview) => sum + preview.warnings, 0), errors: previews.reduce((sum, preview) => sum + preview.errors, 0), noOp: previews.every(preview => preview.noOp), reconciliation, batchFiles: previews.map(preview => preview.filename), batchFailures: failures,
