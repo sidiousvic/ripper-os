@@ -3838,6 +3838,8 @@ Date/number validation is the exception to accepting invalid legacy behavior: V2
 
 ## Roadmap changes
 
+- 2026-09-06: Added `npm run report:unresolved` to inventory real MacroFactor custom fallbacks by name and set count without uploading the source file. This is the input for the broader deterministic mapping expansion.
+
 - 2026-09-06: Mapping audit found MacroFactor headers can carry a ` ∈ ...` exercise annotation. The adapter now resolves the cleaned display name while retaining the original raw name for provenance, preventing known exercises from falling through to custom identities.
 - 2026-09-06: User preview confirmed the broader issue: a real combined MacroFactor export reports 3 mapped exercises and 67 custom/unresolved. The catalog is too small for practical use; expand deterministic MacroFactor source mappings from the actual export before beta review. Do not ask users to resolve dozens of names manually and do not use fuzzy merging as a shortcut.
 

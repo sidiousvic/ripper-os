@@ -138,3 +138,5 @@ The shared dashboard and About footer shows `v<package version>` in production, 
 The fingerprint is computed from application source, public assets, scripts, dependencies, and build configuration when the server starts or a build runs. Matching fingerprints identify matching source inputs across local and deployed builds; uncommitted source edits change the fingerprint after restarting the dev server.
 
 Vercel uses `npx next build` (see `vercel.json`), while `npm run build` uses Vinext. Run the Vercel build when validating production changes. All active fonts are served from `public/fonts/`, including Montaga and its OFL license, so production no longer depends on a Google Fonts stylesheet request.
+
+To inventory unresolved MacroFactor names locally, run `npm run report:unresolved -- /path/to/export.xlsx`. Only exercise names and set counts are printed; the workbook is not uploaded or saved.
