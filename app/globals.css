@@ -92,6 +92,11 @@ body {
   display: inline-flex;
 }
 
+.about-standalone-link:hover {
+  color: var(--green);
+  text-shadow: 0 0 12px rgba(63, 226, 119, .7);
+}
+
 .no-achievements,
 .no-muscles {
   display: none;

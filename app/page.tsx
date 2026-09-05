@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Footer from "./footer";
 import { importTrainingFile } from "../lib/import-training-file";
@@ -237,6 +237,30 @@ export default function Home() {
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const [loadedExportOpen, setLoadedExportOpen] = useState(false);
   const [recommendationError, setRecommendationError] = useState("");
+  const activeModal = recommendationError ? "recommendation-error" : connectOpen ? "connect" : loadedExportOpen ? "loaded-export" : aiConsentOpen ? "ai-consent" : clearConfirmOpen ? "clear" : "";
+  const closeActiveModal = useCallback(() => {
+    if (recommendationError) setRecommendationError("");
+    else if (connectOpen) setConnectOpen(false);
+    else if (loadedExportOpen) setLoadedExportOpen(false);
+    else if (aiConsentOpen) setAiConsentOpen(false);
+    else if (clearConfirmOpen) setClearConfirmOpen(false);
+  }, [recommendationError, connectOpen, loadedExportOpen, aiConsentOpen, clearConfirmOpen]);
+  useEffect(() => {
+    if (!activeModal) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const dialog = document.querySelector<HTMLElement>('section[role="dialog"], section[role="alertdialog"]');
+    const focusable = dialog?.querySelectorAll<HTMLElement>('button, input, select, textarea, a[href], [tabindex]:not([tabindex="-1"])');
+    focusable?.[0]?.focus();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") { event.preventDefault(); closeActiveModal(); return; }
+      if (event.key !== "Tab" || !focusable?.length) return;
+      const first = focusable[0], last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => { document.removeEventListener("keydown", onKeyDown); previous?.focus(); };
+  }, [activeModal, closeActiveModal]);
   const [lastExportName, setLastExportName] = useState("");
   const [lastExportAt, setLastExportAt] = useState("");
   const [selectedExerciseName, setSelectedExerciseName] = useState(() => featuredExercise(exercises)?.name ?? "");
@@ -396,6 +420,12 @@ export default function Home() {
     } finally {
       if (aiController.current === controller) aiController.current = null;
     }
+  };
+
+  const cancelRecommendations = () => {
+    aiController.current?.abort();
+    datasetRevision.current += 1;
+    setRecommendationState("AI recommendations cancelled.");
   };
 
   const selectExercise = (exercise: Exercise) => {
@@ -842,7 +872,7 @@ export default function Home() {
         </section>
       </div>}
 
-      {recommendationState.startsWith("Generating") && <div className="ai-loading-toast" role="status" aria-live="polite"><Sparkles size={18} /><div><p className="eyebrow accent">AI INSIGHTS</p><p>Generating recommendations…</p></div></div>}
+      {recommendationState.startsWith("Generating") && <div className="ai-loading-toast" role="status" aria-live="polite"><Sparkles size={18} /><div><p className="eyebrow accent">AI INSIGHTS</p><p>Generating recommendations…</p></div><button className="button secondary" onClick={cancelRecommendations}>Cancel</button></div>}
 
       <Footer />
     </main>
