@@ -752,7 +752,7 @@ export default function Home() {
               <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={280} debounce={50}>
                 <ComposedChart data={monthlyChart} margin={{ top: 12, right: 4, left: -24, bottom: 16 }}>
                   <CartesianGrid stroke="var(--color-border)" vertical={false} />
-                  <XAxis dataKey="month" tickFormatter={formatMonth} tick={{ fill: "var(--color-text-muted)", fontSize: 16 }} axisLine={false} tickLine={false} tickMargin={12} interval={2} />
+                  <XAxis dataKey="month" tickFormatter={formatMonth} tick={{ fill: "var(--color-text-muted)", fontSize: 14 }} axisLine={false} tickLine={false} tickMargin={8} minTickGap={34} interval="preserveStartEnd" />
                   <YAxis yAxisId="sessions" tick={{ fill: "var(--color-text-muted)", fontSize: 16 }} axisLine={false} tickLine={false} allowDecimals={false} />
                   <YAxis yAxisId="cumulative" orientation="right" tick={{ fill: "var(--color-text-muted)", fontSize: 16 }} axisLine={false} tickLine={false} />
                   <Tooltip content={<ChartTooltip />} cursor={{ fill: "rgba(57, 255, 102, .08)" }} />

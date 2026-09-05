@@ -4242,6 +4242,19 @@ button:hover {
   transform: none;
 }
 
+/* Unit choices should read as compact cards rather than oversized pills. */
+.unit-option {
+  border-radius: 20px;
+  padding-inline: 28px;
+}
+
+@media (max-width: 460px) {
+  .unit-option {
+    border-radius: 18px;
+    padding-inline: 22px;
+  }
+}
+
 /* Let the ambient model pass between sections without a hard horizontal mask. */
 .explorer-section {
   background: linear-gradient(to bottom, rgba(6, 16, 9, 0), rgba(6, 16, 9, .58) 76px, rgba(6, 16, 9, .86) calc(100% - 96px), rgba(6, 16, 9, 0));
