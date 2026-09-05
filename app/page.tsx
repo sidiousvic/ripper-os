@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Footer from "./footer";
 import { importTrainingFile } from "../lib/import-training-file";
-import { saveTrainingSnapshot, TRAINING_SNAPSHOT_KEY } from "../lib/training-snapshot.mjs";
+import { isTrainingSnapshot, saveTrainingSnapshot, TRAINING_SNAPSHOT_KEY } from "../lib/training-snapshot.mjs";
 import {
   Bar,
   CartesianGrid,
@@ -247,6 +247,7 @@ export default function Home() {
       const saved = localStorage.getItem(sessionDataKey);
       if (!saved) return;
       const snapshot = JSON.parse(saved);
+      if (!isTrainingSnapshot(snapshot)) throw new Error("Invalid saved training snapshot");
       const restored = snapshot.data;
       const restoredExercises = restored.exercises as Exercise[];
       const featured = featuredExercise(restoredExercises);

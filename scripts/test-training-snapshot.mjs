@@ -1,5 +1,10 @@
 import assert from "node:assert/strict";
-import { saveTrainingSnapshot, TRAINING_SNAPSHOT_KEY } from "../lib/training-snapshot.mjs";
+import { isTrainingSnapshot, saveTrainingSnapshot, TRAINING_SNAPSHOT_KEY } from "../lib/training-snapshot.mjs";
+
+const validData = { data: { coverage: { firstDate: "2026-01-01", lastDate: "2026-01-02" }, monthly: [], attendance: [], exercises: [], muscles: [], achievements: [] } };
+assert.equal(isTrainingSnapshot(validData), true);
+assert.equal(isTrainingSnapshot({ data: { coverage: {}, exercises: [] } }), false);
+assert.equal(isTrainingSnapshot(null), false);
 
 const values = new Map([[TRAINING_SNAPSHOT_KEY, "old-export"]]);
 const storage = {
