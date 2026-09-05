@@ -5,6 +5,9 @@ import { calculateConsistencySummary } from "./analytics/consistency.ts";
 import { calculateExerciseSummaries } from "./analytics/exercises.ts";
 import { calculateAttendance } from "./analytics/attendance.ts";
 import { calculateSourceMuscles } from "./analytics/muscles.ts";
+import { buildDashboard } from "./analytics/build-dashboard.ts";
+import { createMacroFactorImport } from "./import/adapters/macrofactor.ts";
+import { validateCanonicalExerciseDays } from "./import/validation.ts";
 
 const DAY = 86400000;
 const epoch = Date.UTC(1899, 11, 30);
@@ -96,5 +99,8 @@ export function parseTrainingFile(fileBytes: Uint8Array, fileName: string) {
     const { muscleWindows, muscles, muscleHeatmap } = calculateSourceMuscles(muscleDays, first, last);
     const { attendance, longestActiveWeekStreak } = calculateAttendance(records.map((record) => ({ date: record.date, totalSets: record.totalSets, totalVolumeKg: record.totalVolumeKg })));
     const complete = months.filter((x) => x.coverage === "complete"); const payload = { generatedAt: new Date().toISOString(), coverage: { firstDate: first, lastDate: last, journeyDays: Math.round((Date.parse(`${last}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) / DAY) + 1, totalSessions: sessions.length, averageSessionsPerMonth: r(sessions.length / months.length), averageSessionsPerWeek: r(sessions.length / (((Date.parse(`${last}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) / DAY + 1) / 7)), exerciseCount: exercises.length, longestActiveWeekStreak: longestActiveWeekStreak }, monthly: months, busiestMonths: [...complete].sort((a, b) => b.sessions - a.sessions).slice(0, 5), quietestMonths: [...complete].sort((a, b) => a.sessions - b.sessions).slice(0, 5), gaps, attendance, exercises, muscleWindows, muscles, muscleHeatmap, achievements, methodology: { strength: "Weighted exercise progress defaults to the heaviest recorded load.", muscles: "Muscle balance uses muscle-group set equivalents. These are exposure signals, not diagnoses.", caveat: "Confirm sudden load changes against the exercise setup." } };
-    return payload;
+    const importData = createMacroFactorImport(payload, fileName);
+    const issues = validateCanonicalExerciseDays(importData.exerciseDays);
+    if (issues.length) throw new Error("MacroFactor export contains invalid normalized records.");
+    return buildDashboard(importData);
 }

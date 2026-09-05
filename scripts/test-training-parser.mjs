@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import * as XLSX from "xlsx";
 import { parseTrainingFile } from "../lib/training-parser.ts";
+import { createMacroFactorImport } from "../lib/import/adapters/macrofactor.ts";
+import { validateCanonicalExerciseDays } from "../lib/import/validation.ts";
 import { buildWorkbookFixtures } from "../tests/fixtures/macrofactor/build-workbooks.mjs";
 const nullMetric = { totalSets: 0, totalReps: null, bestSetReps: null, heaviestKg: null, totalVolumeKg: null, e1rmKg: null, durationSec: null };
 assert.equal(nullMetric.totalSets, 0);
@@ -28,6 +30,12 @@ assert.throws(() => parseTrainingFile(new TextEncoder().encode("Date,Exercise,We
 assert.throws(() => parseTrainingFile(new TextEncoder().encode("Date,Exercise,Weight (kg),Reps\n1900-01-01,Row,10,5\n2026-01-01,Row,10,5"), "wide-history.csv"), /supported date span/);
 assert.equal(fromCsv.coverage.firstDate, "2026-01-01");
 assert.ok(!JSON.stringify(fromCsv).includes("private-note-marker"));
+const csvImport = createMacroFactorImport(fromCsv, "training.csv");
+assert.equal(csvImport.schemaVersion, 1);
+assert.equal(csvImport.source, "macrofactor");
+assert.ok(csvImport.exerciseDays.length > 0);
+assert.ok(csvImport.exerciseDays.every((day) => day.sourceRefs.length > 0 && day.origin === "source-aggregate"));
+assert.deepEqual(validateCanonicalExerciseDays(csvImport.exerciseDays), []);
 
 const workbook = XLSX.utils.book_new();
 for (const [name, values] of [

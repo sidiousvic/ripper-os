@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M1 — Lock down the behavior worth keeping
-Current task: V2-008 — Route MacroFactor through the canonical import boundary (IN_PROGRESS)
-Last completed task: V2-007 — Extract source-reported muscle summaries
-Next task: V2-008
+Current task: V2-009 — Add a verified anonymized Strong export fixture (IN_PROGRESS)
+Last completed task: V2-008 — Route MacroFactor through the canonical import boundary
+Next task: V2-009
 Blockers: No verified Strong or Hevy export fixture exists in this checkout. V2-009 and V2-034 require a permission-cleared export with documented units and date interpretation. These do not block V2-001–008.
-Tasks complete: 7
-Tasks remaining: 44
+Tasks complete: 8
+Tasks remaining: 43
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -709,7 +709,7 @@ Implement V2-007 only. Move muscle windows and heatmap calculation behind a pure
 ### V2-008 — Route MacroFactor through the canonical import boundary
 
 Status:
-IN_PROGRESS
+DONE
 
 Milestone:
 M2 — MacroFactor through a small shared model
@@ -786,7 +786,7 @@ Implement V2-008 only. Complete the marked higher-model review before coding; do
 ### V2-009 — Add a verified anonymized Strong export fixture
 
 Status:
-TODO
+IN_PROGRESS
 
 Milestone:
 M3 — Strong drives the existing dashboard
@@ -3831,3 +3831,4 @@ Date/number validation is the exception to accepting invalid legacy behavior: V2
 - 2026-09-05: V2-005 completed by extracting exercise summaries and first-to-peak achievements into `lib/analytics/exercises.ts`; existing formulas and ordering remain unchanged.
 - 2026-09-05: V2-006 completed by extracting attendance bins and active-week streak calculations into `lib/analytics/attendance.ts`; existing thresholds and dashboard output remain unchanged.
 - 2026-09-05: V2-007 completed by extracting source-reported muscle windows and heatmap calculations into `lib/analytics/muscles.ts`; workbook parsing and baseline output remain unchanged.
+- 2026-09-05: V2-008 completed with a transitional MacroFactor import envelope, canonical exercise-day provenance, validation, and a dashboard boundary. Detailed source adapter extraction remains intentionally deferred until verified source fixtures require it.
