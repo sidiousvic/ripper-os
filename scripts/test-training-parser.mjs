@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
 import * as XLSX from "xlsx";
 import { parseTrainingFile } from "../lib/training-parser.ts";
+import { buildWorkbookFixtures } from "../tests/fixtures/macrofactor/build-workbooks.mjs";
 
 const csv = "Date,Exercise,Weight (kg),Reps,Notes\n2026-01-01,Bench Press,100,5,private-note-marker\n2026-01-01,Bench Press,100,5,\n2026-02-01,Bench Press,80,8,\n";
 const fromCsv = parseTrainingFile(new TextEncoder().encode(csv), "training.csv");
@@ -47,3 +49,31 @@ assert.throws(() => parseTrainingFile(new Uint8Array(), "bad.xlsx"), /archive/);
 assert.throws(() => parseTrainingFile(new TextEncoder().encode(csv), "bad.exe"), /csv export/);
 assert.throws(() => parseTrainingFile(new Uint8Array([0, 1]), "bad.csv"), /CSV/);
 console.log("Local parser: CSV/XLSX totals, dates, muscle data, ignored notes, and invalid files passed");
+
+// Fixture acceptance only; independently checked analytics baselines follow in V2-002.
+const fixtureRoot = new URL("../tests/fixtures/macrofactor/", import.meta.url);
+const generatedWorkbooks = buildWorkbookFixtures();
+const repeatedWorkbooks = buildWorkbookFixtures();
+for (const [name, bytes] of generatedWorkbooks) {
+  assert.deepEqual(bytes, repeatedWorkbooks.get(name), `${name}: generation must be deterministic`);
+  assert.deepEqual(bytes, await readFile(new URL(name, fixtureRoot)), `${name}: regenerate after changing the matrix`);
+}
+for (const name of ["six-months.csv", ...generatedWorkbooks.keys()]) {
+  const data = parseTrainingFile(await readFile(new URL(name, fixtureRoot)), name);
+  assert.equal(data.coverage.firstDate, "2026-01-05", name);
+  assert.equal(data.coverage.lastDate, "2026-06-15", name);
+  assert.equal(data.exercises.length, 6, name);
+  assert.equal(data.monthly.length, 6, name);
+  for (const alias of ["Wide Grip Pull-Up", "Bench Dip", "Jump Rope"]) {
+    assert.ok(data.exercises.some((exercise) => exercise.name === alias), `${name}: ${alias}`);
+  }
+  if (name === "six-months.xlsx") {
+    for (const metric of ["totalSets", "totalReps", "bestSetReps", "heaviestKg", "totalVolumeKg", "e1rmKg", "durationSec"]) {
+      assert.ok(data.exercises.some((exercise) => exercise.availableMetrics.includes(metric)), `full fixture covers ${metric}`);
+    }
+    assert.ok(data.muscles.length > 0);
+  } else {
+    assert.equal(data.muscles.length, 0, `${name}: absent muscle data is not fabricated`);
+  }
+}
+console.log("Synthetic six-month fixtures: reproducible workbooks, optional sheets, aliases and CSV acceptance passed");
