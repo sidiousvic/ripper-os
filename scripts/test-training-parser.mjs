@@ -8,6 +8,8 @@ assert.equal(fromCsv.coverage.totalSessions, 2);
 assert.equal(fromCsv.exercises[0].totalSets, 3);
 assert.equal(fromCsv.exercises[0].totalReps, 18);
 assert.equal(fromCsv.exercises[0].totalVolumeKg, 1640);
+assert.equal(fromCsv.achievements[0].peak.value, 100);
+assert.equal(fromCsv.achievements[0].peak.date, "2026-01-01");
 assert.equal(fromCsv.coverage.firstDate, "2026-01-01");
 assert.ok(!JSON.stringify(fromCsv).includes("private-note-marker"));
 
