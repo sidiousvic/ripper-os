@@ -2,6 +2,7 @@
 import * as XLSX from "xlsx";
 import { MAX_IMPORT_BYTES } from "./import-limits.mjs";
 import { calculateConsistencySummary } from "./analytics/consistency.ts";
+import { calculateExerciseSummaries } from "./analytics/exercises.ts";
 
 const DAY = 86400000;
 const epoch = Date.UTC(1899, 11, 30);
@@ -78,8 +79,7 @@ export function parseTrainingFile(fileBytes: Uint8Array, fileName: string) {
     if (Date.parse(`${dates.at(-1)}T00:00:00Z`) - Date.parse(`${dates[0]}T00:00:00Z`) > MAX_DATE_SPAN_DAYS * DAY) throw new Error("Export exceeds the supported date span.");
     const sessions = dates.map((date) => { const day = records.filter((x) => x.date === date); return { date, source: "MacroFactor", workout: "MacroFactor workout day", durationMin: null, totalSets: day.reduce((s, x) => s + n(x.totalSets), 0), totalReps: day.reduce((s, x) => s + n(x.totalReps), 0) || null, volumeKg: day.reduce((s, x) => s + n(x.totalVolumeKg), 0) || null }; });
     const first = consistency.first, last = consistency.last; const months = consistency.months; const gaps = consistency.gaps;
-    const exercises = [...new Set(records.map((x) => x.exercise))].map((name) => { const history = records.filter((x) => x.exercise === name); const availableMetrics = ["heaviestKg", "e1rmKg", "bestSetReps", "totalVolumeKg", "totalReps", "totalSets", "durationSec"].filter((k) => history.some((x) => n(x[k]) > 0)); const cardio = /rope|run|walk|bike|cycling|cardio|rowing|rower/i.test(name); const metric = cardio && availableMetrics.includes("durationSec") ? "durationSec" : !cardio && availableMetrics.includes("heaviestKg") ? "heaviestKg" : availableMetrics.includes("bestSetReps") ? "bestSetReps" : availableMetrics.includes("totalReps") ? "totalReps" : "totalSets"; return { name, family: family(name), defaultMetric: metric, availableMetrics, firstDate: history[0].date, lastDate: history.at(-1).date, sessions: new Set(history.map((x) => x.date)).size, totalSets: r(history.reduce((s, x) => s + n(x.totalSets), 0)), totalReps: r(history.reduce((s, x) => s + n(x.totalReps), 0)), totalVolumeKg: r(history.reduce((s, x) => s + n(x.totalVolumeKg), 0)), progress: history.map(({ source, ...x }) => x) }; }).sort((a, b) => b.totalSets - a.totalSets || a.name.localeCompare(b.name));
-    const achievements = exercises.filter((x) => x.progress.length > 1).map((x) => { const firstPoint = x.progress[0], latest = x.progress.at(-1), value = (p: any) => r(n(p[x.defaultMetric])); const peak = x.progress.reduce((best, point) => value(point) > value(best) ? point : best, firstPoint); const percentChange = value(firstPoint) ? r((value(peak) / value(firstPoint) - 1) * 100, 0) : 0; return { exercise: x.name, metric: x.defaultMetric, first: { date: firstPoint.date, value: value(firstPoint) }, latest: { date: latest.date, value: value(latest) }, peak: { date: peak.date, value: value(peak) }, percentChange }; }).filter((achievement) => achievement.percentChange > 0).slice(0, 4);
+    const { exercises, achievements } = calculateExerciseSummaries(records);
     // MacroFactor's muscle sheet is a dated set-equivalent ledger. Keep the two
     // comparison windows separate: previously these were both derived from the
     // all-time total, which made every pair of lines the same length.
