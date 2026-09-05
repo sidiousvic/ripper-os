@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import {
   Bar,
@@ -181,6 +181,24 @@ function ChartTooltip({ active, payload, label, unit = "", comparisonUnit = "" }
       ))}
     </div>
   );
+}
+
+function MeasuredChart({ className, children }: { className: string; children: React.ReactNode }) {
+  const frameRef = useRef<HTMLDivElement>(null);
+  const [measured, setMeasured] = useState(false);
+  useEffect(() => {
+    const frame = frameRef.current;
+    if (!frame) return;
+    const update = () => {
+      const rect = frame.getBoundingClientRect();
+      setMeasured(rect.width > 0 && rect.height > 0);
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(frame);
+    return () => observer.disconnect();
+  }, []);
+  return <div ref={frameRef} className={className}>{measured ? children : null}</div>;
 }
 
 export default function Home() {
@@ -472,7 +490,7 @@ R  R  III  P     P     EEEE  R  R    OOO   SSS
               <div><p className="eyebrow">Session cadence</p><h3>Monthly sessions + cumulative journey</h3></div>
               <div className="legend-inline"><span><i className="legend-bar" /> Sessions</span><span><i className="legend-line" /> Cumulative</span></div>
             </div>
-            <div className="chart-area tall">
+            <MeasuredChart className="chart-area tall">
               <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={280} debounce={50}>
                 <ComposedChart data={monthlyChart} margin={{ top: 12, right: 4, left: -24, bottom: 16 }}>
                   <CartesianGrid stroke="#1c3425" vertical={false} />
@@ -484,7 +502,7 @@ R  R  III  P     P     EEEE  R  R    OOO   SSS
                   <Line yAxisId="cumulative" type="monotone" dataKey="cumulative" name="Cumulative" stroke="#c7ff4a" strokeWidth={2.5} dot={false} />
                 </ComposedChart>
               </ResponsiveContainer>
-            </div>
+            </MeasuredChart>
           </article>
           <article className="panel ranking-panel">
             <div className="panel-heading"><div><p className="eyebrow">Ranked months</p><h3>Busy & quiet</h3></div></div>
@@ -580,7 +598,7 @@ R  R  III  P     P     EEEE  R  R    OOO   SSS
               <div><span>First → latest</span><strong><Delta value={selectedChange} /></strong></div>
             </div>
             <div className="legend-inline focus-legend"><span><i className="legend-history" /> {selectedMeta.label}</span>{comparisonMeta && <span><i className="legend-latest" /> {comparisonMeta.label}</span>}</div>
-            <div className="chart-area focus-chart">
+            <MeasuredChart className="chart-area focus-chart">
               {selectedSeries.length > 1 ? (
                 <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={300} debounce={50}>
                   <LineChart data={selectedChartData} margin={{ top: 20, right: 8, left: -12, bottom: 16 }}>
@@ -595,7 +613,7 @@ R  R  III  P     P     EEEE  R  R    OOO   SSS
                   </LineChart>
                 </ResponsiveContainer>
               ) : <div className="empty-state">Only one measurable point is available for this metric.</div>}
-            </div>
+            </MeasuredChart>
           </article>
 
           <div className="explorer-toolbar">
