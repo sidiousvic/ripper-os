@@ -6,6 +6,7 @@ import { importTrainingFile } from "../lib/import-training-file";
 import type { ImportOutcome } from "../lib/import/parse-import";
 import type { StrongNormalizationOptions } from "../lib/import/adapters/strong";
 import { buildDashboard } from "../lib/analytics/build-dashboard";
+import { projectStrengthImport } from "../lib/analytics/project-strength";
 import type { HistoryImport } from "../lib/history/combine-imports";
 import { exerciseOverrideKey, resolveExercise, type ExerciseOverride, type ExerciseOverrideMap } from "../lib/exercises/resolve";
 import ExerciseMappingDialog, { type MappingCandidate } from "../components/import/exercise-mapping-dialog";
@@ -15,7 +16,8 @@ import ImportConflicts from "../components/import/import-conflicts";
 import { ImportController } from "../lib/import/import-controller";
 import ImportReportDialog from "../components/import/import-report";
 import { createImportReport, type ImportReport } from "../lib/import/import-report";
-import { isTrainingSnapshot, saveTrainingSnapshot, TRAINING_SNAPSHOT_KEY } from "../lib/training-snapshot.mjs";
+import { isTrainingSnapshot, TRAINING_SNAPSHOT_KEY } from "../lib/training-snapshot.mjs";
+import { clearTrainingHistory, loadTrainingHistory, saveTrainingHistory } from "../lib/storage/training-store";
 import { isCurrentRequest } from "../lib/request-guard.mjs";
 import type { DashboardData, Exercise, MetricKey, ProgressRecord } from "../lib/analytics/dashboard-types";
 import {
@@ -285,30 +287,30 @@ export default function Home() {
   // Restore only the normalized dashboard snapshot; raw workbook data and API keys are never stored.
   /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    try {
-      localStorage.removeItem("ripper-os-training-data");
-      const saved = localStorage.getItem(sessionDataKey);
-      if (!saved) return;
-      const snapshot = JSON.parse(saved);
-      if (!isTrainingSnapshot(snapshot)) throw new Error("Invalid saved training snapshot");
-      const restored = snapshot.data;
-      const restoredExercises = restored.exercises as Exercise[];
-      const featured = featuredExercise(restoredExercises);
-      const year = Number(restored.coverage.lastDate.slice(0, 4));
-      setData(restored);
-      setLoadedImport(null);
-      setLoadedSource("");
-      setHistoryImports([]);
-      setExerciseOverrides({});
-      setPendingImport(null);
-      setPendingConflict(null);
-      setImportReport(null);
-      setLastExportName(snapshot.fileName ?? ""); setLastExportAt(snapshot.uploadedAt ?? "");
-      setRecommendations(snapshot.recommendations ?? []); setAiInsight(snapshot.aiInsight ?? null);
-      setSelectedExerciseId(featured ? exerciseSeriesId(featured) : "");
-      setSelectedMetric(featured?.defaultMetric ?? "totalSets");
-      setAttendanceYear(year);
-    } catch { try { localStorage.removeItem(sessionDataKey); } catch { /* Storage can be disabled. */ } }
+    let cancelled = false;
+    void loadTrainingHistory().then((result) => {
+      if (cancelled) return;
+      if (result.ok && result.value) {
+        const restoredImports: HistoryImport[] = result.value.imports.map((item) => "representation" in item && item.representation === "detailed" ? projectStrengthImport(item) : item as HistoryImport);
+        const restored = buildDashboard(restoredImports) as UploadPayload;
+        const restoredExercises = restored.exercises as Exercise[];
+        const featured = featuredExercise(restoredExercises);
+        setData(restored); setHistoryImports(restoredImports); setExerciseOverrides(result.value.exerciseOverrides);
+        setLoadedSource(result.value.imports.map((item) => item.source).filter((source, index, all) => all.indexOf(source) === index).join(" + "));
+        setSelectedExerciseId(featured ? exerciseSeriesId(featured) : ""); setSelectedMetric(featured?.defaultMetric ?? "totalSets");
+        setAttendanceYear(Number(restored.coverage.lastDate.slice(0, 4))); setUploadState("Restored your saved training history.");
+        return;
+      }
+      try {
+        const saved = localStorage.getItem(sessionDataKey);
+        if (saved) {
+          const snapshot = JSON.parse(saved);
+          if (isTrainingSnapshot(snapshot)) setUploadState("A previous dashboard snapshot is available. Reimport your source file to continue adding data.");
+        }
+      } catch { /* A legacy snapshot is optional and never becomes canonical data. */ }
+      if (!result.ok) setUploadState(result.error.message);
+    });
+    return () => { cancelled = true; };
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
 
@@ -367,7 +369,7 @@ export default function Home() {
     }
   };
 
-  const applyPendingImport = () => {
+  const applyPendingImport = async () => {
     if (!pendingImport) return;
     if (pendingImport.noOp) {
       setPendingImport(null);
@@ -379,7 +381,6 @@ export default function Home() {
     const featured = featuredExercise(nextExercises);
     const uploadedAt = new Date().toISOString();
     const fileName = pendingImport.action === "add" && lastExportName ? `${lastExportName} + ${pendingImport.filename}` : pendingImport.filename;
-    const snapshot = { data: payload, fileName, uploadedAt, recommendations: [], aiInsight: null };
     datasetRevision.current += 1;
     setData(payload);
     setHistoryImports(pendingImport.nextImports);
@@ -392,8 +393,8 @@ export default function Home() {
     setSearch(""); setFamily("All"); setComparisonMetric(""); setVisibleCount(24);
     setRecommendations([]); setAiInsight(null); setRecommendationError(""); setRecommendationState("");
     setAiConsentOpen(false);
-    const saved = saveTrainingSnapshot(JSON.stringify(snapshot), () => localStorage);
-    setUploadState(saved === "saved" ? `${pendingImport.action === "add" ? "Added" : "Loaded"} ${pendingImport.filename}.` : `${pendingImport.action === "add" ? "Added" : "Loaded"} ${pendingImport.filename}. This result could not be saved in this browser; keep this page open or import the file again after refreshing.`);
+    const saved = await saveTrainingHistory({ schemaVersion: 1, imports: pendingImport.nextImports, exerciseOverrides });
+    setUploadState(saved.ok ? `${pendingImport.action === "add" ? "Added" : "Loaded"} ${pendingImport.filename}.` : `${pendingImport.action === "add" ? "Added" : "Loaded"} ${pendingImport.filename}. This result is available for this session but could not be saved: ${saved.error.message}`);
     setImportReport(createImportReport(pendingImport));
     setPendingImport(null);
     setPendingConflict(null);
@@ -434,13 +435,13 @@ export default function Home() {
     setRecommendationState("");
     setRecommendationError("");
     setMappingCandidate(null);
-    const snapshot = { data: payload, fileName: lastExportName, uploadedAt: new Date().toISOString(), recommendations: [], aiInsight: null };
-    saveTrainingSnapshot(JSON.stringify(snapshot), () => localStorage);
+    void saveTrainingHistory({ schemaVersion: 1, imports: nextImports, exerciseOverrides: nextOverrides });
   };
 
   const clearUploadedData = () => {
     importController.current.cancel();
     aiController.current?.abort();
+    void clearTrainingHistory();
     try { localStorage.removeItem(sessionDataKey); } catch { /* Clearing the visible dashboard must still work. */ }
     datasetRevision.current += 1;
     setData(demoData);
