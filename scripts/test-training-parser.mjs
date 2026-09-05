@@ -164,6 +164,7 @@ console.log("Detection: source signatures, BOM, renamed files, unknown and ambig
 
 const { parseStrongRows } = await import("../lib/import/adapters/strong-rows.ts");
 const { parseHevyRows } = await import("../lib/import/adapters/hevy-rows.ts");
+const { normalizeHevy } = await import("../lib/import/adapters/hevy.ts");
 const { parseImport } = await import('../lib/import/parse-import.ts');
 const strongInput = inspectInput(strongFixtureBytes, "strong.csv");
 assert.equal(parseImport(strongFixtureBytes, "strong.csv").status, "needs-input");
@@ -174,6 +175,9 @@ assert.equal(parsedHevyRows.rows[0].date, "2025-06-30");
 assert.equal(parsedHevyRows.rows[0].weightKg, 48);
 assert.equal(parsedHevyRows.rows[0].distanceMeters, null);
 assert.equal(parsedHevyRows.rows.some(row => row.weightKg === null && row.reps !== null), true);
+const normalizedHevy = normalizeHevy(inspectInput(hevyFixtureBytes, "hevy.csv"), "hevy.csv");
+assert.equal(normalizedHevy.sessions.length > 1, true);
+assert.equal(normalizedHevy.sessions.flatMap(session => session.exercises).flatMap(exercise => exercise.sets).length, 330);
 assert.equal(parsedStrong.status, "ready");
 assert.equal(parsedStrong.source, "strong");
 assert.equal(parsedStrong.dashboard.coverage.totalSessions, 86);

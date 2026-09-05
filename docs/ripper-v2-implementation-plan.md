@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M5 — Imports become additive and explainable
-Current task: V2-037
-Last completed task: V2-036 — Parse Hevy source rows and normalize measurements
-Next task: V2-037
+Current task: V2-038
+Last completed task: V2-037 — Group Hevy rows into existing canonical sessions
+Next task: V2-038
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
-Tasks complete: 34
-Tasks remaining: 17
+Tasks complete: 35
+Tasks remaining: 16
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -2738,7 +2738,7 @@ Implement V2-036 only. Implement Hevy-specific row parsing using shared low-leve
 ### V2-037 — Group Hevy rows into existing canonical sessions
 
 Status:
-TODO
+DONE
 
 Milestone:
 M7 — Hevy proves the adapter boundary
