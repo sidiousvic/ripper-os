@@ -73,16 +73,20 @@ const metricMeta: Record<MetricKey, { label: string; short: string; unit: string
   totalSets: { label: "Working sets", short: "Sets", unit: "sets" },
   durationSec: { label: "Session duration", short: "Duration", unit: "sec" },
 };
+const preferredComparisonMetric = (exercise: Exercise, primaryMetric: MetricKey): MetricKey | "" => {
+  const alternatives = exercise.availableMetrics.filter((metric) => metric !== primaryMetric);
+  return alternatives.includes("totalVolumeKg") ? "totalVolumeKg" : alternatives[0] ?? "";
+};
 
 const formatDate = (value: string, options?: Intl.DateTimeFormatOptions) =>
   new Intl.DateTimeFormat("en", { ...(options ?? { day: "numeric", month: "short", year: "numeric" }), timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`));
 const formatMonth = (value: string) => formatDate(`${value}-01`, { month: "short", year: "2-digit" });
 const formatNumber = (value: number, maximumFractionDigits = 1) =>
   new Intl.NumberFormat("en", { maximumFractionDigits }).format(value);
-const metricValue = (record: ProgressRecord, metric: MetricKey) => Number(record[metric] ?? 0);
+const metricValue = (record: ProgressRecord, metric: MetricKey) => record[metric];
 const metricSeries = (exercise: Exercise, metric: MetricKey) => exercise.progress
-  .filter((record) => metricValue(record, metric) > 0)
-  .map((record) => ({ ...record, value: metricValue(record, metric) }));
+  .filter((record) => metricValue(record, metric) !== null)
+  .map((record) => ({ ...record, value: metricValue(record, metric)! }));
 
 // Make the first movement feel like a meaningful headline, not merely the first
 // alphabetical or most-frequent record. A stable, well-practised lift with the
@@ -262,7 +266,7 @@ export default function Home() {
   const [selectedExerciseId, setSelectedExerciseId] = useState(() => { const featured = featuredExercise(exercises); return featured ? exerciseSeriesId(featured) : ""; });
   const selectedExercise = exercises.find((exercise) => exerciseSeriesId(exercise) === selectedExerciseId) ?? featuredExercise(exercises) ?? emptyExercise;
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>(selectedExercise.defaultMetric);
-  const [comparisonMetric, setComparisonMetric] = useState<MetricKey | "">("");
+  const [comparisonMetric, setComparisonMetric] = useState<MetricKey | "">(() => preferredComparisonMetric(selectedExercise, selectedMetric));
   const [search, setSearch] = useState("");
   const [family, setFamily] = useState("All");
   const [exerciseSort, setExerciseSort] = useState<"recent" | "used">("recent");
@@ -300,7 +304,9 @@ export default function Home() {
         const featured = featuredExercise(restoredExercises);
         setData(restored); setHistoryImports(restoredImports); setExerciseOverrides(result.value.exerciseOverrides);
         setLoadedSource(result.value.imports.map((item) => item.source).filter((source, index, all) => all.indexOf(source) === index).join(" + "));
-        setSelectedExerciseId(featured ? exerciseSeriesId(featured) : ""); setSelectedMetric(featured?.defaultMetric ?? "totalSets");
+        const nextMetric = featured?.defaultMetric ?? "totalSets";
+        setSelectedExerciseId(featured ? exerciseSeriesId(featured) : ""); setSelectedMetric(nextMetric);
+        setComparisonMetric(preferredComparisonMetric(featured ?? emptyExercise, nextMetric));
         setAttendanceYear(Number(restored.coverage.lastDate.slice(0, 4)));
         return;
       }
@@ -382,9 +388,10 @@ export default function Home() {
     setLoadedSource(pendingImport.nextImports.map((item) => item.source).filter((source, index, all) => all.indexOf(source) === index).join(" + "));
     setLastExportName(fileName); setLastExportAt(uploadedAt);
     setSelectedExerciseId(featured ? exerciseSeriesId(featured) : "");
-    setSelectedMetric(featured?.defaultMetric ?? "totalSets");
+    const nextMetric = featured?.defaultMetric ?? "totalSets";
+    setSelectedMetric(nextMetric);
     setAttendanceYear(Number(payload.coverage.lastDate.slice(0, 4)));
-    setSearch(""); setFamily("All"); setComparisonMetric(""); setVisibleCount(24);
+    setSearch(""); setFamily("All"); setComparisonMetric(preferredComparisonMetric(featured ?? emptyExercise, nextMetric)); setVisibleCount(24);
     setRecommendations([]); setAiInsight(null); setRecommendationError(""); setRecommendationState("");
     setAiConsentOpen(false);
     const saved = await saveTrainingHistory({ schemaVersion: 1, imports: pendingImport.nextImports, exerciseOverrides });
@@ -540,7 +547,7 @@ export default function Home() {
   const selectExercise = (exercise: Exercise) => {
     setSelectedExerciseId(exerciseSeriesId(exercise));
     setSelectedMetric(exercise.defaultMetric);
-    setComparisonMetric("");
+    setComparisonMetric(preferredComparisonMetric(exercise, exercise.defaultMetric));
     document.getElementById("exercise-focus")?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
@@ -765,7 +772,11 @@ export default function Home() {
               </div>
               <div className="metric-controls">
               <label className="metric-select">View metric
-                <select value={selectedMetric} onChange={(event) => setSelectedMetric(event.target.value as MetricKey)}>
+                <select value={selectedMetric} onChange={(event) => {
+                  const nextMetric = event.target.value as MetricKey;
+                  setSelectedMetric(nextMetric);
+                  setComparisonMetric((current) => current === nextMetric ? preferredComparisonMetric(selectedExercise, nextMetric) : current);
+                }}>
                   {selectedExercise.availableMetrics.map((metric) => <option value={metric} key={metric}>{metricMeta[metric].label}</option>)}
                 </select>
               </label>

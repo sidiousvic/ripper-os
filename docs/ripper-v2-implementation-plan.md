@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M5 — Imports become additive and explainable
-Current task: V2-042
-Last completed task: V2-041 — Let users inspect and choose comparison contexts
-Next task: V2-042
+Current task: V2-043
+Last completed task: V2-042 — Preserve missing and recorded-zero values in dashboard views
+Next task: V2-043
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
-Tasks complete: 39
-Tasks remaining: 12
+Tasks complete: 40
+Tasks remaining: 11
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -3100,7 +3100,7 @@ Implement V2-041 only. Add a small context selector/detail panel within the exis
 ### V2-042 — Preserve missing and recorded-zero values in dashboard views
 
 Status:
-TODO
+DONE
 
 Milestone:
 M8 — Improve meaning after preserving behavior
