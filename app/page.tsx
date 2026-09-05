@@ -478,11 +478,11 @@ export default function Home() {
                 <div className="achievement-numbers">
                   <span>{formatNumber(achievement.first.value)} {unit}</span>
                   <ChevronRight size={15} />
-                  <strong>{formatNumber(achievement.latest.value)} {unit}</strong>
+                  <strong>{formatNumber(achievement.peak.value)} {unit}</strong>
                 </div>
                 <div className="achievement-bottom">
                   <Delta value={achievement.percentChange} />
-                  <span>peak {formatNumber(achievement.peak.value)} {unit}</span>
+                  <span>latest {formatNumber(achievement.latest.value)} {unit}</span>
                 </div>
               </article>
             );

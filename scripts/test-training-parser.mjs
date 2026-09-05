@@ -8,8 +8,12 @@ assert.equal(fromCsv.coverage.totalSessions, 2);
 assert.equal(fromCsv.exercises[0].totalSets, 3);
 assert.equal(fromCsv.exercises[0].totalReps, 18);
 assert.equal(fromCsv.exercises[0].totalVolumeKg, 1640);
-assert.equal(fromCsv.achievements[0].peak.value, 100);
-assert.equal(fromCsv.achievements[0].peak.date, "2026-01-01");
+assert.equal(fromCsv.achievements.length, 0);
+const peakCsv = "Date,Exercise,Weight (kg),Reps\n2026-01-01,Deadlift,100,5\n2026-02-01,Deadlift,120,5\n2026-03-01,Deadlift,80,5\n";
+const fromPeakCsv = parseTrainingFile(new TextEncoder().encode(peakCsv), "peak.csv");
+assert.equal(fromPeakCsv.achievements[0].peak.value, 120);
+assert.equal(fromPeakCsv.achievements[0].peak.date, "2026-02-01");
+assert.equal(fromPeakCsv.achievements[0].percentChange, 20);
 assert.equal(fromCsv.coverage.firstDate, "2026-01-01");
 assert.ok(!JSON.stringify(fromCsv).includes("private-note-marker"));
 
