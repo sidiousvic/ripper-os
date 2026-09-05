@@ -1,9 +1,9 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M5 — Imports become additive and explainable
-Current task: V2-045
+Current task: V2-047
 Last completed task: V2-044 — Add a small versioned derived muscle exposure model
-Next task: V2-045
+Next task: V2-047
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
 Tasks complete: 42
 Tasks remaining: 9
@@ -3311,7 +3311,7 @@ Implement V2-044 only. Estimate muscle exposure for a limited verified catalog w
 ### V2-045 — Import verified bodyweight measurements as a separate series
 
 Status:
-TODO
+TODO (BLOCKED — no approved bodyweight fixture)
 
 Milestone:
 M8 — Improve meaning after preserving behavior
@@ -3831,6 +3831,8 @@ These are not hidden prerequisites and must not be implemented opportunistically
 Date/number validation is the exception to accepting invalid legacy behavior: V2-008 rejects/omits malformed facts explicitly, while valid-input analytics remain equal. Regression tests should name this distinction.
 
 ## Roadmap changes
+
+- 2026-09-06: V2-045 is blocked pending an approved anonymized MacroFactor bodyweight export fixture. No bodyweight values will be inferred from workout loads; independent tasks continue with V2-047.
 
 - 2026-09-06: Reported bug: MacroFactor exercise names are broadly falling through to `custom_*` identities, making manual resolution of roughly 70 exercises impractical. Treat this as a high-priority mapping investigation before asking users to resolve imported names; inspect MacroFactor source mappings, normalization keys and fixture coverage. No automatic fuzzy merge is authorized.
 - 2026-09-06: Added deterministic catalog coverage for the known MacroFactor fixture aliases (pull-up, bench dip, lateral raise and jump rope) with regression assertions. The broader real-export mapping audit remains open.
