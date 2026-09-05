@@ -36,6 +36,15 @@ function legacyPresentationRecords(imports: AggregateImport[], presentation?: Le
     } else if (previous && presentation === "workbook") {
       // Old worksheet mapping overwrote supplied nonzero cells only.
       for (const field of Object.keys(metrics) as (keyof typeof metrics)[]) metrics[field] ??= previous[field];
+    } else if (previous && !presentation) {
+      // Reconciliation supplies only new facts: complementary aggregate metrics
+      // or separate verified sessions. Combine those facts within the same day.
+      for (const field of Object.keys(metrics) as (keyof typeof metrics)[]) {
+        const before = previous[field], incoming = metrics[field];
+        metrics[field] = before === null ? incoming : incoming === null ? before
+          : ["totalSets", "totalReps", "totalVolumeKg", "durationSec"].includes(field)
+            ? before + incoming : Math.max(before, incoming);
+      }
     }
     records.set(key, { date: day.date, exercise: day.displayName, family: legacyExerciseFamily(day.displayName), exerciseId: day.exerciseId, comparisonKey: day.comparisonKey, ...metrics });
   }

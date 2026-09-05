@@ -19,10 +19,11 @@ export type ImportPreview = {
   warnings: number;
   errors: number;
   noOp: boolean;
+  reconciliation?: { added: number; unchanged: number; unit: "workouts" | "daily observations" };
 };
 
 export function createImportPreview(outcome: Extract<ImportOutcome, { status: "ready" }>, filename: string, action: "replace" | "add", existing: HistoryImport[]): ImportPreview | { conflict: string } {
-  const candidate = action === "add" ? combineImports([], outcome.importData) : combineImports([], outcome.importData);
+  const candidate = combineImports([], outcome.importData);
   if (!candidate.ok) return { conflict: candidate.conflict.message };
   const candidateDashboard = outcome.dashboard;
   const noOp = hasImportedContentHash(existing, outcome.importData.contentHash);
@@ -44,5 +45,6 @@ export function createImportPreview(outcome: Extract<ImportOutcome, { status: "r
     warnings: issues.filter((issue) => issue.severity === "warning").length,
     errors: issues.filter((issue) => issue.severity === "error").length,
     noOp,
+    reconciliation: !noOp && "added" in combined ? { added: combined.added, unchanged: combined.unchanged, unit: outcome.source === "strong" ? "workouts" : "daily observations" } : undefined,
   };
 }

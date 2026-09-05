@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
-Current milestone: M3 — Strong drives the existing dashboard
-Current task: V2-025
-Last completed task: V2-024 — Skip identical file imports using content hashes
-Next task: V2-025
+Current milestone: M5 — Imports become additive and explainable
+Current task: V2-026 (not started)
+Last completed task: V2-025 — Reconcile verified same-source incremental exports
+Next task: V2-026
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
-Tasks complete: 22
-Tasks remaining: 29
+Tasks complete: 23
+Tasks remaining: 28
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -1897,12 +1897,14 @@ Implement V2-024 only. Detect byte-identical previously accepted files before pa
 ### V2-025 — Reconcile verified same-source incremental exports
 
 Status:
-TODO
+DONE
 
 Milestone:
 M5 — Imports become additive and explainable
 
 **REQUIRES HIGHER-MODEL REVIEW**
+
+Review completed 2026-09-06: current Strong IDs are import-local, so use original timestamp/title locators until an adapter supplies a verified sourceSessionId. Retain versioned structural session fingerprints alongside daily projections; never reconstruct workouts from those projections. Aggregate observation locators use source/date/exact raw name/metric, with the adapter-supplied normalized value as payload (no dashboard rounding or alias labels). Missing metrics remain absent. Muscle observations reconcile independently. A local history represents one source account/profile, communicated in Add data; no account inference is attempted. Session content includes ordered repeated sets, original load units and basis, and notes. Edits conflict atomically; missing old observations remain. Unverified projections and aggregate/detail overlaps conflict in either direction. Only new observations reach shared analytics; complementary metrics and distinct same-day sessions must combine without overwriting each other. This task does not implement V2-026 conflict choices.
 
 Manual checkpoint: NO
 
@@ -3821,6 +3823,8 @@ These are not hidden prerequisites and must not be implemented opportunistically
 Date/number validation is the exception to accepting invalid legacy behavior: V2-008 rejects/omits malformed facts explicitly, while valid-input analytics remain equal. Regression tests should name this distinction.
 
 ## Roadmap changes
+
+- 2026-09-06: V2-025 higher-model review completed. Added same-source session/observation reconciliation, retained session evidence through projection, and combined new same-day facts without overwriting prior metrics. Verified real Strong superset/reordering, edited and missing records, two-a-day sessions, alias changes, MacroFactor CSV/XLSX and muscle observations. Cross-source overlaps and projections without session evidence remain conflicts; V2-026 is not started. Local history is scoped to one account per source.
 
 - 2026-09-05: Created this incremental roadmap from the prior engineering plan and a fresh working-tree inspection. Accounted for committed UI modernization and pending typography/branding/version changes without modifying them.
 - 2026-09-05: Selected a daily-aggregate-first boundary, Strong dashboard checkpoint at V2-015, and in-memory cross-source history checkpoint at V2-019. Deferred durable storage until V2-030, sophisticated duplicates indefinitely, and optional semantics until after the third-source proof.

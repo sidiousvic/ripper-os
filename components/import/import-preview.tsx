@@ -18,7 +18,8 @@ export default function ImportPreviewDialog({ preview, onCancel, onAccept }: { p
           <p><strong>{preview.mappedExercises}</strong> mapped exercises · <strong>{preview.customExercises}</strong> custom or unresolved</p>
           {(preview.warnings > 0 || preview.errors > 0) && <p>{preview.warnings} warnings · {preview.errors} errors. Valid records can still be imported.</p>}
         </div>
-        {preview.action === "add" && <p className="muted small">Adding builds one chronological history. Dates already present cannot be added yet.</p>}
+        {preview.action === "add" && <p className="muted small">Unchanged records from the same source are skipped. Changed records and overlaps across sources require resolution.</p>}
+        {preview.action === "add" && preview.reconciliation && <p className="muted small">{preview.reconciliation.added} new {preview.reconciliation.unit}; {preview.reconciliation.unchanged} unchanged. Records missing from this export stay in your history.</p>}
         {preview.action === "replace" && <p className="muted small">Replacing removes the currently loaded history after you confirm.</p>}
         {preview.noOp && <p className="muted small">These exact file bytes were already accepted. No changes are needed.</p>}
         <div className="connect-actions"><button className="button secondary" onClick={onCancel}>Cancel</button><button className="button primary" onClick={onAccept} disabled={preview.noOp}>{preview.noOp ? "Already imported" : "Import valid rows"}</button></div>

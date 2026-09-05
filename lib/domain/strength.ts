@@ -36,6 +36,8 @@ export interface ExercisePerformance {
 }
 export interface StrengthSession {
   id: string;
+  /** Only an ID supplied by the source; never the generated import-local id. */
+  sourceSessionId?: string;
   importId: string;
   source: TrainingSource;
   date: string;
