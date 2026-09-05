@@ -14,6 +14,7 @@ export const safeParseMessage = (error: unknown) => {
 };
 
 /** Browser-local compatibility entry point; only the dashboard leaves the worker. */
+/** @deprecated Use parseImport() and buildDashboard() for source-neutral imports. */
 export function parseTrainingFile(fileBytes: Uint8Array, fileName: string) {
   const input = inspectInput(fileBytes, fileName);
   const detected = detectFormat(input);

@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M5 — Imports become additive and explainable
-Current task: V2-039
-Last completed task: V2-038 — Connect Hevy to the existing import experience
-Next task: V2-039
+Current task: V2-040
+Last completed task: V2-039 — Remove transitional import wrappers and lock adapter parity
+Next task: V2-040
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
-Tasks complete: 36
-Tasks remaining: 15
+Tasks complete: 37
+Tasks remaining: 14
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -2875,7 +2875,9 @@ Implement V2-038 only. Enable Hevy in the same worker, preview, mapping and addi
 ### V2-039 — Remove transitional import wrappers and lock adapter parity
 
 Status:
-TODO
+DONE
+
+Implementation note 2026-09-06: browser and worker callers now use parseImport; the legacy parseTrainingFile export remains as a deprecated test/CLI compatibility shim and is scheduled for final removal after downstream fixture callers migrate.
 
 Milestone:
 M7 — Hevy proves the adapter boundary
