@@ -3752,3 +3752,25 @@ button:hover {
   background: #d2ff52;
   box-shadow: 0 9px 22px rgba(198, 255, 25, .22);
 }
+
+/* Keep every hero action in an equal geometric slot as actions are added. */
+.hero-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: min(100%, 840px);
+  margin-inline: auto;
+}
+
+.hero-actions .button {
+  width: 100%;
+  max-width: none;
+  flex: none;
+}
+
+@media (max-width: 760px) {
+  .hero-actions {
+    width: 100%;
+    margin-inline: 0;
+    grid-template-columns: 1fr;
+  }
+}
