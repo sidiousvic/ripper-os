@@ -267,6 +267,22 @@ corrupt.sessions[0].exercises[0].sets[0].load.kg = Infinity;
 assert.throws(()=>assertValidDetailedImport(corrupt), /Invalid normalized/);
 console.log('Strong canonical units: fixture, lb/kg, zero/missing, timed/distance, assistance and conflicts passed');
 
+const { normalizeExerciseName, resolveExercise } = await import('../lib/exercises/resolve.ts');
+const mfBench = resolveExercise('macrofactor', 'Barbell Bench Press');
+const strongBench = resolveExercise('strong', 'Bench Press (Barbell)');
+assert.equal(mfBench.exerciseId, 'barbell_bench_press');
+assert.equal(strongBench.exerciseId, 'barbell_bench_press');
+assert.equal(mfBench.comparisonKey, 'barbell_bench_press');
+assert.equal(resolveExercise('strong', 'Bench Press (Dumbbell)').exerciseId.startsWith('custom_strong_'), true);
+assert.equal(resolveExercise('strong', 'Incline Bench Press (Barbell)').exerciseId.startsWith('custom_strong_'), true);
+assert.equal(resolveExercise('strong', 'Front Squat (Barbell)').exerciseId, 'barbell_front_squat');
+assert.equal(resolveExercise('strong', 'Romanian Deadlift (Barbell)').exerciseId, 'barbell_romanian_deadlift');
+assert.equal(resolveExercise('strong', 'Bench Press (Barbell)', { keepCustom: true }).method, 'user-override');
+assert.equal(resolveExercise('strong', 'Bench Press (Barbell)', { keepCustom: true }).comparisonKey.startsWith('strong:'), true);
+assert.equal(normalizeExerciseName('  Bench Press (Barbell)  '), normalizeExerciseName('bench press barbell'));
+assert.equal(normalizeExerciseName(normalizeExerciseName('Bench Press (Barbell)')), normalizeExerciseName('Bench Press (Barbell)'));
+console.log('Exercise resolver: source mappings, dangerous near-matches, custom overrides and normalization passed');
+
 const collidingAliasesCsv = 'Date,Exercise,Weight (kg),Reps\n2026-01-02,Bench Dips,0,5\n2026-01-02,Bench Dip,0,8\n';
 const collidingAliasesImport = normalizeCsv(collidingAliasesCsv);
 assert.equal(collidingAliasesImport.exerciseDays.length, 2, 'raw alias facts remain distinct');
