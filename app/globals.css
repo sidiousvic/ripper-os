@@ -3785,10 +3785,13 @@ button:hover {
   display: flex;
   justify-content: center;
   margin-top: 14px;
+  width: min(100%, 840px);
+  margin-inline: auto;
 }
 
 .export-guide-link .button {
-  width: min(100%, 360px);
+  width: calc(50% - 5px);
+  max-width: none;
   min-height: 44px;
   color: var(--color-text-secondary);
   text-decoration: none;
@@ -3799,6 +3802,14 @@ button:hover {
 }
 
 @media (max-width: 760px) {
+  .export-guide-link {
+    width: 100%;
+  }
+
+  .export-guide-link .button {
+    width: 100%;
+  }
+
   .hero-actions .button,
   .hero-actions .ai-action {
     grid-column: 1;
