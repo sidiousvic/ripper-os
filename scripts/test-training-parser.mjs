@@ -14,6 +14,12 @@ const fromPeakCsv = parseTrainingFile(new TextEncoder().encode(peakCsv), "peak.c
 assert.equal(fromPeakCsv.achievements[0].peak.value, 120);
 assert.equal(fromPeakCsv.achievements[0].peak.date, "2026-02-01");
 assert.equal(fromPeakCsv.achievements[0].percentChange, 20);
+const poundsCsv = "Date,Exercise,Weight (lb),Reps\n2026-01-01,Row,100,5\n2026-02-01,Row,110,5\n";
+const fromPoundsCsv = parseTrainingFile(new TextEncoder().encode(poundsCsv), "pounds.csv");
+assert.equal(Math.round(fromPoundsCsv.exercises[0].totalVolumeKg * 10) / 10, 476.3);
+assert.equal(Math.round(fromPoundsCsv.exercises[0].progress[1].heaviestKg * 10) / 10, 49.9);
+assert.throws(() => parseTrainingFile(new TextEncoder().encode("Date,Exercise,Weight (stone),Reps\n2026-01-01,Row,1,5"), "unsupported.csv"), /Unsupported weight unit/);
+assert.throws(() => parseTrainingFile(new TextEncoder().encode("Date,Exercise,Weight (kg)\n2026-01-01,Row,10"), "missing.csv"), /Missing required CSV column/);
 assert.equal(fromCsv.coverage.firstDate, "2026-01-01");
 assert.ok(!JSON.stringify(fromCsv).includes("private-note-marker"));
 

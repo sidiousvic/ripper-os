@@ -32,6 +32,8 @@ const hasSafeZipDirectory = (bytes: Uint8Array) => {
 export const safeParseMessage = (error: unknown) => {
   const message = error instanceof Error ? error.message : "";
   if (/No workout sessions/i.test(message)) return "No workout sessions were found in this MacroFactor export.";
+  if (/Missing required CSV column/i.test(message)) return "This CSV is missing a required Date, Exercise, or Reps column.";
+  if (/Unsupported weight unit/i.test(message)) return "This CSV uses an unsupported weight unit. Use kilograms (kg) or pounds (lb).";
   if (/Missing required MacroFactor sheet/i.test(message)) return "This workbook is missing a required MacroFactor workout sheet.";
   return "Could not parse this export. Confirm it is a supported MacroFactor CSV or XLSX file and try again.";
 };
@@ -51,9 +53,16 @@ export function parseTrainingFile(fileBytes: Uint8Array, fileName: string) {
     const merge = (sheet: string, field: string) => { const values = rows(sheet); const headers = values[0]?.map(clean) ?? []; for (const row of values.slice(1)) { const date = key(row[0]); if (!date) continue; for (let c = 1; c < headers.length; c += 1) { const value = n(row[c]); if (!value) continue; const exercise = canonical(headers[c]); const id = `${date}|${exercise}`; const item = map.get(id) ?? { date, source: "MacroFactor", exercise, family: family(exercise), totalSets: null, totalReps: null, bestSetReps: null, heaviestKg: null, totalVolumeKg: null, e1rmKg: null, durationSec: null }; item[field] = value; map.set(id, item); } } };
     if (fileName.toLowerCase().endsWith(".csv")) {
       const csvRows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true, UTC: true, defval: null }) as unknown[][];
-      const headers = csvRows[0]?.map(clean) ?? []; const index = (name: string) => headers.findIndex((header) => header.toLowerCase() === clean(name).toLowerCase());
-      const dateCol = index("Date"), exerciseCol = index("Exercise"), weightCol = index("Weight (kg)"), repsCol = index("Reps"), workoutDurationCol = index("Workout Duration"), durationCol = index("Duration");
-      for (const row of csvRows.slice(1)) { const date = key(row[dateCol]); const exercise = canonical(row[exerciseCol]); if (!date || !exercise) continue; const id = `${date}|${exercise}`; const item = map.get(id) ?? { date, source: "MacroFactor", exercise, family: family(exercise), totalSets: 0, totalReps: 0, bestSetReps: 0, heaviestKg: 0, totalVolumeKg: 0, e1rmKg: null, durationSec: null }; const weight = n(row[weightCol]); const reps = n(row[repsCol]); item.totalSets += 1; item.totalReps += reps; item.bestSetReps = Math.max(item.bestSetReps, reps); item.heaviestKg = Math.max(item.heaviestKg, weight); item.totalVolumeKg += weight * reps; item.durationSec = n(row[durationCol]) || n(row[workoutDurationCol]) || item.durationSec; map.set(id, item); }
+      const rawHeaders = csvRows[0]?.map((header) => String(header ?? "").trim()) ?? []; const headers = rawHeaders.map(clean); const index = (name: string) => headers.findIndex((header) => header.toLowerCase() === clean(name).toLowerCase());
+      const dateCol = index("Date"), exerciseCol = index("Exercise"), repsCol = index("Reps"), workoutDurationCol = index("Workout Duration"), durationCol = index("Duration");
+      const weightKgCol = rawHeaders.findIndex((header) => /^weight\s*\(kg\)$/i.test(header));
+      const weightLbCol = rawHeaders.findIndex((header) => /^weight\s*\((?:lb|lbs|pounds)\)$/i.test(header));
+      const unsupportedWeight = rawHeaders.find((header) => /^weight\s*\(/i.test(header) && !/^weight\s*\((?:kg|lb|lbs|pounds)\)$/i.test(header));
+      if (dateCol < 0 || exerciseCol < 0 || repsCol < 0) throw new Error("Missing required CSV column.");
+      if (unsupportedWeight) throw new Error(`Unsupported weight unit: ${unsupportedWeight}`);
+      const weightCol = weightKgCol >= 0 ? weightKgCol : weightLbCol;
+      const pounds = weightKgCol < 0 && weightLbCol >= 0;
+      for (const row of csvRows.slice(1)) { const date = key(row[dateCol]); const exercise = canonical(row[exerciseCol]); if (!date || !exercise) continue; const id = `${date}|${exercise}`; const item = map.get(id) ?? { date, source: "MacroFactor", exercise, family: family(exercise), totalSets: 0, totalReps: 0, bestSetReps: 0, heaviestKg: 0, totalVolumeKg: 0, e1rmKg: null, durationSec: null }; const weight = n(row[weightCol]) * (pounds ? 0.45359237 : 1); const reps = n(row[repsCol]); item.totalSets += 1; item.totalReps += reps; item.bestSetReps = Math.max(item.bestSetReps, reps); item.heaviestKg = Math.max(item.heaviestKg, weight); item.totalVolumeKg += weight * reps; item.durationSec = n(row[durationCol]) || n(row[workoutDurationCol]) || item.durationSec; map.set(id, item); }
     } else {
       merge("Exercises - Total Sets", "totalSets"); merge("Exercises - Total Reps", "totalReps"); merge("Exercises - Best Set Reps", "bestSetReps"); merge("Exercises - Heaviest Weight", "heaviestKg"); merge("Exercises - Total Volume", "totalVolumeKg"); merge("Exercises - 1-RM", "e1rmKg"); merge("Exercises - Total Duration", "durationSec");
     }
