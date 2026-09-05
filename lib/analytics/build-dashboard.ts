@@ -12,9 +12,9 @@ import { legacyExerciseFamily } from "./legacy-exercise-labels.ts";
 /** Legacy presentation grouping only. Canonical identities and supplied zeros stay untouched. */
 type LegacyPresentation = "csv" | "workbook";
 function legacyPresentationRecords(imports: AggregateImport[], presentation?: LegacyPresentation) {
-  const records = new Map<string, { date: string; exercise: string; family: string } & AggregateImport["exerciseDays"][number]["metrics"]>();
+  const records = new Map<string, { date: string; exercise: string; family: string; exerciseId: string; comparisonKey: string } & AggregateImport["exerciseDays"][number]["metrics"]>();
   for (const data of imports) for (const day of data.exerciseDays) {
-    const key = JSON.stringify([day.date, day.displayName]);
+    const key = JSON.stringify([day.date, day.exerciseId, day.comparisonKey]);
     const previous = records.get(key);
     const metrics = { ...day.metrics };
     // The old CSV view zero-filled absent load/reps. Workbook views omitted zero cells.
@@ -37,7 +37,7 @@ function legacyPresentationRecords(imports: AggregateImport[], presentation?: Le
       // Old worksheet mapping overwrote supplied nonzero cells only.
       for (const field of Object.keys(metrics) as (keyof typeof metrics)[]) metrics[field] ??= previous[field];
     }
-    records.set(key, { date: day.date, exercise: day.displayName, family: legacyExerciseFamily(day.displayName), ...metrics });
+    records.set(key, { date: day.date, exercise: day.displayName, family: legacyExerciseFamily(day.displayName), exerciseId: day.exerciseId, comparisonKey: day.comparisonKey, ...metrics });
   }
   return [...records.values()].sort((a, b) => a.date.localeCompare(b.date));
 }

@@ -47,7 +47,8 @@ const demoData = demoDataJson as unknown as DashboardData;
 type UploadPayload = DashboardData & { error?: string; recommendations?: Recommendation[]; sustainedPractice?: string; nextYearRule?: string; sectionInsights?: Record<string, string> };
 type ReadyImport = Extract<ImportOutcome, { status: "ready" }>;
 
-const emptyExercise: Exercise = { name: "No exercise selected", family: "—", defaultMetric: "totalSets", availableMetrics: ["totalSets"], firstDate: "1970-01-01", lastDate: "1970-01-01", sessions: 0, totalSets: 0, totalReps: 0, totalVolumeKg: 0, progress: [] };
+const emptyExercise: Exercise = { exerciseId: "empty", comparisonKey: "empty", seriesId: "empty", name: "No exercise selected", family: "—", defaultMetric: "totalSets", availableMetrics: ["totalSets"], firstDate: "1970-01-01", lastDate: "1970-01-01", sessions: 0, totalSets: 0, totalReps: 0, totalVolumeKg: 0, progress: [] };
+const exerciseSeriesId = (exercise: Exercise) => exercise.seriesId || exercise.exerciseId || exercise.name;
 const sessionDataKey = TRAINING_SNAPSHOT_KEY;
 const metricMeta: Record<MetricKey, { label: string; short: string; unit: string }> = {
   heaviestKg: { label: "Heaviest load", short: "Load", unit: "kg" },
@@ -233,8 +234,8 @@ export default function Home() {
   }, [activeModal, closeActiveModal]);
   const [lastExportName, setLastExportName] = useState("");
   const [lastExportAt, setLastExportAt] = useState("");
-  const [selectedExerciseName, setSelectedExerciseName] = useState(() => featuredExercise(exercises)?.name ?? "");
-  const selectedExercise = exercises.find((exercise) => exercise.name === selectedExerciseName) ?? featuredExercise(exercises) ?? emptyExercise;
+  const [selectedExerciseId, setSelectedExerciseId] = useState(() => { const featured = featuredExercise(exercises); return featured ? exerciseSeriesId(featured) : ""; });
+  const selectedExercise = exercises.find((exercise) => exerciseSeriesId(exercise) === selectedExerciseId) ?? featuredExercise(exercises) ?? emptyExercise;
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>(selectedExercise.defaultMetric);
   const [comparisonMetric, setComparisonMetric] = useState<MetricKey | "">("");
   const [search, setSearch] = useState("");
@@ -267,7 +268,7 @@ export default function Home() {
       setLoadedSource("");
       setLastExportName(snapshot.fileName ?? ""); setLastExportAt(snapshot.uploadedAt ?? "");
       setRecommendations(snapshot.recommendations ?? []); setAiInsight(snapshot.aiInsight ?? null);
-      setSelectedExerciseName(featured?.name ?? "");
+      setSelectedExerciseId(featured ? exerciseSeriesId(featured) : "");
       setSelectedMetric(featured?.defaultMetric ?? "totalSets");
       setAttendanceYear(year);
     } catch { try { localStorage.removeItem(sessionDataKey); } catch { /* Storage can be disabled. */ } }
@@ -313,7 +314,7 @@ export default function Home() {
       setLoadedImport(outcome.importData);
       setLoadedSource(outcome.source);
       setLastExportName(file.name); setLastExportAt(uploadedAt);
-      setSelectedExerciseName(featured?.name ?? "");
+      setSelectedExerciseId(featured ? exerciseSeriesId(featured) : "");
       setSelectedMetric(featured?.defaultMetric ?? "totalSets");
       setAttendanceYear(Number(payload.coverage.lastDate.slice(0, 4)));
       setSearch("");
@@ -351,7 +352,7 @@ export default function Home() {
     setLastExportName(""); setLastExportAt("");
     setUploadState("");
     setRecommendationState("");
-    setSelectedExerciseName("");
+    setSelectedExerciseId("");
     setSelectedMetric("totalSets");
     setAttendanceYear(Number(demoData.coverage.lastDate.slice(0, 4)));
     setSearch(""); setFamily("All"); setComparisonMetric(""); setVisibleCount(24);
@@ -421,7 +422,7 @@ export default function Home() {
   };
 
   const selectExercise = (exercise: Exercise) => {
-    setSelectedExerciseName(exercise.name);
+    setSelectedExerciseId(exerciseSeriesId(exercise));
     setSelectedMetric(exercise.defaultMetric);
     setComparisonMetric("");
     document.getElementById("exercise-focus")?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -522,7 +523,7 @@ export default function Home() {
           {headlineAchievements.map((achievement, index) => {
             const unit = metricMeta[achievement.metric as MetricKey].unit;
             return (
-              <article className="achievement-card panel" key={achievement.exercise}>
+              <article className="achievement-card panel" key={`${achievement.exercise}-${index}`}>
                 <div className="achievement-rank">0{index + 1}</div>
                 <div className="achievement-icon"><TrendingUp size={22} /></div>
                 <p className="eyebrow">{metricMeta[achievement.metric as MetricKey].label}</p>
@@ -703,7 +704,7 @@ export default function Home() {
               const cardio = /rope|run|walk|bike|cycling|cardio|rowing|rower/i.test(exercise.name);
               const bodyweight = !cardio && !exercise.availableMetrics.includes("heaviestKg");
               return (
-                <button className={selectedExercise.name === exercise.name ? "exercise-card panel selected" : "exercise-card panel"} onClick={() => selectExercise(exercise)} key={exercise.name}>
+                <button className={selectedExerciseId === exerciseSeriesId(exercise) ? "exercise-card panel selected" : "exercise-card panel"} onClick={() => selectExercise(exercise)} key={exerciseSeriesId(exercise)}>
                   <div className="exercise-card-top"><span>{cardio ? <><HeartPulse size={14} aria-hidden="true" /> Cardio</> : bodyweight ? <><Dumbbell size={14} aria-hidden="true" /> Bodyweight</> : exercise.family}</span><ChevronRight size={16} /></div>
                   <h4>{exercise.name}</h4>
                   <Sparkline values={series.map((record) => record.value)} />
@@ -784,7 +785,7 @@ export default function Home() {
           {exercises.slice(0, 12).map((exercise, index) => {
             const cardio = /rope|run|walk|bike|cycling|cardio|rowing|rower/i.test(exercise.name);
             const bodyweight = !cardio && !exercise.availableMetrics.includes("heaviestKg");
-            return <button className="leaderboard-row" onClick={() => selectExercise(exercise)} key={exercise.name}>
+            return <button className="leaderboard-row" onClick={() => selectExercise(exercise)} key={exerciseSeriesId(exercise)}>
               <span className="rank-number">{index + 1}</span>
               <span className="leader-name"><i>{cardio ? <HeartPulse size={15} aria-label="Cardio exercise" /> : bodyweight ? <Dumbbell size={15} aria-label="Bodyweight exercise" /> : <Dumbbell size={15} aria-hidden="true" />}</i><b>{exercise.name}</b><small>{exercise.family}</small></span>
               <strong>{exercise.sessions}</strong>

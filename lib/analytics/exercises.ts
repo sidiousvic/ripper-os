@@ -2,6 +2,8 @@ import type { Exercise, MetricKey } from "./dashboard-types";
 
 type ExerciseRecord = {
   date: string;
+  exerciseId: string;
+  comparisonKey: string;
   exercise: string;
   family: string;
   source?: string;
@@ -19,12 +21,16 @@ const finite = (value: number | null) => typeof value === "number" && Number.isF
 const round = (value: number, digits = 1) => Math.round(value * 10 ** digits) / 10 ** digits;
 
 export function calculateExerciseSummaries(records: ExerciseRecord[]) {
-  const exercises: Exercise[] = [...new Set(records.map((record) => record.exercise))].map((name) => {
-    const history = records.filter((record) => record.exercise === name);
+  const exercises: Exercise[] = [...new Set(records.map((record) => `${record.exerciseId}|${record.comparisonKey}`))].map((seriesId) => {
+    const history = records.filter((record) => `${record.exerciseId}|${record.comparisonKey}` === seriesId);
+    const name = history[0].exercise;
     const availableMetrics = metrics.filter((metric) => history.some((record) => finite(record[metric]) > 0));
     const cardio = /rope|run|walk|bike|cycling|cardio|rowing|rower/i.test(name);
     const defaultMetric: MetricKey = cardio && availableMetrics.includes("durationSec") ? "durationSec" : !cardio && availableMetrics.includes("heaviestKg") ? "heaviestKg" : availableMetrics.includes("bestSetReps") ? "bestSetReps" : availableMetrics.includes("totalReps") ? "totalReps" : "totalSets";
     return {
+      exerciseId: history[0].exerciseId,
+      comparisonKey: history[0].comparisonKey,
+      seriesId,
       name,
       family: history[0].family,
       defaultMetric,

@@ -167,6 +167,7 @@ const parsedStrong = parseImport(strongFixtureBytes, "strong.csv", { weightUnit:
 assert.equal(parsedStrong.status, "ready");
 assert.equal(parsedStrong.source, "strong");
 assert.equal(parsedStrong.dashboard.coverage.totalSessions, 86);
+assert.equal(parsedStrong.importData.sessions.flatMap(session => session.exercises).some(exercise => exercise.exerciseId === "barbell_bench_press"), true);
 const stagedStrong = parseStrongRows(strongInput);
 assert.equal(stagedStrong.rows.length, 1903);
 assert.deepEqual(stagedStrong.needs, ["weight-unit", "distance-unit"]);
@@ -231,12 +232,15 @@ assert.equal(normalizedStrong.data.sessions[0].exercises[0].sets[0].durationSeco
 assert.equal(normalizedStrong.data.sessions[0].exercises[0].sets[0].load.component, 'unknown');
 assert.equal(normalizedStrong.data.sessions[0].startedAt, undefined);
 assert.equal(normalizedStrong.data.sessions[0].exercises[0].sets[0].completed, null);
+const normalizedStrongBench = normalizedStrong.data.sessions.flatMap(session => session.exercises).find(exercise => exercise.rawExerciseName === "Bench Press (Barbell)");
+assert.equal(normalizedStrongBench.exerciseId, "barbell_bench_press");
+assert.ok(normalizedStrongBench.comparisonKey.includes("unknown"));
 assertValidDetailedImport(normalizedStrong.data);
 const projectedStrong = projectStrengthImport(normalizedStrong.data);
 assert.equal(projectedStrong.exerciseDays.every(day => day.origin === 'derived-from-sets'), true);
 assert.equal(projectedStrong.exerciseDays.length, 320);
 assert.equal(projectedStrong.exerciseDays[0].metrics.totalSets, 8);
-assert.equal(projectedStrong.exerciseDays[0].metrics.totalReps, 26);
+assert.equal(projectedStrong.exerciseDays[0].metrics.totalReps, 25);
 assert.equal(projectedStrong.exerciseDays[0].metrics.heaviestKg, null, 'unknown load basis stays non-comparable');
 assert.equal(projectedStrong.exerciseDays[0].metrics.totalVolumeKg, null, 'unknown load basis has no tonnage');
 assert.equal(buildDashboard(normalizedStrong.data).coverage.totalSessions, 86);
@@ -287,16 +291,17 @@ const collidingAliasesCsv = 'Date,Exercise,Weight (kg),Reps\n2026-01-02,Bench Di
 const collidingAliasesImport = normalizeCsv(collidingAliasesCsv);
 assert.equal(collidingAliasesImport.exerciseDays.length, 2, 'raw alias facts remain distinct');
 const aliasView = buildDashboard(collidingAliasesImport, 'csv');
-assert.equal(aliasView.exercises.length, 1);
-assert.equal(aliasView.exercises[0].totalSets, 2);
-assert.equal(aliasView.exercises[0].totalReps, 13);
-assert.equal(aliasView.exercises[0].progress[0].bestSetReps, 8);
+assert.equal(aliasView.exercises.length, 2, 'distinct identities sharing a label remain selectable');
+assert.equal(new Set(aliasView.exercises.map(exercise => exercise.seriesId)).size, 2);
+assert.equal(aliasView.exercises.reduce((sum, exercise) => sum + exercise.totalSets, 0), 2);
+assert.equal(aliasView.exercises.reduce((sum, exercise) => sum + exercise.totalReps, 0), 13);
 const aliasWorkbook = XLSX.utils.book_new();
 for (const [sheet, a, b] of [['Exercises - Total Sets',2,null], ['Exercises - Total Reps',null,13]]) {
   XLSX.utils.book_append_sheet(aliasWorkbook, XLSX.utils.aoa_to_sheet([['Date','Bench Dips','Bench Dip'],['2026-01-02',a,b]]),sheet);
 }
 const aliasWorkbookBytes = new Uint8Array(XLSX.write(aliasWorkbook,{type:'array',bookType:'xlsx',compression:true}));
 const workbookAliasView = parseTrainingFile(aliasWorkbookBytes,'aliases.xlsx');
-assert.equal(workbookAliasView.exercises[0].totalSets,2);
-assert.equal(workbookAliasView.exercises[0].totalReps,13);
+assert.equal(workbookAliasView.exercises.length, 2);
+assert.equal(workbookAliasView.exercises.reduce((sum, exercise) => sum + exercise.totalSets, 0),2);
+assert.equal(workbookAliasView.exercises.reduce((sum, exercise) => sum + exercise.totalReps, 0),13);
 console.log('Legacy alias collisions: canonical names retained and CSV/workbook presentation parity passed');

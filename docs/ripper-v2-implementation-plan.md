@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M3 — Strong drives the existing dashboard
-Current task: V2-017
-Last completed task: V2-016 — Resolve a small set of known exercise identities
-Next task: V2-017
+Current task: V2-018
+Last completed task: V2-017 — Key dashboard exercise selection by stable identity
+Next task: V2-018
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
-Tasks complete: 14
-Tasks remaining: 37
+Tasks complete: 15
+Tasks remaining: 36
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -1347,7 +1347,7 @@ Implement V2-016 only. Complete the marked higher-model review before coding; do
 ### V2-017 — Key dashboard exercise selection by stable identity
 
 Status:
-TODO
+DONE
 
 Milestone:
 M4 — One exercise history across two sources
@@ -3851,3 +3851,4 @@ Date/number validation is the exception to accepting invalid legacy behavior: V2
 - 2026-09-05: V2-008 final regression review found simultaneous legacy aliases could lose CSV totals or complementary workbook metrics in the compatibility projection. Corrected presentation merging while retaining distinct raw canonical facts; added focused CSV/workbook collision tests. Released locally as v0.2.43 after parser/unit tests, typecheck, lint and both builds. V2-014 is next; browser worker smoke still pending file permission.
 - 2026-09-05: V2-014 completed with a pure detailed-session projection into canonical exercise days. Strong daily facts derive only from sets; unknown load basis remains non-comparable and set duration is not copied from workout duration. `buildDashboard()` accepts detailed imports through the projection; Strong UI wiring is V2-015.
 - 2026-09-05: V2-016 completed after higher-model review with a small v1 exercise catalog and deterministic resolver. Verified MF/Strong bench aliases share `barbell_bench_press`; dangerous movement variants remain custom; user overrides and mapping metadata are explicit. Stable identity selection is V2-017.
+- 2026-09-05: V2-017 completed with stable exercise/comparison/series IDs in dashboard view models and selection keys. MacroFactor and Strong adapters now use the v1 resolver; load comparability remains separate from exercise identity. Existing formulas and labels remain unchanged.

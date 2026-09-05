@@ -12,6 +12,9 @@ export type ProgressRecord = {
 };
 
 export type Exercise = {
+  exerciseId: string;
+  comparisonKey: string;
+  seriesId: string;
   name: string;
   family: string;
   defaultMetric: MetricKey;

@@ -6,6 +6,7 @@ import { assertValidDetailedImport } from "../validation.ts";
 import { strongDuration } from "../value-parsing.ts";
 import { parseStrongRows, type StrongOptions, type StrongRowsResult } from "./strong-rows.ts";
 import { groupStrongSessions } from "./strong-sessions.ts";
+import { resolveExercise } from "../../exercises/resolve.ts";
 
 export interface StrongNormalizationOptions extends StrongOptions {
   /** Explicit user/source evidence only; never inferred from the exercise name. */
@@ -40,10 +41,12 @@ export function normalizeStrong(input: InspectedInput, filename: string, options
       ...session, durationSeconds: durations.length === 1 ? durations[0] : null, notes: notes || undefined,
       exercises: session.exercises.map(exercise => {
         const semantics = options.loadSemantics?.[exercise.rawExerciseName] ?? { component: "unknown" as const, basis: "unknown" as const };
-        const exerciseId = `strong:${exercise.rawExerciseName}`;
+        const resolved = resolveExercise("strong", exercise.rawExerciseName);
+        const exerciseId = resolved.exerciseId;
+        const comparisonKey = semantics.component === "unknown" || semantics.basis === "unknown" ? `${resolved.exerciseId}:${semantics.component}:${semantics.basis}` : resolved.comparisonKey;
         return {
-          id: exercise.id, order: exercise.order, rawExerciseName: exercise.rawExerciseName, displayName: exercise.rawExerciseName, exerciseId,
-          comparisonKey: JSON.stringify([exerciseId, semantics.component, semantics.basis]),
+          id: exercise.id, order: exercise.order, rawExerciseName: exercise.rawExerciseName, displayName: resolved.displayName, exerciseId,
+          comparisonKey,
           sets: exercise.rows.map((row, index) => ({
             id: `${importId}:set:${row.row}`, index, kind: "unknown" as const, rawKind: row.rawSetOrder,
             completed: null, reps: row.reps, repsBasis: "unknown" as const,

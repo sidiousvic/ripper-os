@@ -3,6 +3,7 @@ import type { InspectedInput } from "../inspect-input.ts";
 import type { CanonicalExerciseDay, DailyMetric, DailyMetrics } from "../../domain/training.ts";
 import type { AggregateImport, ImportIssue } from "../types.ts";
 import { assertValidImport, isCalendarDate } from "../validation.ts";
+import { resolveExercise } from "../../exercises/resolve.ts";
 
 const DAY = 86_400_000;
 const clean = (value: unknown) => String(value ?? "").replace(/ \((kg|sets|reps|sec)\)$/i, "").trim();
@@ -63,7 +64,8 @@ export function normalizeMacroFactor(workbook: InspectedInput, filename: string)
     const key = JSON.stringify([date, rawExerciseName]);
     let entry = days.get(key);
     if (!entry) {
-      entry = { id: `${importId}:${key}`, importId, source: "macrofactor", rawExerciseName, exerciseId: `macrofactor:${rawExerciseName}`, displayName: displayName(rawExerciseName), date, metrics: emptyMetrics(), origin: "source-aggregate", sourceRefs: [], comparisonKey: `macrofactor:${rawExerciseName}` };
+      const resolved = resolveExercise("macrofactor", rawExerciseName);
+      entry = { id: `${importId}:${key}`, importId, source: "macrofactor", rawExerciseName, exerciseId: resolved.exerciseId, displayName: displayName(rawExerciseName), date, metrics: emptyMetrics(), origin: "source-aggregate", sourceRefs: [], comparisonKey: resolved.comparisonKey };
       days.set(key, entry);
     }
     return entry;
