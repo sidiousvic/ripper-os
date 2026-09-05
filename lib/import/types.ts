@@ -4,7 +4,7 @@ export interface ImportIssue {
   code: string;
   severity: "warning" | "error";
   rowRefs: string[];
-  action: "skipped-row" | "omitted-field";
+  action: "skipped-row" | "omitted-field" | "needs-input";
   message: string;
 }
 export interface SourceRow {

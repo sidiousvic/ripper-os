@@ -184,3 +184,24 @@ assert.equal(stagedSynthetic.sourceRows[1].row, 3, "row numbers count CSV record
 assert.ok(stagedSynthetic.needs.includes('date-format'));
 assert.equal(parseStrongRows(strongInput, {weightUnit:'kg', distanceUnit:'km'}).status, 'ready');
 console.log('Strong rows: real fixture, explicit options, notes, zero/blank and malformed data passed');
+
+const { groupStrongSessions } = await import('../lib/import/adapters/strong-sessions.ts');
+const groupedStrong = groupStrongSessions(stagedStrong, 'strong:test');
+assert.equal(groupedStrong.sessions.length, 86);
+assert.equal(groupedStrong.sessions.flatMap(session => session.exercises.flatMap(exercise => exercise.rows)).length, 1903);
+assert.equal(groupedStrong.ambiguousRowRefs.length, 0);
+assert.deepEqual(groupStrongSessions(stagedStrong, 'strong:test'), groupedStrong, 'group IDs deterministic within an import');
+const sequenceRows = ['Bench','Row','Bench'].flatMap((name) => [1,2].map(order => `2026-01-02 09:00:00,Morning,1h,${name},${order},80,8,0,0,,,`));
+sequenceRows.push('2026-01-02 18:00:00,Evening,1h,Bench,1,80,8,0,0,,,');
+sequenceRows.push(sequenceRows.at(-1));
+const sequence = groupStrongSessions(parseStrongRows(inspectCsv(strongHeader + sequenceRows.join('\n'))), 'strong:sequence');
+assert.equal(sequence.sessions.length, 2);
+assert.deepEqual(sequence.sessions[0].exercises.map(exercise=>exercise.rawExerciseName), ['Bench','Row','Bench']);
+assert.equal(sequence.sessions[1].exercises[0].rows.length, 2, 'identical sets stay separate');
+const reset = groupStrongSessions(parseStrongRows(inspectCsv(strongHeader + [2,1].map(order=>`2026-01-02 09:00:00,Morning,1h,Bench,${order},80,8,0,0,,,`).join('\n'))), 'strong:reset');
+assert.equal(reset.sessions[0].exercises.length, 2);
+assert.ok(reset.issues.some(issue=>issue.code === 'ambiguous-set-reset'));
+const missingBoundary = groupStrongSessions(parseStrongRows(inspectCsv(strongHeader + '2026-01-02 09:00:00,,1h,Bench,1,80,8,0,0,,,')), 'strong:missing');
+assert.equal(missingBoundary.sessions.length, 0);
+assert.equal(missingBoundary.ambiguousRowRefs.length, 1);
+console.log('Strong grouping: 86 sessions, all sets, two-a-day, repeated blocks and ambiguity passed');

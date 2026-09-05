@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M3 — Strong drives the existing dashboard
-Current task: V2-012
-Last completed task: V2-011 — Parse and validate Strong rows with explicit issues
-Next task: V2-012
+Current task: V2-013
+Last completed task: V2-012 — Reconstruct Strong sessions and preserve detailed sets
+Next task: V2-013
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures; unit evidence still must be documented.
-Tasks complete: 10
-Tasks remaining: 41
+Tasks complete: 11
+Tasks remaining: 40
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -991,7 +991,7 @@ Implement V2-011 only. Read verified Strong rows into a typed source-only stagin
 ### V2-012 — Reconstruct Strong sessions and preserve detailed sets
 
 Status:
-TODO
+DONE
 
 Milestone:
 M3 — Strong drives the existing dashboard
@@ -3843,3 +3843,5 @@ Date/number validation is the exception to accepting invalid legacy behavior: V2
 - 2026-09-05: V2-010: Detect source signatures using decoded content, including BOM, renamed files and ambiguous candidates. Strong upload remains disabled; unknown CSV retains MF compatibility errors.
 
 - 2026-09-05: V2-011: Parsed all 1,903 original Strong rows into typed staging records; preserve wall time, CSV records and multiline notes. Invalid required fields are skipped with issues; missing units and alternate date grammars request input.
+
+- 2026-09-05: V2-012: Grouped original Strong rows into 86 contiguous timestamp/title sessions with all 1,903 sets preserved. A/B/A blocks and equal sets remain distinct; resets and missing/reappearing workout boundaries require review. Introduced detailed domain types without converting measurements.
