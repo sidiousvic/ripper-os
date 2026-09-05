@@ -160,7 +160,13 @@ assert.throws(() => inspectInput(new Uint8Array([80,75,0,0]), "zip.csv"), /archi
 console.log("Detection: source signatures, BOM, renamed files, unknown and ambiguous input passed");
 
 const { parseStrongRows } = await import("../lib/import/adapters/strong-rows.ts");
+const { parseImport } = await import('../lib/import/parse-import.ts');
 const strongInput = inspectInput(strongFixtureBytes, "strong.csv");
+assert.equal(parseImport(strongFixtureBytes, "strong.csv").status, "needs-input");
+const parsedStrong = parseImport(strongFixtureBytes, "strong.csv", { weightUnit: "kg", distanceUnit: "km" });
+assert.equal(parsedStrong.status, "ready");
+assert.equal(parsedStrong.source, "strong");
+assert.equal(parsedStrong.dashboard.coverage.totalSessions, 86);
 const stagedStrong = parseStrongRows(strongInput);
 assert.equal(stagedStrong.rows.length, 1903);
 assert.deepEqual(stagedStrong.needs, ["weight-unit", "distance-unit"]);

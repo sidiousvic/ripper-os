@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Footer from "./footer";
 import { importTrainingFile } from "../lib/import-training-file";
+import type { ImportOutcome } from "../lib/import/parse-import";
+import type { StrongNormalizationOptions } from "../lib/import/adapters/strong";
 import { isTrainingSnapshot, saveTrainingSnapshot, TRAINING_SNAPSHOT_KEY } from "../lib/training-snapshot.mjs";
 import { isCurrentRequest } from "../lib/request-guard.mjs";
 import type { DashboardData, Exercise, MetricKey, ProgressRecord } from "../lib/analytics/dashboard-types";
@@ -43,6 +45,7 @@ type Recommendation = { title: string; summary: string; evidence: string[]; acti
 type AiInsight = { sustainedPractice: string; nextYearRule: string; sectionInsights: Record<string, string> };
 const demoData = demoDataJson as unknown as DashboardData;
 type UploadPayload = DashboardData & { error?: string; recommendations?: Recommendation[]; sustainedPractice?: string; nextYearRule?: string; sectionInsights?: Record<string, string> };
+type ReadyImport = Extract<ImportOutcome, { status: "ready" }>;
 
 const emptyExercise: Exercise = { name: "No exercise selected", family: "—", defaultMetric: "totalSets", availableMetrics: ["totalSets"], firstDate: "1970-01-01", lastDate: "1970-01-01", sessions: 0, totalSets: 0, totalReps: 0, totalVolumeKg: 0, progress: [] };
 const sessionDataKey = TRAINING_SNAPSHOT_KEY;
@@ -188,6 +191,8 @@ export default function Home() {
   const datasetRevision = useRef(0);
   const aiController = useRef<AbortController | null>(null);
   const [uploadState, setUploadState] = useState<string>("");
+  const [loadedImport, setLoadedImport] = useState<ReadyImport["importData"] | null>(null);
+  const [loadedSource, setLoadedSource] = useState<ReadyImport["source"] | "">("");
   const [importing, setImporting] = useState(false);
   const importController = useRef<AbortController | null>(null);
   useEffect(() => () => { importController.current?.abort(); aiController.current?.abort(); datasetRevision.current += 1; }, []);
@@ -237,7 +242,7 @@ export default function Home() {
   const [exerciseSort, setExerciseSort] = useState<"recent" | "used">("recent");
   const [visibleCount, setVisibleCount] = useState(24);
   const [attendanceYear, setAttendanceYear] = useState(Number(data.coverage.lastDate.slice(0, 4)));
-  const hasUploadedData = data !== demoData;
+  const hasUploadedData = data !== demoData || loadedImport !== null;
 
   useEffect(() => {
     console.log("%c+----------------------+\n|      RIPPER OS       |\n+----------------------+", "font-family: 'Google Sans Flex', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: 2px; line-height: 1.35; color: #f3f7f1;");
@@ -258,6 +263,8 @@ export default function Home() {
       const featured = featuredExercise(restoredExercises);
       const year = Number(restored.coverage.lastDate.slice(0, 4));
       setData(restored);
+      setLoadedImport(null);
+      setLoadedSource("");
       setLastExportName(snapshot.fileName ?? ""); setLastExportAt(snapshot.uploadedAt ?? "");
       setRecommendations(snapshot.recommendations ?? []); setAiInsight(snapshot.aiInsight ?? null);
       setSelectedExerciseName(featured?.name ?? "");
@@ -277,16 +284,34 @@ export default function Home() {
     const controller = new AbortController();
     importController.current = controller;
     setImporting(true);
-    setUploadState("Processing MacroFactor export on this device…");
+    setUploadState("Detecting and processing your export on this device…");
     try {
-      const payload = await importTrainingFile(file, controller.signal) as unknown as UploadPayload;
+      let options: StrongNormalizationOptions = {};
+      let outcome = await importTrainingFile(file, controller.signal, options);
+      if (outcome.status === "needs-input") {
+        if (outcome.needs.includes("weight-unit")) {
+          const unit = window.prompt("Strong does not label its Weight column. Enter the unit used in this export (kg or lb).", "kg")?.trim().toLowerCase();
+          if (unit !== "kg" && unit !== "lb") { setUploadState("Import cancelled: a valid weight unit is required."); return; }
+          options = { ...options, weightUnit: unit };
+        }
+        if (outcome.needs.includes("distance-unit")) {
+          const unit = window.prompt("Strong does not label its Distance column. Enter the unit used in this export (m, km, or mi).", "km")?.trim().toLowerCase();
+          if (unit !== "m" && unit !== "km" && unit !== "mi") { setUploadState("Import cancelled: a valid distance unit is required."); return; }
+          options = { ...options, distanceUnit: unit };
+        }
+        outcome = await importTrainingFile(file, controller.signal, options);
+      }
       if (controller.signal.aborted) return;
+      if (outcome.status !== "ready") throw new Error("This export needs import choices before it can be loaded.");
+      const payload = outcome.dashboard as UploadPayload;
       const nextExercises = payload.exercises as Exercise[];
       const featured = featuredExercise(nextExercises);
       const uploadedAt = new Date().toISOString();
       const snapshot = { data: payload, fileName: file.name, uploadedAt, recommendations: [], aiInsight: null };
       datasetRevision.current += 1;
       setData(payload);
+      setLoadedImport(outcome.importData);
+      setLoadedSource(outcome.source);
       setLastExportName(file.name); setLastExportAt(uploadedAt);
       setSelectedExerciseName(featured?.name ?? "");
       setSelectedMetric(featured?.defaultMetric ?? "totalSets");
@@ -318,6 +343,8 @@ export default function Home() {
     try { localStorage.removeItem(sessionDataKey); } catch { /* Clearing the visible dashboard must still work. */ }
     datasetRevision.current += 1;
     setData(demoData);
+    setLoadedImport(null);
+    setLoadedSource("");
     setRecommendations([]);
     setAiInsight(null);
     setRecommendationError("");
@@ -464,7 +491,7 @@ export default function Home() {
           <h1><b>RIPPER <span>OS</span></b>.<br /><span className="hero-training">Training, <span>Analyzed.</span></span></h1>
           <p>Upload your training data and Ripper OS organizes it into progress, consistency, muscle balance, highlights, and next opportunities. It&apos;s like Spotify Wrapped for training.</p>
           <div className="hero-actions" aria-label="Dashboard actions">
-            {hasUploadedData ? <button className="button upload-button is-ready" onClick={() => setLoadedExportOpen(true)}><Check size={17} aria-hidden="true" />MacroFactor export uploaded</button> : <label className="button upload-button"><CircleDot size={17} aria-hidden="true" />Upload MacroFactor export<input type="file" accept=".xlsx,.csv" onChange={handleUpload} /></label>}
+            {hasUploadedData ? <button className="button upload-button is-ready" onClick={() => setLoadedExportOpen(true)}><Check size={17} aria-hidden="true" />{loadedSource ? `${loadedSource[0].toUpperCase()}${loadedSource.slice(1)} export uploaded` : "Training export uploaded"}</button> : <label className="button upload-button"><CircleDot size={17} aria-hidden="true" />Upload training data<input type="file" accept=".xlsx,.csv" onChange={handleUpload} /></label>}
             <button className={`button upload-button ${openAIKey ? "is-ready" : ""}`} onClick={() => { setKeyDraft(openAIKey); setConnectionState(""); setConnectOpen(true); }}><KeyRound size={17} aria-hidden="true" />{openAIKey ? "OpenAI connected" : "Connect OpenAI"}</button>
             {hasUploadedData && <button className="button upload-button" onClick={() => setClearConfirmOpen(true)}><Trash2 size={17} aria-hidden="true" />Clear uploaded data</button>}
             {hasUploadedData && <a className="button primary" href="#progress">Explore all exercises <ChevronRight size={17} /></a>}
@@ -781,7 +808,7 @@ export default function Home() {
           <div className="next-grid">
             {recommendations.map((item, index) => <article className="next-card panel" key={`${item.title}-${index}`}><span>0{index + 1}</span><div className="next-icon"><Target size={21} /></div><h3>{item.title}</h3><p>{item.summary}</p><p className="muted small">{item.evidence.join(" · ")}</p><ul className="next-actions">{item.actions.map((action) => <li key={action}>{action}</li>)}</ul></article>)}
             {!recommendations.length && data !== demoData && !recommendationState && <div className="callout ai-insight"><Sparkles size={20} /><div><p className="eyebrow accent">AI insight</p><p>Upload complete. Generate recommendations when you want an AI interpretation; your plotted data works without an OpenAI account.</p></div></div>}
-            {!recommendations.length && data === demoData && <div className="callout ai-insight"><Sparkles size={20} /><div><p className="eyebrow accent">Ready when you are</p><p>Upload your MacroFactor export to populate the charts. AI recommendations will remain optional.</p></div></div>}
+            {!recommendations.length && data === demoData && <div className="callout ai-insight"><Sparkles size={20} /><div><p className="eyebrow accent">Ready when you are</p><p>Upload a supported training export to populate the charts. AI recommendations will remain optional.</p></div></div>}
           </div>
           {aiInsight && <div className="principle panel"><div className="principle-icon"><Dumbbell size={25} /></div><div><p className="eyebrow accent">A simple next-year rule</p><h3>{aiInsight.nextYearRule}</h3><p>Generated from the current uploaded training summary.</p></div></div>}
         </div>
@@ -803,7 +830,7 @@ export default function Home() {
         <section className="connect-dialog panel" role="dialog" aria-modal="true" aria-labelledby="loaded-export-title">
           <p className="eyebrow accent">Current export</p>
           <h2 id="loaded-export-title">MacroFactor data is loaded</h2>
-          <p className="loaded-export-name">{lastExportName || "MacroFactor export"}</p>
+          <p className="loaded-export-name">{lastExportName || "Training export"}</p>
           {lastExportAt && <p className="muted small">Loaded {new Date(lastExportAt).toLocaleString()}</p>}
           <div className="connect-actions"><button className="button secondary" onClick={() => setLoadedExportOpen(false)}>Close</button><label className="button primary upload-button">Replace export<input type="file" accept=".xlsx,.csv" onChange={(event) => { setLoadedExportOpen(false); handleUpload(event); }} /></label></div>
         </section>

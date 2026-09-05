@@ -1,9 +1,9 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M3 — Strong drives the existing dashboard
-Current task: V2-015
-Last completed task: V2-013 — Normalize Strong measurements into canonical units
-Next task: V2-015
+Current task: V2-016
+Last completed task: V2-014 — Project detailed Strong history into shared daily analytics
+Next task: V2-016
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
 Tasks complete: 13
 Tasks remaining: 38
@@ -1201,7 +1201,7 @@ Implement V2-014 only. Add a source-independent detailed-session-to-exercise-day
 ### V2-015 — Render Strong imports in the existing dashboard
 
 Status:
-TODO
+IN_PROGRESS
 
 Milestone:
 M3 — Strong drives the existing dashboard
