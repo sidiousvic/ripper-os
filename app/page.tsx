@@ -5,6 +5,8 @@ import Footer from "./footer";
 import { importTrainingFile } from "../lib/import-training-file";
 import type { ImportOutcome } from "../lib/import/parse-import";
 import type { StrongNormalizationOptions } from "../lib/import/adapters/strong";
+import { buildDashboard } from "../lib/analytics/build-dashboard";
+import { combineImports, type HistoryImport } from "../lib/history/combine-imports";
 import { isTrainingSnapshot, saveTrainingSnapshot, TRAINING_SNAPSHOT_KEY } from "../lib/training-snapshot.mjs";
 import { isCurrentRequest } from "../lib/request-guard.mjs";
 import type { DashboardData, Exercise, MetricKey, ProgressRecord } from "../lib/analytics/dashboard-types";
@@ -193,7 +195,8 @@ export default function Home() {
   const aiController = useRef<AbortController | null>(null);
   const [uploadState, setUploadState] = useState<string>("");
   const [loadedImport, setLoadedImport] = useState<ReadyImport["importData"] | null>(null);
-  const [loadedSource, setLoadedSource] = useState<ReadyImport["source"] | "">("");
+  const [loadedSource, setLoadedSource] = useState<string>("");
+  const [historyImports, setHistoryImports] = useState<HistoryImport[]>([]);
   const [importing, setImporting] = useState(false);
   const importController = useRef<AbortController | null>(null);
   useEffect(() => () => { importController.current?.abort(); aiController.current?.abort(); datasetRevision.current += 1; }, []);
@@ -266,6 +269,7 @@ export default function Home() {
       setData(restored);
       setLoadedImport(null);
       setLoadedSource("");
+      setHistoryImports([]);
       setLastExportName(snapshot.fileName ?? ""); setLastExportAt(snapshot.uploadedAt ?? "");
       setRecommendations(snapshot.recommendations ?? []); setAiInsight(snapshot.aiInsight ?? null);
       setSelectedExerciseId(featured ? exerciseSeriesId(featured) : "");
@@ -275,7 +279,7 @@ export default function Home() {
   }, []);
   /* eslint-enable react-hooks/set-state-in-effect */
 
-  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>, mode: "replace" | "add" = "replace") => {
     const input = event.currentTarget;
     const file = input.files?.[0];
     if (!file) return;
@@ -304,16 +308,23 @@ export default function Home() {
       }
       if (controller.signal.aborted) return;
       if (outcome.status !== "ready") throw new Error("This export needs import choices before it can be loaded.");
-      const payload = outcome.dashboard as UploadPayload;
+      const combined = mode === "add" ? combineImports(historyImports, outcome.importData) : combineImports([], outcome.importData);
+      if (!combined.ok) {
+        setUploadState(combined.conflict.message);
+        return;
+      }
+      const payload = buildDashboard(combined.imports) as UploadPayload;
       const nextExercises = payload.exercises as Exercise[];
       const featured = featuredExercise(nextExercises);
       const uploadedAt = new Date().toISOString();
-      const snapshot = { data: payload, fileName: file.name, uploadedAt, recommendations: [], aiInsight: null };
+      const fileName = mode === "add" && lastExportName ? `${lastExportName} + ${file.name}` : file.name;
+      const snapshot = { data: payload, fileName, uploadedAt, recommendations: [], aiInsight: null };
       datasetRevision.current += 1;
       setData(payload);
+      setHistoryImports(combined.imports);
       setLoadedImport(outcome.importData);
-      setLoadedSource(outcome.source);
-      setLastExportName(file.name); setLastExportAt(uploadedAt);
+      setLoadedSource(combined.imports.map((item) => item.source).filter((source, index, all) => all.indexOf(source) === index).join(" + "));
+      setLastExportName(fileName); setLastExportAt(uploadedAt);
       setSelectedExerciseId(featured ? exerciseSeriesId(featured) : "");
       setSelectedMetric(featured?.defaultMetric ?? "totalSets");
       setAttendanceYear(Number(payload.coverage.lastDate.slice(0, 4)));
@@ -327,7 +338,7 @@ export default function Home() {
       setRecommendationState("");
       setAiConsentOpen(false);
       const saved = saveTrainingSnapshot(JSON.stringify(snapshot), () => localStorage);
-      setUploadState(saved === "saved" ? `Loaded ${file.name}.` : `Loaded ${file.name}. This result could not be saved in this browser; keep this page open or import the file again after refreshing.`);
+      setUploadState(saved === "saved" ? `${mode === "add" ? "Added" : "Loaded"} ${file.name}.` : `${mode === "add" ? "Added" : "Loaded"} ${file.name}. This result could not be saved in this browser; keep this page open or import the file again after refreshing.`);
     } catch (error) {
       if (!controller.signal.aborted) setUploadState(error instanceof Error ? error.message : "Could not parse the workbook.");
     } finally {
@@ -346,6 +357,7 @@ export default function Home() {
     setData(demoData);
     setLoadedImport(null);
     setLoadedSource("");
+    setHistoryImports([]);
     setRecommendations([]);
     setAiInsight(null);
     setRecommendationError("");
@@ -498,7 +510,7 @@ export default function Home() {
             {hasUploadedData && <a className="button primary" href="#progress">Explore all exercises <ChevronRight size={17} /></a>}
             {hasUploadedData && <button className="button ai-action" onClick={generateRecommendations} disabled={recommendationState.startsWith("Generating")}><Sparkles size={16} /> Generate AI insights</button>}
           </div>
-          <p className="export-guide-link"><a href="/about">How to export my MacroFactor data</a></p>
+          <p className="export-guide-link"><a href="/about">How to export your training data</a></p>
           <p className="muted small">Your file stays on this device. AI insights are optional.</p>
           {uploadState && <p className="upload-status" role="status">{uploadState}</p>}
           {importing && <button className="button secondary" onClick={() => { importController.current?.abort(); setUploadState("Import cancelled."); }}>Cancel import</button>}
@@ -830,10 +842,11 @@ export default function Home() {
       {loadedExportOpen && <div className="connect-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setLoadedExportOpen(false); }}>
         <section className="connect-dialog panel" role="dialog" aria-modal="true" aria-labelledby="loaded-export-title">
           <p className="eyebrow accent">Current export</p>
-          <h2 id="loaded-export-title">MacroFactor data is loaded</h2>
+          <h2 id="loaded-export-title">Training data is loaded</h2>
           <p className="loaded-export-name">{lastExportName || "Training export"}</p>
           {lastExportAt && <p className="muted small">Loaded {new Date(lastExportAt).toLocaleString()}</p>}
-          <div className="connect-actions"><button className="button secondary" onClick={() => setLoadedExportOpen(false)}>Close</button><label className="button primary upload-button">Replace export<input type="file" accept=".xlsx,.csv" onChange={(event) => { setLoadedExportOpen(false); handleUpload(event); }} /></label></div>
+          {historyImports.length > 0 ? <p className="muted small">Sources in this history: {loadedSource || "training exports"}. Add accepts imports with dates not already present.</p> : <p className="muted small">This result was restored from a dashboard snapshot. Reimport the source before adding another file.</p>}
+          <div className="connect-actions"><button className="button secondary" onClick={() => setLoadedExportOpen(false)}>Close</button>{historyImports.length > 0 && <label className="button secondary upload-button">Add data<input type="file" accept=".xlsx,.csv" onChange={(event) => { setLoadedExportOpen(false); handleUpload(event, "add"); }} /></label>}<label className="button primary upload-button">Replace export<input type="file" accept=".xlsx,.csv" onChange={(event) => { setLoadedExportOpen(false); handleUpload(event, "replace"); }} /></label></div>
         </section>
       </div>}
 
