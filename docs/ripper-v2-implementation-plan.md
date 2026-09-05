@@ -3838,6 +3838,8 @@ Date/number validation is the exception to accepting invalid legacy behavior: V2
 
 ## Roadmap changes
 
+- 2026-09-06: Mapping audit found MacroFactor headers can carry a ` ∈ ...` exercise annotation. The adapter now resolves the cleaned display name while retaining the original raw name for provenance, preventing known exercises from falling through to custom identities.
+
 - 2026-09-06: V2-045 is blocked pending an approved anonymized MacroFactor bodyweight export fixture. No bodyweight values will be inferred from workout loads; independent tasks continue with V2-047.
 
 - 2026-09-06: Reported bug: MacroFactor exercise names are broadly falling through to `custom_*` identities, making manual resolution of roughly 70 exercises impractical. Treat this as a high-priority mapping investigation before asking users to resolve imported names; inspect MacroFactor source mappings, normalization keys and fixture coverage. No automatic fuzzy merge is authorized.

@@ -182,6 +182,7 @@ assert.equal(normalizedHevy.sessions.flatMap(session => session.exercises).flatM
 const hevyImport = parseImport(hevyFixtureBytes, "hevy.csv");
 assert.equal(hevyImport.source, "hevy");
 for (const name of ["Wide Grip Pull Up", "Jumping Rope"]) assert.notEqual(resolveExerciseForFixture("macrofactor", name).method, "custom");
+assert.equal(resolveExerciseForFixture("macrofactor", "Barbell Bench Press ∈ Barbell Bench Press").exerciseId, "barbell_bench_press");
 assert.equal(parsedStrong.status, "ready");
 assert.equal(parsedStrong.source, "strong");
 assert.equal(parsedStrong.dashboard.coverage.totalSessions, 86);
