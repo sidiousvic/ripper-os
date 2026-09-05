@@ -1,7 +1,7 @@
 import * as XLSX from "xlsx";
 import type { InspectedInput } from "./inspect-input.ts";
 
-type Source = "macrofactor" | "strong";
+type Source = "macrofactor" | "strong" | "hevy";
 export type DetectionResult = { format: Source | "unknown" } | { format: "ambiguous"; candidates: Source[] };
 const normalized = (value: unknown) => String(value ?? "").replace(/^\uFEFF/, "").trim().toLowerCase();
 export function detectFormat(input: InspectedInput): DetectionResult {
@@ -14,6 +14,7 @@ export function detectFormat(input: InspectedInput): DetectionResult {
     const has = (names: string[]) => names.every(name => headers.has(name));
     if (has(["date", "exercise", "reps"])) candidates.push("macrofactor");
     if (has(["date", "workout name", "duration", "exercise name", "set order", "weight", "reps"])) candidates.push("strong");
+    if (has(["title", "start_time", "end_time", "exercise_title", "set_index", "set_type"])) candidates.push("hevy");
   }
   return candidates.length > 1 ? { format: "ambiguous", candidates } : { format: candidates[0] ?? "unknown" };
 }

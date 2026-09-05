@@ -151,6 +151,8 @@ console.log("Canonical boundary: rebuild, provenance, muscle ledger, null/zero a
 const { detectFormat } = await import("../lib/import/detect-format.ts");
 const strongFixtureBytes = await readFile(new URL("../tests/fixtures/strong/original-export.csv", import.meta.url));
 assert.equal(detectFormat(inspectInput(strongFixtureBytes, "renamed.csv")).format, "strong");
+const hevyFixtureBytes = await readFile(new URL("../tests/fixtures/hevy/original-export.csv", import.meta.url));
+assert.equal(detectFormat(inspectInput(hevyFixtureBytes, "renamed.csv")).format, "hevy");
 assert.equal(detectFormat(inspectInput(new TextEncoder().encode('\uFEFF' + csv), "renamed.xlsx")).format, "macrofactor");
 assert.equal(detectFormat(inspectInput(generatedWorkbooks.get("six-months.xlsx"), "renamed.csv")).format, "macrofactor");
 assert.equal(parseTrainingFile(generatedWorkbooks.get("six-months.xlsx"), "renamed.csv").coverage.totalSessions, 24);
