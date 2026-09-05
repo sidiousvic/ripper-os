@@ -1,4 +1,5 @@
 import * as XLSX from "xlsx";
+import type { InspectedInput } from "../inspect-input.ts";
 import type { CanonicalExerciseDay, DailyMetric, DailyMetrics } from "../../domain/training.ts";
 import type { AggregateImport, ImportIssue } from "../types.ts";
 import { assertValidImport, isCalendarDate } from "../validation.ts";
@@ -29,7 +30,7 @@ function sourceDate(value: unknown, date1904: boolean): string | null {
 }
 
 /** Source mapping only: no dashboard calculations or display zero-filling. */
-export function normalizeMacroFactor(workbook: XLSX.WorkBook, filename: string): AggregateImport {
+export function normalizeMacroFactor(workbook: InspectedInput, filename: string): AggregateImport {
   // Import-local identity, not a deduplication fingerprint (reconciliation is a later task).
   const importId = `macrofactor:${globalThis.crypto.randomUUID()}`;
   const result: AggregateImport = { schemaVersion: 1, importId, source: "macrofactor", filename, adapterVersion: "aggregate-v2", exerciseDays: [], muscleDays: [], issues: [], sourceSheets: {}, sourceRows: [] };
@@ -67,7 +68,7 @@ export function normalizeMacroFactor(workbook: XLSX.WorkBook, filename: string):
     }
     return entry;
   };
-  if (/\.csv$/i.test(filename)) {
+  if (workbook.inputKind === "csv") {
     const sheet = workbook.SheetNames[0];
     const data = rows(sheet);
     const headers = result.sourceSheets[sheet];

@@ -146,3 +146,15 @@ for (const [name, bytes] of generatedWorkbooks) {
   assert.ok(imported.sourceRows.every(row => row.sheet.startsWith("Exercises -") || row.sheet === "Muscle Groups - Sets"));
 }
 console.log("Canonical boundary: rebuild, provenance, muscle ledger, null/zero and invalid-input checks passed");
+
+const { detectFormat } = await import("../lib/import/detect-format.ts");
+const strongFixtureBytes = await readFile(new URL("../tests/fixtures/strong/original-export.csv", import.meta.url));
+assert.equal(detectFormat(inspectInput(strongFixtureBytes, "renamed.csv")).format, "strong");
+assert.equal(detectFormat(inspectInput(new TextEncoder().encode('\uFEFF' + csv), "renamed.xlsx")).format, "macrofactor");
+assert.equal(detectFormat(inspectInput(generatedWorkbooks.get("six-months.xlsx"), "renamed.csv")).format, "macrofactor");
+assert.equal(parseTrainingFile(generatedWorkbooks.get("six-months.xlsx"), "renamed.csv").coverage.totalSessions, 24);
+const inspectCsv = (text) => inspectInput(new TextEncoder().encode(text), "detect.csv");
+assert.equal(detectFormat(inspectCsv("foo,bar\nx,y")).format, "unknown");
+assert.deepEqual(detectFormat(inspectCsv("Date,Exercise,Reps,Workout Name,Duration,Exercise Name,Set Order,Weight\n")), {format:"ambiguous", candidates:["macrofactor","strong"]});
+assert.throws(() => inspectInput(new Uint8Array([80,75,0,0]), "zip.csv"), /archive/);
+console.log("Detection: source signatures, BOM, renamed files, unknown and ambiguous input passed");

@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M3 — Strong drives the existing dashboard
-Current task: V2-010
-Last completed task: V2-009 — Add a verified anonymized Strong export fixture
-Next task: V2-010
+Current task: V2-011
+Last completed task: V2-010 — Detect MacroFactor and Strong from content signatures
+Next task: V2-011
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures; unit evidence still must be documented.
-Tasks complete: 8
-Tasks remaining: 43
+Tasks complete: 9
+Tasks remaining: 42
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -853,7 +853,7 @@ Implement V2-009 only. Commit a real Strong CSV with a schema manifest before co
 ### V2-010 — Detect MacroFactor and Strong from content signatures
 
 Status:
-TODO
+DONE
 
 Milestone:
 M3 — Strong drives the existing dashboard
@@ -3839,3 +3839,5 @@ Date/number validation is the exception to accepting invalid legacy behavior: V2
 - 2026-09-05: Higher-model review reopened V2-008. Replaced dashboard pass-through with canonical-driven composition, isolated MacroFactor mapping, retained training rows and muscle ledger, and validated dates/numbers before analytics. Valid regression fixtures, typecheck, lint and both builds pass; Next home/About show v0.2.37. Browser upload blocked by extension permission, so V2-008 stays IN_PROGRESS for that verification. CSV legacy zero-fill and workbook zero omission are presentation-only until V2-042. Multiple imports explicitly rejected until additive reconciliation; V2-019 removes this guard. User confirmed original Strong/Hevy CSVs anonymized and approved.
 
 - 2026-09-05: V2-009: Committed the approved original Strong fixture and observed schema manifest. Unitless Weight/Distance require explicit options; no source settings are guessed.
+
+- 2026-09-05: V2-010: Detect source signatures using decoded content, including BOM, renamed files and ambiguous candidates. Strong upload remains disabled; unknown CSV retains MF compatibility errors.

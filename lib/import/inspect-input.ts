@@ -19,10 +19,13 @@ const hasSafeZipDirectory = (bytes: Uint8Array) => {
   return true;
 };
 
-export function inspectInput(fileBytes: Uint8Array, fileName: string) {
+export type InspectedInput = XLSX.WorkBook & { inputKind: "csv" | "xlsx" };
+
+export function inspectInput(fileBytes: Uint8Array, fileName: string): InspectedInput {
   if (!/\.(xlsx|csv)$/i.test(fileName)) throw new Error("Choose a MacroFactor .xlsx or .csv export.");
   if (fileBytes.byteLength > MAX_IMPORT_BYTES) throw new Error("The export is larger than the 25 MB import limit.");
-  const xlsx = fileName.toLowerCase().endsWith(".xlsx");
+  if (!fileBytes.length && /\.xlsx$/i.test(fileName)) throw new Error("Invalid workbook archive.");
+  const xlsx = fileBytes[0] === 0x50 && fileBytes[1] === 0x4b;
   if (xlsx && !hasSafeZipDirectory(fileBytes)) throw new Error("Invalid workbook archive.");
   if (!xlsx && (fileBytes.includes(0) || !new TextDecoder("utf-8", { fatal: true }).decode(fileBytes).trim())) throw new Error("Invalid CSV file.");
   const workbook = XLSX.read(fileBytes, { type: "array", cellDates: false, raw: !xlsx });
@@ -33,5 +36,5 @@ export function inspectInput(fileBytes: Uint8Array, fileName: string) {
     const range = XLSX.utils.decode_range(ref);
     if (range.e.r > 100_000 || range.e.c > 500) throw new Error("Workbook is too large to process safely.");
   }
-  return workbook;
+  return Object.assign(workbook, { inputKind: xlsx ? "xlsx" as const : "csv" as const });
 }

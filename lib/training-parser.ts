@@ -1,5 +1,6 @@
 import { inspectInput } from "./import/inspect-input.ts";
 import { normalizeMacroFactor } from "./import/adapters/macrofactor.ts";
+import { detectFormat } from "./import/detect-format.ts";
 import { buildDashboard } from "./analytics/build-dashboard.ts";
 
 export const safeParseMessage = (error: unknown) => {
@@ -14,5 +15,10 @@ export const safeParseMessage = (error: unknown) => {
 
 /** Browser-local compatibility entry point; only the dashboard leaves the worker. */
 export function parseTrainingFile(fileBytes: Uint8Array, fileName: string) {
-  return buildDashboard(normalizeMacroFactor(inspectInput(fileBytes, fileName), fileName), /\.csv$/i.test(fileName) ? "csv" : "workbook");
+  const input = inspectInput(fileBytes, fileName);
+  const detected = detectFormat(input);
+  if (detected.format === "strong") throw new Error("Strong CSV detected. Dashboard support is not available yet.");
+  if (detected.format === "ambiguous") throw new Error("Ambiguous training export format.");
+  // Preserve MF's actionable missing-column error for unknown CSVs during compatibility support.
+  return buildDashboard(normalizeMacroFactor(input, fileName), input.inputKind === "csv" ? "csv" : "workbook");
 }
