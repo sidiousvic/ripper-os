@@ -1,6 +1,8 @@
 import type { DashboardData } from "./dashboard-types.ts";
 import type { AggregateImport } from "../import/types.ts";
+import type { DetailedImport } from "../domain/strength.ts";
 import { assertValidImport } from "../import/validation.ts";
+import { projectStrengthImport } from "./project-strength.ts";
 import { calculateConsistencySummary } from "./consistency.ts";
 import { calculateExerciseSummaries } from "./exercises.ts";
 import { calculateAttendance } from "./attendance.ts";
@@ -41,8 +43,9 @@ function legacyPresentationRecords(imports: AggregateImport[], presentation?: Le
 }
 
 /** All sources supply facts; this function alone composes the existing dashboard. */
-export function buildDashboard(input: AggregateImport | AggregateImport[], presentation?: LegacyPresentation): DashboardData {
-  const imports = Array.isArray(input) ? input : [input];
+export function buildDashboard(input: AggregateImport | DetailedImport | (AggregateImport | DetailedImport)[], presentation?: LegacyPresentation): DashboardData {
+  const rawImports = Array.isArray(input) ? input : [input];
+  const imports: AggregateImport[] = rawImports.map((data) => "representation" in data && data.representation === "detailed" ? projectStrengthImport(data) : data as AggregateImport);
   if (imports.length !== 1) throw new Error("Import one history at a time until additive reconciliation is available.");
   for (const data of imports) assertValidImport(data);
   const records = legacyPresentationRecords(imports, presentation);

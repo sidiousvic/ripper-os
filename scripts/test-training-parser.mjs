@@ -207,6 +207,7 @@ assert.equal(missingBoundary.ambiguousRowRefs.length, 1);
 console.log('Strong grouping: 86 sessions, all sets, two-a-day, repeated blocks and ambiguity passed');
 
 const { normalizeStrong } = await import('../lib/import/adapters/strong.ts');
+const { projectStrengthImport } = await import('../lib/analytics/project-strength.ts');
 const { kilograms, meters } = await import('../lib/import/units.ts');
 const { assertValidDetailedImport } = await import('../lib/import/validation.ts');
 assert.ok(Math.abs(kilograms(100, 'lb') - 45.359237) < 1e-10);
@@ -225,6 +226,16 @@ assert.equal(normalizedStrong.data.sessions[0].exercises[0].sets[0].load.compone
 assert.equal(normalizedStrong.data.sessions[0].startedAt, undefined);
 assert.equal(normalizedStrong.data.sessions[0].exercises[0].sets[0].completed, null);
 assertValidDetailedImport(normalizedStrong.data);
+const projectedStrong = projectStrengthImport(normalizedStrong.data);
+assert.equal(projectedStrong.exerciseDays.every(day => day.origin === 'derived-from-sets'), true);
+assert.equal(projectedStrong.exerciseDays.length, 320);
+assert.equal(projectedStrong.exerciseDays[0].metrics.totalSets, 8);
+assert.equal(projectedStrong.exerciseDays[0].metrics.totalReps, 26);
+assert.equal(projectedStrong.exerciseDays[0].metrics.heaviestKg, null, 'unknown load basis stays non-comparable');
+assert.equal(projectedStrong.exerciseDays[0].metrics.totalVolumeKg, null, 'unknown load basis has no tonnage');
+assert.equal(buildDashboard(normalizedStrong.data).coverage.totalSessions, 86);
+const projectedMissing = projectStrengthImport({ ...normalizedStrong.data, sessions: [{ ...normalizedStrong.data.sessions[0], exercises: [{ ...normalizedStrong.data.sessions[0].exercises[0], sets: [{ ...normalizedStrong.data.sessions[0].exercises[0].sets[0], reps: null, load: null }] }] }] });
+assert.equal(projectedMissing.exerciseDays[0].metrics.totalReps, null, 'missing reps do not become zero');
 const measurementCsv = inspectCsv(strongHeader + [
  '2026-01-02 12:30:00,Test,1h,Pull-Up,1,100,5,0,0,,,',
  '2026-01-02 12:30:00,Test,1h,Pull-Up,2,0,5,0,0,,,',

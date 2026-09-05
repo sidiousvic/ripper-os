@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M3 — Strong drives the existing dashboard
-Current task: V2-014
+Current task: V2-015
 Last completed task: V2-013 — Normalize Strong measurements into canonical units
-Next task: V2-014
+Next task: V2-015
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
-Tasks complete: 12
-Tasks remaining: 39
+Tasks complete: 13
+Tasks remaining: 38
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -1131,7 +1131,7 @@ Implement V2-013 only. Convert staged Strong measurements into canonical detaile
 ### V2-014 — Project detailed Strong history into shared daily analytics
 
 Status:
-TODO
+DONE
 
 Milestone:
 M3 — Strong drives the existing dashboard
@@ -3849,3 +3849,4 @@ Date/number validation is the exception to accepting invalid legacy behavior: V2
 - 2026-09-05: V2-013: Strong now emits validated detailed imports using explicit mass/distance choices, without fabricating reps, completion, timezone, load basis or bodyweight. Positive assistance supported only via explicit exercise semantics; row-unit conflicts and ambiguous sessions require input. 86 workouts and 1,903 sets retained. Next task V2-014 projects these facts into shared daily analytics.
 
 - 2026-09-05: V2-008 final regression review found simultaneous legacy aliases could lose CSV totals or complementary workbook metrics in the compatibility projection. Corrected presentation merging while retaining distinct raw canonical facts; added focused CSV/workbook collision tests. Released locally as v0.2.43 after parser/unit tests, typecheck, lint and both builds. V2-014 is next; browser worker smoke still pending file permission.
+- 2026-09-05: V2-014 completed with a pure detailed-session projection into canonical exercise days. Strong daily facts derive only from sets; unknown load basis remains non-comparable and set duration is not copied from workout duration. `buildDashboard()` accepts detailed imports through the projection; Strong UI wiring is V2-015.
