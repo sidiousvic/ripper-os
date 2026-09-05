@@ -163,10 +163,17 @@ assert.throws(() => inspectInput(new Uint8Array([80,75,0,0]), "zip.csv"), /archi
 console.log("Detection: source signatures, BOM, renamed files, unknown and ambiguous input passed");
 
 const { parseStrongRows } = await import("../lib/import/adapters/strong-rows.ts");
+const { parseHevyRows } = await import("../lib/import/adapters/hevy-rows.ts");
 const { parseImport } = await import('../lib/import/parse-import.ts');
 const strongInput = inspectInput(strongFixtureBytes, "strong.csv");
 assert.equal(parseImport(strongFixtureBytes, "strong.csv").status, "needs-input");
 const parsedStrong = parseImport(strongFixtureBytes, "strong.csv", { weightUnit: "kg", distanceUnit: "km" });
+const parsedHevyRows = parseHevyRows(inspectInput(hevyFixtureBytes, "hevy.csv"));
+assert.equal(parsedHevyRows.rows.length, 330);
+assert.equal(parsedHevyRows.rows[0].date, "2025-06-30");
+assert.equal(parsedHevyRows.rows[0].weightKg, 48);
+assert.equal(parsedHevyRows.rows[0].distanceMeters, null);
+assert.equal(parsedHevyRows.rows.some(row => row.weightKg === null && row.reps !== null), true);
 assert.equal(parsedStrong.status, "ready");
 assert.equal(parsedStrong.source, "strong");
 assert.equal(parsedStrong.dashboard.coverage.totalSessions, 86);

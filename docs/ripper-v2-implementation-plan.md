@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M5 — Imports become additive and explainable
-Current task: V2-036
-Last completed task: V2-035 — Detect Hevy without confusing Strong exports
-Next task: V2-036
+Current task: V2-037
+Last completed task: V2-036 — Parse Hevy source rows and normalize measurements
+Next task: V2-037
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
-Tasks complete: 33
-Tasks remaining: 18
+Tasks complete: 34
+Tasks remaining: 17
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -2670,7 +2670,7 @@ Implement V2-035 only. Add Hevy's verified signature to the existing detector. U
 ### V2-036 — Parse Hevy source rows and normalize measurements
 
 Status:
-TODO
+DONE
 
 Milestone:
 M7 — Hevy proves the adapter boundary
