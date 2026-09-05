@@ -928,7 +928,7 @@ export default function Home() {
         <SectionHeading
           kicker="Muscle balance"
           title="Your program changed shape"
-          description={`Early window used is ${formatDate(data.muscleWindows.early[0])} to ${formatDate(data.muscleWindows.early[1])}. Recent window is ${formatDate(data.muscleWindows.recent[0])} to ${formatDate(data.muscleWindows.recent[1])}. Values are set-equivalents per week.`}
+          description={`Early window used is ${formatDate(data.muscleWindows.early[0])} to ${formatDate(data.muscleWindows.early[1])}. Recent window is ${formatDate(data.muscleWindows.recent[0])} to ${formatDate(data.muscleWindows.recent[1])}. Values are estimated muscle sets per week; primary muscles count as 1 set and secondary muscles as 0.5.`}
         />
         <SectionInsight text={aiInsight?.sectionInsights.muscles} />
         <div className="two-column equal single-column">
@@ -938,7 +938,7 @@ export default function Home() {
               {data.muscles.filter((muscle) => muscle.earlyWeekly > 0 || muscle.recentWeekly > 0).map((muscle) => (
                 <div className="muscle-row" key={muscle.muscle}>
                   <span>{muscle.muscle}</span>
-                  <div className="muscle-tracks" aria-label={`${muscle.muscle}: early ${muscle.earlyWeekly}, recent ${muscle.recentWeekly} set-equivalents per week`}>
+                  <div className="muscle-tracks" aria-label={`${muscle.muscle}: early ${muscle.earlyWeekly}, recent ${muscle.recentWeekly} estimated muscle sets per week`}>
                     <i className="early" style={{ width: `${Math.min(100, (muscle.earlyWeekly / maxRecentMuscle) * 100)}%` }} />
                     <i className="recent" style={{ width: `${Math.min(100, (muscle.recentWeekly / maxRecentMuscle) * 100)}%` }} />
                   </div>
@@ -954,10 +954,10 @@ export default function Home() {
         <SectionHeading
           kicker="Training exposure"
           title={data.muscleHeatmap.weeks.length >= 13 ? "Your last 13 weeks at a glance" : "Your training exposure so far"}
-          description={`Each square shows the recorded set-equivalents for one muscle group in one training week. Brighter squares mean more exposure. ${data.muscleHeatmap.weeks.length < 13 ? `This export covers ${data.muscleHeatmap.weeks.length} ${data.muscleHeatmap.weeks.length === 1 ? "week" : "weeks"}.` : ""}`}
+          description={`Each square shows estimated weekly sets for one muscle group. Primary muscles count as 1 set and secondary muscles as 0.5; brighter squares mean more exposure. ${data.muscleHeatmap.weeks.length < 13 ? `This export covers ${data.muscleHeatmap.weeks.length} ${data.muscleHeatmap.weeks.length === 1 ? "week" : "weeks"}.` : ""}`}
         />
         <article className="panel heatmap-panel">
-          <div className="panel-heading"><div><p className="eyebrow">Weekly pattern</p><h3 id="muscle-heatmap-title">Muscle exposure heatmap</h3></div><span className="muted small">set-equivalents</span></div>
+          <div className="panel-heading"><div><p className="eyebrow">Weekly pattern</p><h3 id="muscle-heatmap-title">Muscle exposure heatmap</h3></div><span className="muted small" title="Primary muscle assignments count as 1 set; secondary assignments count as 0.5 set.">Estimated sets</span></div>
           <div className="muscle-heatmap-scroll" tabIndex={0} aria-label="Scrollable muscle exposure heatmap">
             <div className="muscle-heatmap">
               <div className="heatmap-header"><span />{data.muscleHeatmap.weeks.map((week) => <i key={week}>{formatDate(week, { month: "short", day: "numeric" })}</i>)}</div>
@@ -966,7 +966,7 @@ export default function Home() {
                   <span>{row.muscle}</span>
                   {row.weeks.map((value, index) => {
                     const level = value === 0 ? 0 : value < 3 ? 1 : value < 6 ? 2 : value < 10 ? 3 : 4;
-                    return <i className={`heat-${level}`} title={`${row.muscle}: ${value} sets, week of ${formatDate(data.muscleHeatmap.weeks[index])}`} aria-label={`${row.muscle}: ${value} set-equivalents, week of ${formatDate(data.muscleHeatmap.weeks[index])}`} key={`${row.muscle}-${index}`} />;
+                    return <i className={`heat-${level}`} title={`${row.muscle}: ${value} estimated sets, week of ${formatDate(data.muscleHeatmap.weeks[index])}`} aria-label={`${row.muscle}: ${value} estimated sets, week of ${formatDate(data.muscleHeatmap.weeks[index])}`} key={`${row.muscle}-${index}`} />;
                   })}
                 </div>
               ))}

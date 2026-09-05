@@ -4190,3 +4190,30 @@ button:hover {
     width: max-content;
   }
 }
+
+/* Keep the hero copy inside the same visual rail as the action grid. */
+.hero-copy > p:not(.muted) {
+  width: min(100%, 840px);
+  max-width: 840px;
+  transform: none;
+}
+
+.hero-copy > .muted.small {
+  width: min(100%, 840px);
+  max-width: 840px;
+  margin: 14px auto 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+  text-align: center;
+  transform: none;
+}
+
+/* Let the ambient model pass between sections without a hard horizontal mask. */
+.explorer-section {
+  background: linear-gradient(to bottom, rgba(6, 16, 9, 0), rgba(6, 16, 9, .58) 76px, rgba(6, 16, 9, .86) 164px);
+}
+
+.next-section {
+  background: linear-gradient(to bottom, rgba(9, 21, 13, 0), rgba(9, 21, 13, .62) 76px, rgba(9, 21, 13, .9) 164px);
+}
