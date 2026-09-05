@@ -7,6 +7,7 @@
 - Use judgment for semantic versioning: default to a patch bump for fixes and small refinements, minor for substantial compatible features, and major for breaking changes. Patch numbers have no artificial ceiling: `0.1.555` is valid. Do not roll over to a minor release just because a patch number is large.
 - Keep the shared website footer tied to the package version and build metadata so local, preview, and production environments can be compared and traced to a commit. Never hardcode a separate display version. Restart development after a version/configuration change to refresh build metadata.
 - Show only the version in the production footer; add a Local or Preview label in those environments. Keep the commit hash and source fingerprint in hover details rather than the visible label.
+- Every release must update the website version through the package bump and verify that both page footers display the version matching the release tag. Push the updated website with the release. Verify the live Vercel footer when its URL is available; otherwise report deployment verification as pending rather than treating a GitHub push as a confirmed deployment.
 - Keep commits focused. Preserve unrelated user edits; do not commit OS metadata or personal training archives.
 
 ## Commit release notes

@@ -52,7 +52,7 @@ The core row-oriented schema is:
 
 Extra columns such as `Workout ID`, `Workout`, `Set Type`, `Notes`, and `Distance` are allowed. Keep MacroFactor's original headers. FIT and additional file types are planned for a future release.
 
-The upload limit is 25 MB. XLSX archives are also checked for excessive expansion and oversized sheets before parsing.
+The local file limit is 25 MB. Files are processed in a browser Web Worker, with cancellation and a 30-second processing timeout. XLSX archive metadata is checked before parsing and worksheet dimensions are checked after decoding.
 
 ## What the dashboard does
 
@@ -65,19 +65,19 @@ The upload limit is 25 MB. XLSX archives are also checked for excessive expansio
 
 ## Privacy and OpenAI keys
 
-The original workbook is processed transiently and is not retained by Ripper OS. A normalized rendered snapshot, filename, upload time, and generated insights may be kept in this browser's `localStorage` (up to roughly 4 MB) so a refresh can restore the last export. Use **Clear uploaded data** to remove it.
+The original CSV/XLSX file is processed entirely on the user's device in a browser Web Worker. Neither the file nor its raw rows are uploaded to a server. A normalized rendered snapshot, filename, import time, and generated insights may be kept in this browser's `localStorage` (up to roughly 4 MB) so a refresh can restore the last export. Use **Clear uploaded data** to remove it. When the user explicitly requests AI insights, only the calculated summary is sent to the Ripper OS server and onward to OpenAI.
 
 OpenAI is bring-your-own-key. Ripper OS does not use a shared public API key. The key is held in memory for the current browser session, is not saved in browser storage, and is sent to the server only for the connection check or the recommendation request. OpenAI API billing is separate from a ChatGPT subscription. Revoke a key immediately if it is exposed.
 
 ## Rate limits
 
-Ripper OS applies lightweight per-network safety limits: uploads are limited to 8 per minute, connection checks to 6 per minute, and recommendation requests to 6 per minute. Recommendations also have a per-network/per-key limit of 5 requests per 10 minutes. These limits are in-memory safeguards and reset when the server instance is recycled.
+File imports are local and do not consume server requests. Ripper OS applies lightweight per-network safety limits to AI: connection checks are limited to 6 per minute and recommendation requests to 6 per minute. Recommendations also have a per-network/per-key limit of 5 requests per 10 minutes. These limits are in-memory safeguards and reset when the server instance is recycled.
 
 OpenAI applies separate project, quota, billing, and provider-throttling limits. A first request can fail when a key has no available quota or when several people share a network. Ripper OS does not add a country block, although OpenAI availability and network conditions can vary by region.
 
 ## Security notes
 
-The API routes require same-origin browser requests, enforce request-size limits, reject oversized or suspicious XLSX archives, cap workbook dimensions, sanitize model output, and return generic upstream errors. The deployed app also sends CSP, `nosniff`, referrer, permissions, and cross-origin isolation headers.
+AI routes require same-origin browser requests, limit summary sizes, sanitize model output, and return generic upstream errors. File size, archive metadata, and workbook dimensions are checked locally; parsing runs in a disposable worker so it can be cancelled or timed out. The deployed app also sends CSP, `nosniff`, referrer, permissions, and cross-origin isolation headers.
 
 The in-memory limiter is suitable for a beta, not a complete DDoS solution. For a larger public launch, add a durable Vercel WAF/Redis limit, monitoring, and alerting. Never put a user's API key in `OPENAI_API_KEY` on a public deployment.
 
@@ -97,13 +97,14 @@ The script normalizes aliases, merges daily metrics, and writes the generated JS
 
 ```bash
 npm test       # generated data shape
+npm run test:parser # synthetic local CSV/XLSX parsing checks
 npm run lint   # ESLint
 npm run build  # production build
 ```
 
 ## Deployment
 
-Because uploads and OpenAI calls use `/api/parse`, `/api/openai-connection`, and `/api/recommendations`, deployment needs a Node-compatible server or serverless adapter. Vercel is a suitable option for the current app. A static-only host can show the bundled demo but cannot process new uploads or call OpenAI.
+File parsing and calculations run in the browser; there is no `/api/parse` endpoint. OpenAI connection checks and insights still use `/api/openai-connection` and `/api/recommendations`, so the complete app needs a Node-compatible server or serverless adapter such as Vercel. The local 25 MB import limit is independent of Vercel's request-body limit because files are never posted to a function.
 
 ## Contributing and bugs
 
@@ -113,7 +114,9 @@ Open a pull request with a focused change and a short description; I will review
 
 - `app/page.tsx` — dashboard UI, charts, upload state, local snapshot restore, and interactions
 - `app/about/page.tsx` — user guide, schema, privacy, limitations, and rate-limit explanation
-- `app/api/parse/route.ts` — CSV/XLSX parsing and normalized summary generation
+- `lib/training-parser.ts` — local CSV/XLSX parsing and normalized summary generation
+- `lib/training-parser.worker.ts` — browser worker that reads the file and runs calculations
+- `lib/import-training-file.ts` — worker lifecycle, cancellation, and timeout
 - `app/api/openai-connection/route.ts` — transient OpenAI model access check
 - `app/api/recommendations/route.ts` — guarded AI recommendation route
 - `app/globals.css` — visual system and responsive layout

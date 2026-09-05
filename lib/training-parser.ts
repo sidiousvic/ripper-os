@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
 import * as XLSX from "xlsx";
-import { isSameOrigin, takeRateLimit, tooManyRequests } from "../../../lib/security";
+import { MAX_IMPORT_BYTES } from "./import-limits.mjs";
 
-export const runtime = "nodejs";
 const DAY = 86400000;
 const epoch = Date.UTC(1899, 11, 30);
 const n = (v: unknown) => typeof v === "number" && Number.isFinite(v) ? v : 0;
@@ -12,7 +11,6 @@ const clean = (v: unknown) => String(v ?? "").replace(/ \((kg|sets|reps|sec)\)$/
 const family = (name: string) => { const s = name.toLowerCase(); if (s.includes("raise") || s.includes("overhead press")) return "Shoulders"; if (s.includes("bench") || s.includes("push") || s.includes("fly")) return "Chest"; if (s.includes("dip") || s.includes("triceps")) return "Triceps"; if (s.includes("pull") || s.includes("chin") || s.includes("row")) return "Back"; if (s.includes("curl") && !s.includes("leg curl")) return "Biceps"; if (s.includes("squat") || s.includes("lunge") || s.includes("leg extension")) return "Quads"; if (s.includes("deadlift") || s.includes("swing") || s.includes("hip thrust") || s.includes("leg curl")) return "Posterior chain"; if (s.includes("calf")) return "Calves"; if (s.includes("crunch") || s.includes("plank")) return "Core"; return "Other"; };
 const aliases = new Map([["Wide Grip Pull Up", "Wide Grip Pull-Up"], ["Bench Dips", "Bench Dip"], ["Jumping Rope", "Jump Rope"]]);
 const canonical = (v: unknown) => { const name = clean(v).split(" ∈ ")[0].trim(); return aliases.get(name) ?? name; };
-const MAX_FILE_SIZE = 25 * 1024 * 1024;
 const MAX_XLSX_EXPANDED_SIZE = 150 * 1024 * 1024;
 const readU16 = (bytes: Uint8Array, offset: number) => bytes[offset] | (bytes[offset + 1] << 8);
 const readU32 = (bytes: Uint8Array, offset: number) => (bytes[offset] | (bytes[offset + 1] << 8) | (bytes[offset + 2] << 16) | (bytes[offset + 3] << 24)) >>> 0;
@@ -31,35 +29,28 @@ const hasSafeZipDirectory = (bytes: Uint8Array) => {
   }
   return true;
 };
-const safeParseMessage = (error: unknown) => {
+export const safeParseMessage = (error: unknown) => {
   const message = error instanceof Error ? error.message : "";
   if (/No workout sessions/i.test(message)) return "No workout sessions were found in this MacroFactor export.";
   if (/Missing required MacroFactor sheet/i.test(message)) return "This workbook is missing a required MacroFactor workout sheet.";
   return "Could not parse this export. Confirm it is a supported MacroFactor CSV or XLSX file and try again.";
 };
 
-export async function POST(request: Request) {
-  if (!isSameOrigin(request)) return Response.json({ error: "Cross-site uploads are not allowed." }, { status: 403 });
-  const limit = takeRateLimit(request, "parse", 8, 60_000);
-  if (!limit.allowed) return tooManyRequests(limit.retryAfter);
-  const contentLength = Number(request.headers.get("content-length") ?? 0);
-  if (contentLength > MAX_FILE_SIZE + 1_000_000) return Response.json({ error: "The upload is larger than the 25 MB limit." }, { status: 413 });
-  const form = await request.formData(); const file = form.get("file");
-  if (!(file instanceof File)) return Response.json({ error: "Upload a MacroFactor .xlsx or .csv file." }, { status: 400 });
-  if (!/\.(xlsx|csv)$/i.test(file.name)) return Response.json({ error: "Upload a MacroFactor .xlsx or .csv export." }, { status: 400 });
-  if (file.size > MAX_FILE_SIZE) return Response.json({ error: "The workbook is larger than the 25 MB upload limit." }, { status: 413 });
-  try {
-    const fileBytes = new Uint8Array(await file.arrayBuffer()); const xlsx = file.name.toLowerCase().endsWith(".xlsx");
+/** Pure local parser. Called only inside the browser worker; no network access. */
+export function parseTrainingFile(fileBytes: Uint8Array, fileName: string) {
+  if (!/\.(xlsx|csv)$/i.test(fileName)) throw new Error("Choose a MacroFactor .xlsx or .csv export.");
+  if (fileBytes.byteLength > MAX_IMPORT_BYTES) throw new Error("The export is larger than the 25 MB import limit.");
+  const xlsx = fileName.toLowerCase().endsWith(".xlsx");
     if (xlsx && !hasSafeZipDirectory(fileBytes)) throw new Error("Invalid workbook archive.");
     if (!xlsx && (fileBytes.includes(0) || !new TextDecoder("utf-8", { fatal: true }).decode(fileBytes.slice(0, Math.min(fileBytes.length, 8192))).trim())) throw new Error("Invalid CSV file.");
     const wb = XLSX.read(fileBytes, { type: "array", cellDates: true });
     if (!wb.SheetNames.length || wb.SheetNames.length > 60) throw new Error("Unsupported workbook structure.");
     for (const sheetName of wb.SheetNames) { const ref = wb.Sheets[sheetName]?.["!ref"]; if (!ref) continue; const range = XLSX.utils.decode_range(ref); if (range.e.r > 100_000 || range.e.c > 500) throw new Error("Workbook is too large to process safely."); }
-    const rows = (name: string, required = false) => { const sheet = wb.Sheets[name]; if (!sheet) { if (required) throw new Error(`Missing required MacroFactor sheet: ${name}`); return []; } return XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: null }) as unknown[][]; };
+    const rows = (name: string, required = false) => { const sheet = wb.Sheets[name]; if (!sheet) { if (required) throw new Error(`Missing required MacroFactor sheet: ${name}`); return []; } return XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, UTC: true, defval: null }) as unknown[][]; };
     const map = new Map<string, any>();
     const merge = (sheet: string, field: string) => { const values = rows(sheet); const headers = values[0]?.map(clean) ?? []; for (const row of values.slice(1)) { const date = key(row[0]); if (!date) continue; for (let c = 1; c < headers.length; c += 1) { const value = n(row[c]); if (!value) continue; const exercise = canonical(headers[c]); const id = `${date}|${exercise}`; const item = map.get(id) ?? { date, source: "MacroFactor", exercise, family: family(exercise), totalSets: null, totalReps: null, bestSetReps: null, heaviestKg: null, totalVolumeKg: null, e1rmKg: null, durationSec: null }; item[field] = value; map.set(id, item); } } };
-    if (file.name.toLowerCase().endsWith(".csv")) {
-      const csvRows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true, defval: null }) as unknown[][];
+    if (fileName.toLowerCase().endsWith(".csv")) {
+      const csvRows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true, UTC: true, defval: null }) as unknown[][];
       const headers = csvRows[0]?.map(clean) ?? []; const index = (name: string) => headers.findIndex((header) => header.toLowerCase() === clean(name).toLowerCase());
       const dateCol = index("Date"), exerciseCol = index("Exercise"), weightCol = index("Weight (kg)"), repsCol = index("Reps"), workoutDurationCol = index("Workout Duration"), durationCol = index("Duration");
       for (const row of csvRows.slice(1)) { const date = key(row[dateCol]); const exercise = canonical(row[exerciseCol]); if (!date || !exercise) continue; const id = `${date}|${exercise}`; const item = map.get(id) ?? { date, source: "MacroFactor", exercise, family: family(exercise), totalSets: 0, totalReps: 0, bestSetReps: 0, heaviestKg: 0, totalVolumeKg: 0, e1rmKg: null, durationSec: null }; const weight = n(row[weightCol]); const reps = n(row[repsCol]); item.totalSets += 1; item.totalReps += reps; item.bestSetReps = Math.max(item.bestSetReps, reps); item.heaviestKg = Math.max(item.heaviestKg, weight); item.totalVolumeKg += weight * reps; item.durationSec = n(row[durationCol]) || n(row[workoutDurationCol]) || item.durationSec; map.set(id, item); }
@@ -75,7 +66,7 @@ export async function POST(request: Request) {
     // MacroFactor's muscle sheet is a dated set-equivalent ledger. Keep the two
     // comparison windows separate: previously these were both derived from the
     // all-time total, which made every pair of lines the same length.
-    const muscleValues = file.name.toLowerCase().endsWith(".csv") ? [["Date"]] : rows("Muscle Groups - Sets");
+    const muscleValues = fileName.toLowerCase().endsWith(".csv") ? [["Date"]] : rows("Muscle Groups - Sets");
     const muscleHeaders = muscleValues[0]?.map(clean) ?? [];
     const muscleRows = muscleValues.slice(1).flatMap((row) => {
       const date = key(row[0]);
@@ -120,6 +111,5 @@ export async function POST(request: Request) {
     const attendance: any[] = []; const firstWeek = new Date(`${monday(first)}T00:00:00Z`); const lastWeek = new Date(`${monday(last)}T00:00:00Z`); let currentStreak = 0; let longestStreak = 0;
     for (let cursor = firstWeek; cursor <= lastWeek; cursor = new Date(cursor.valueOf() + 7 * DAY)) { const week = cursor.toISOString().slice(0, 10); const active = weekMap.get(week) ?? new Set<string>(); const days = Array.from({ length: 7 }, (_, index) => { const date = new Date(cursor.valueOf() + index * DAY).toISOString().slice(0, 10); const sets = dailySets.get(date) ?? 0; const load = dailyLoad.get(date) ?? 0; const ratio = maxDailyLoad ? load / maxDailyLoad : 0; return sets ? maxDailyLoad ? ratio >= .66 ? 3 : ratio >= .33 ? 2 : 1 : sets >= 16 ? 3 : sets >= 8 ? 2 : 1 : 0; }); attendance.push({ week, days, sessions: active.size }); if (active.size) { currentStreak += 1; longestStreak = Math.max(longestStreak, currentStreak); } else currentStreak = 0; }
     const complete = months.filter((x) => x.coverage === "complete"); const payload = { generatedAt: new Date().toISOString(), coverage: { firstDate: first, lastDate: last, journeyDays: Math.round((Date.parse(`${last}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) / DAY) + 1, totalSessions: sessions.length, averageSessionsPerMonth: r(sessions.length / months.length), averageSessionsPerWeek: r(sessions.length / (((Date.parse(`${last}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) / DAY + 1) / 7)), exerciseCount: exercises.length, longestActiveWeekStreak: longestStreak }, monthly: months, busiestMonths: [...complete].sort((a, b) => b.sessions - a.sessions).slice(0, 5), quietestMonths: [...complete].sort((a, b) => a.sessions - b.sessions).slice(0, 5), gaps, attendance, exercises, muscleWindows: { early: [earlyStart, earlyEnd], recent: [recentStart, recentEnd] }, muscles, muscleHeatmap, achievements, methodology: { strength: "Weighted exercise progress defaults to the heaviest recorded load.", muscles: "Muscle balance uses muscle-group set equivalents. These are exposure signals, not diagnoses.", caveat: "Confirm sudden load changes against the exercise setup." } };
-    return Response.json(payload, { headers: { "cache-control": "no-store" } });
-  } catch (error) { return Response.json({ error: safeParseMessage(error) }, { status: 422 }); }
+    return payload;
 }

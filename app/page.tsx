@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Footer from "./footer";
+import { importTrainingFile } from "../lib/import-training-file";
 import {
   Bar,
   CartesianGrid,
@@ -79,7 +80,7 @@ const metricMeta: Record<MetricKey, { label: string; short: string; unit: string
 };
 
 const formatDate = (value: string, options?: Intl.DateTimeFormatOptions) =>
-  new Intl.DateTimeFormat("en", options ?? { day: "numeric", month: "short", year: "numeric" }).format(new Date(`${value}T00:00:00Z`));
+  new Intl.DateTimeFormat("en", { ...(options ?? { day: "numeric", month: "short", year: "numeric" }), timeZone: "UTC" }).format(new Date(`${value}T00:00:00Z`));
 const formatMonth = (value: string) => formatDate(`${value}-01`, { month: "short", year: "2-digit" });
 const formatNumber = (value: number, maximumFractionDigits = 1) =>
   new Intl.NumberFormat("en", { maximumFractionDigits }).format(value);
@@ -205,6 +206,9 @@ function MeasuredChart({ className, children }: { className: string; children: R
 export default function Home() {
   const [dataVersion, redraw] = useState(0);
   const [uploadState, setUploadState] = useState<string>("");
+  const [importing, setImporting] = useState(false);
+  const importController = useRef<AbortController | null>(null);
+  useEffect(() => () => importController.current?.abort(), []);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [aiInsight, setAiInsight] = useState<AiInsight | null>(null);
   const [recommendationState, setRecommendationState] = useState<string>("");
@@ -256,15 +260,18 @@ export default function Home() {
   /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+    const input = event.currentTarget;
+    const file = input.files?.[0];
     if (!file) return;
-    setUploadState("Parsing MacroFactor export…");
-    const form = new FormData();
-    form.append("file", file);
+    input.value = "";
+    importController.current?.abort();
+    const controller = new AbortController();
+    importController.current = controller;
+    setImporting(true);
+    setUploadState("Processing MacroFactor export on this device…");
     try {
-      const response = await fetch("/api/parse", { method: "POST", body: form });
-      const payload = await response.json() as unknown as UploadPayload;
-      if (!response.ok) throw new Error(payload.error ?? "Could not parse the workbook.");
+      const payload = await importTrainingFile(file, controller.signal) as unknown as UploadPayload;
+      if (controller.signal.aborted) return;
       data = payload;
       exercises = data.exercises as Exercise[];
       const uploadedAt = new Date().toISOString();
@@ -283,13 +290,17 @@ export default function Home() {
       setRecommendationError("");
       redraw((value) => value + 1);
     } catch (error) {
-      setUploadState(error instanceof Error ? error.message : "Could not parse the workbook.");
+      if (!controller.signal.aborted) setUploadState(error instanceof Error ? error.message : "Could not parse the workbook.");
     } finally {
-      event.target.value = "";
+      if (importController.current === controller) {
+        importController.current = null;
+        setImporting(false);
+      }
     }
   };
 
   const clearUploadedData = () => {
+    importController.current?.abort();
     localStorage.removeItem(sessionDataKey);
     data = demoData;
     exercises = data.exercises as Exercise[];
@@ -426,7 +437,9 @@ export default function Home() {
             {hasUploadedData && <button className="button ai-action" onClick={generateRecommendations} disabled={recommendationState.startsWith("Generating")}><Sparkles size={16} /> Generate AI insights</button>}
           </div>
           <p className="export-guide-link"><a href="/about">How to export my MacroFactor data</a></p>
+          <p className="muted small">Your file stays on this device. AI insights are optional.</p>
           {uploadState && <p className="upload-status" role="status">{uploadState}</p>}
+          {importing && <button className="button secondary" onClick={() => { importController.current?.abort(); setUploadState("Import cancelled."); }}>Cancel import</button>}
         </div>
       </section>
 

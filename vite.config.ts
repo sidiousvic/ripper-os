@@ -4,6 +4,7 @@ import vinext from 'vinext';
 import { defineConfig } from 'vite';
 import hostingConfig from './.openai/hosting.json';
 import { getBuildInfo } from './lib/build-info';
+import { fileURLToPath } from 'node:url';
 
 const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
   '00000000-0000-4000-8000-000000000000';
@@ -47,6 +48,11 @@ export default defineConfig(async ({ command }) => {
   const { cloudflare } = await import('@cloudflare/vite-plugin');
 
   return {
+    resolve: {
+      alias: {
+        './create-training-worker': fileURLToPath(new URL('./lib/create-training-worker.vite.ts', import.meta.url)),
+      },
+    },
     define: {
       'process.env.NEXT_PUBLIC_APP_VERSION': JSON.stringify(build.version),
       'process.env.NEXT_PUBLIC_BUILD_SOURCE': JSON.stringify(build.source),

@@ -31,7 +31,7 @@ const workbook = XLSX.read(await fs.readFile(macroFactorPath), { type: "buffer",
 const rowsFrom = (name) => {
   const sheet = workbook.Sheets[name];
   if (!sheet) throw new Error(`Missing required MacroFactor sheet: ${name}`);
-  return XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: null });
+  return XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, UTC: true, defval: null });
 };
 const sortByDate = (a, b) => a.date.localeCompare(b.date);
 
