@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M5 — Imports become additive and explainable
-Current task: V2-047
-Last completed task: V2-044 — Add a small versioned derived muscle exposure model
-Next task: V2-047
+Current task: V2-048
+Last completed task: V2-047 — Display preferred units without altering canonical values
+Next task: V2-048
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
-Tasks complete: 42
-Tasks remaining: 9
+Tasks complete: 43
+Tasks remaining: 8
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -3451,7 +3451,7 @@ Implement V2-046 only. Implement a transparent same-day/prior-measurement lookup
 ### V2-047 — Display preferred units without altering canonical values
 
 Status:
-TODO
+DONE
 
 Milestone:
 M8 — Improve meaning after preserving behavior

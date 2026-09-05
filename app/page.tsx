@@ -60,6 +60,9 @@ type AiInsight = { sustainedPractice: string; nextYearRule: string; sectionInsig
 const demoData = demoDataJson as unknown as DashboardData;
 type UploadPayload = DashboardData & { error?: string; recommendations?: Recommendation[]; sustainedPractice?: string; nextYearRule?: string; sectionInsights?: Record<string, string> };
 type ReadyImport = Extract<ImportOutcome, { status: "ready" }>;
+type UnitPromptKind = "weight" | "distance";
+type UnitPromptValue = "kg" | "lb" | "m" | "km" | "mi";
+type UnitPromptRequest = { resolve: (value: string | null) => void; cleanup: () => void };
 
 const emptyExercise: Exercise = { exerciseId: "empty", comparisonKey: "empty", seriesId: "empty", name: "No exercise selected", family: "—", defaultMetric: "totalSets", availableMetrics: ["totalSets"], firstDate: "1970-01-01", lastDate: "1970-01-01", sessions: 0, totalSets: 0, totalReps: 0, totalVolumeKg: 0, progress: [] };
 const exerciseSeriesId = (exercise: Exercise) => exercise.seriesId || exercise.exerciseId || exercise.name;
@@ -84,6 +87,7 @@ const formatMonth = (value: string) => formatDate(`${value}-01`, { month: "short
 const formatNumber = (value: number, maximumFractionDigits = 1) =>
   new Intl.NumberFormat("en", { maximumFractionDigits }).format(value);
 const metricValue = (record: ProgressRecord, metric: MetricKey) => record[metric];
+const toDisplayLoad = (value: number, unit: "kg" | "lb") => unit === "lb" ? value / 0.45359237 : value;
 const metricSeries = (exercise: Exercise, metric: MetricKey) => exercise.progress
   .filter((record) => metricValue(record, metric) !== null)
   .map((record) => ({ ...record, value: metricValue(record, metric)! }));
@@ -210,6 +214,8 @@ export default function Home() {
   const datasetRevision = useRef(0);
   const aiController = useRef<AbortController | null>(null);
   const [notice, setNotice] = useState<string>("");
+  const [unitPrompt, setUnitPrompt] = useState<{ kind: UnitPromptKind; fileName: string } | null>(null);
+  const unitPromptRequest = useRef<UnitPromptRequest | null>(null);
   const [loadedImport, setLoadedImport] = useState<ReadyImport["importData"] | null>(null);
   const [loadedSource, setLoadedSource] = useState<string>("");
   const [historyImports, setHistoryImports] = useState<HistoryImport[]>([]);
@@ -232,9 +238,32 @@ export default function Home() {
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const [loadedExportOpen, setLoadedExportOpen] = useState(false);
   const [recommendationError, setRecommendationError] = useState("");
-  const activeModal = recommendationError ? "recommendation-error" : notice ? "notice" : connectOpen ? "connect" : loadedExportOpen ? "loaded-export" : aiConsentOpen ? "ai-consent" : clearConfirmOpen ? "clear" : mappingCandidate ? "exercise-mapping" : pendingConflict ? "import-conflict" : pendingImport ? "import-preview" : importReport ? "import-report" : "";
+  const resolveUnitPrompt = useCallback((value: string | null) => {
+    const request = unitPromptRequest.current;
+    if (!request) return;
+    unitPromptRequest.current = null;
+    request.cleanup();
+    setUnitPrompt(null);
+    request.resolve(value);
+  }, []);
+  const requestUnit = (kind: UnitPromptKind, fileName: string, signal: AbortSignal) => new Promise<string | null>((resolve) => {
+    const cleanup = () => signal.removeEventListener("abort", onAbort);
+    const onAbort = () => {
+      if (unitPromptRequest.current?.resolve !== resolve) return;
+      unitPromptRequest.current = null;
+      cleanup();
+      setUnitPrompt(null);
+      resolve(null);
+    };
+    unitPromptRequest.current = { resolve, cleanup };
+    setUnitPrompt({ kind, fileName });
+    if (signal.aborted) onAbort();
+    else signal.addEventListener("abort", onAbort, { once: true });
+  });
+  const activeModal = recommendationError ? "recommendation-error" : unitPrompt ? "unit-prompt" : notice ? "notice" : connectOpen ? "connect" : loadedExportOpen ? "loaded-export" : aiConsentOpen ? "ai-consent" : clearConfirmOpen ? "clear" : mappingCandidate ? "exercise-mapping" : pendingConflict ? "import-conflict" : pendingImport ? "import-preview" : importReport ? "import-report" : "";
   const closeActiveModal = useCallback(() => {
     if (recommendationError) setRecommendationError("");
+    else if (unitPrompt) resolveUnitPrompt(null);
     else if (notice) setNotice("");
     else if (connectOpen) setConnectOpen(false);
     else if (loadedExportOpen) setLoadedExportOpen(false);
@@ -244,7 +273,7 @@ export default function Home() {
     else if (pendingConflict) setPendingConflict(null);
     else if (pendingImport) setPendingImport(null);
     else if (importReport) setImportReport(null);
-  }, [recommendationError, notice, connectOpen, loadedExportOpen, aiConsentOpen, clearConfirmOpen, mappingCandidate, pendingConflict, pendingImport, importReport]);
+  }, [recommendationError, unitPrompt, notice, connectOpen, loadedExportOpen, aiConsentOpen, clearConfirmOpen, mappingCandidate, pendingConflict, pendingImport, importReport, resolveUnitPrompt]);
   useEffect(() => {
     if (!activeModal) return;
     const previous = document.activeElement as HTMLElement | null;
@@ -266,6 +295,8 @@ export default function Home() {
   const [selectedExerciseId, setSelectedExerciseId] = useState(() => { const featured = featuredExercise(exercises); return featured ? exerciseSeriesId(featured) : ""; });
   const selectedExercise = exercises.find((exercise) => exerciseSeriesId(exercise) === selectedExerciseId) ?? featuredExercise(exercises) ?? emptyExercise;
   const [selectedMetric, setSelectedMetric] = useState<MetricKey>(selectedExercise.defaultMetric);
+  const [displayUnit, setDisplayUnit] = useState<"kg" | "lb">(() => { try { const saved = typeof window !== "undefined" ? localStorage.getItem("ripper-display-unit") : null; return saved === "lb" ? "lb" : "kg"; } catch { return "kg"; } });
+  useEffect(() => { try { localStorage.setItem("ripper-display-unit", displayUnit); } catch {} }, [displayUnit]);
   const [comparisonMetric, setComparisonMetric] = useState<MetricKey | "">(() => preferredComparisonMetric(selectedExercise, selectedMetric));
   const [search, setSearch] = useState("");
   const [family, setFamily] = useState("All");
@@ -335,12 +366,12 @@ export default function Home() {
           let outcome = await importTrainingFile(file, operation.signal, options);
           if (outcome.status === "needs-input") {
             if (outcome.needs.includes("weight-unit")) {
-              const unit = window.prompt(`Strong does not label the Weight column in ${file.name}. Enter its unit (kg or lb).`, "kg")?.trim().toLowerCase();
+              const unit = (await requestUnit("weight", file.name, operation.signal))?.trim().toLowerCase();
               if (unit !== "kg" && unit !== "lb") { failures.push(`${file.name}: weight unit required`); continue; }
               options = { ...options, weightUnit: unit };
             }
             if (outcome.needs.includes("distance-unit")) {
-              const unit = window.prompt(`Strong does not label the Distance column in ${file.name}. Enter its unit (m, km, or mi).`, "km")?.trim().toLowerCase();
+              const unit = (await requestUnit("distance", file.name, operation.signal))?.trim().toLowerCase();
               if (unit !== "m" && unit !== "km" && unit !== "mi") { failures.push(`${file.name}: distance unit required`); continue; }
               options = { ...options, distanceUnit: unit };
             }
@@ -738,10 +769,9 @@ export default function Home() {
             <div className="panel-heading"><div><p className="eyebrow">Longest pauses</p><h3>Your top five gaps</h3></div></div>
             <div className="gap-list">
               {data.gaps.slice(0, 5).map((gap, index) => (
-                <div className="gap-row" key={`${gap.from}-${gap.to}`}>
+                <div className="gap-row" key={`${gap.from}-${gap.to}`} aria-label={`${gap.daysOff} ${gap.daysOff === 1 ? "day" : "days"} off from ${formatDate(gap.from)} to ${formatDate(gap.to)}`}>
                   <span className="rank-number">{index + 1}</span>
-                  <div><strong>{gap.daysBetween} days between sessions</strong><span>{formatDate(gap.from, { day: "numeric", month: "short" })} → {formatDate(gap.to, { day: "numeric", month: "short", year: "numeric" })}</span></div>
-                  <b>{gap.daysOff}<small> days off</small></b>
+                  <div className="gap-summary"><strong>{gap.daysOff} {gap.daysOff === 1 ? "day" : "days"} off</strong><span>{formatDate(gap.from, { day: "numeric", month: "short" })} → {formatDate(gap.to, { day: "numeric", month: "short", year: "numeric" })}</span></div>
                 </div>
               ))}
             </div>
@@ -786,12 +816,15 @@ export default function Home() {
                   {selectedExercise.availableMetrics.filter((metric) => metric !== selectedMetric).map((metric) => <option value={metric} key={metric}>{metricMeta[metric].label}</option>)}
                 </select>
               </label>
+              <label className="metric-select">Units
+                <select value={displayUnit} onChange={(event) => setDisplayUnit(event.target.value as "kg" | "lb")}><option value="kg">Kilograms</option><option value="lb">Pounds</option></select>
+              </label>
               </div>
             </div>
             <div className="focus-metrics">
-              <div><span>Starting</span><strong>{formatNumber(selectedFirst)} <small>{selectedMeta.unit}</small></strong></div>
-              <div><span>Latest</span><strong>{formatNumber(selectedLatest)} <small>{selectedMeta.unit}</small></strong></div>
-              <div><span>All-time peak</span><strong>{formatNumber(selectedPeak)} <small>{selectedMeta.unit}</small></strong></div>
+              <div><span>Starting</span><strong>{formatNumber(selectedMetric === "heaviestKg" || selectedMetric === "e1rmKg" ? toDisplayLoad(selectedFirst, displayUnit) : selectedFirst)} <small>{selectedMetric === "heaviestKg" || selectedMetric === "e1rmKg" ? displayUnit : selectedMeta.unit}</small></strong></div>
+              <div><span>Latest</span><strong>{formatNumber(selectedMetric === "heaviestKg" || selectedMetric === "e1rmKg" ? toDisplayLoad(selectedLatest, displayUnit) : selectedLatest)} <small>{selectedMetric === "heaviestKg" || selectedMetric === "e1rmKg" ? displayUnit : selectedMeta.unit}</small></strong></div>
+              <div><span>All-time peak</span><strong>{formatNumber(selectedMetric === "heaviestKg" || selectedMetric === "e1rmKg" ? toDisplayLoad(selectedPeak, displayUnit) : selectedPeak)} <small>{selectedMetric === "heaviestKg" || selectedMetric === "e1rmKg" ? displayUnit : selectedMeta.unit}</small></strong></div>
               <div><span>First → latest</span><strong><Delta value={selectedChange} /></strong></div>
             </div>
             <div className="legend-inline focus-legend"><span><i className="legend-history" /> {selectedMeta.label}</span>{comparisonMeta && <span><i className="legend-latest" /> {comparisonMeta.label}</span>}</div>
@@ -859,7 +892,7 @@ export default function Home() {
           <article className="panel muscle-bars-panel">
             <div className="panel-heading"><div><p className="eyebrow">Early vs recent</p><h3>Weekly exposure by muscle</h3></div><div className="legend-inline"><span><i className="legend-early" /> Early</span><span><i className="legend-recent" /> Recent</span></div></div>
             <div className="muscle-bars">
-              {data.muscles.map((muscle) => (
+              {data.muscles.filter((muscle) => muscle.earlyWeekly > 0 || muscle.recentWeekly > 0).map((muscle) => (
                 <div className="muscle-row" key={muscle.muscle}>
                   <span>{muscle.muscle}</span>
                   <div className="muscle-tracks" aria-label={`${muscle.muscle}: early ${muscle.earlyWeekly}, recent ${muscle.recentWeekly} set-equivalents per week`}>
