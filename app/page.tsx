@@ -575,7 +575,7 @@ export default function Home() {
                   <YAxis yAxisId="cumulative" orientation="right" tick={{ fill: "var(--color-text-muted)", fontSize: 16 }} axisLine={false} tickLine={false} />
                   <Tooltip content={<ChartTooltip />} cursor={{ fill: "rgba(57, 255, 102, .08)" }} />
                   <Bar yAxisId="sessions" dataKey="sessions" name="Sessions" fill="var(--chart-1)" radius={[4, 4, 1, 1]} maxBarSize={24} />
-                  <Line yAxisId="cumulative" type="monotone" dataKey="cumulative" name="Cumulative" stroke="var(--chart-2)" strokeWidth={2.5} dot={false} />
+                  <Line yAxisId="cumulative" type="monotone" dataKey="cumulative" name="Cumulative" stroke="var(--chart-2)" strokeWidth={1.75} dot={false} />
                 </ComposedChart>
               </ResponsiveContainer>
             </MeasuredChart>
@@ -684,8 +684,8 @@ export default function Home() {
                     <YAxis tick={{ fill: "var(--color-text-muted)", fontSize: 16 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
                     {comparisonMeta && <YAxis yAxisId="comparison" orientation="right" tick={{ fill: "var(--chart-2)", fontSize: 14 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />}
                     <Tooltip content={<ChartTooltip unit={selectedMeta.unit} comparisonUnit={comparisonMeta?.unit} />} cursor={{ stroke: "var(--color-border-strong)", strokeDasharray: "3 3" }} />
-                    <Line type="monotone" dataKey="primaryValue" name={selectedMeta.label} stroke="url(#exercise-line-gradient)" strokeWidth={3.5} connectNulls dot={{ r: 2.5, fill: "var(--color-bg)", strokeWidth: 2 }} activeDot={{ r: 5 }} />
-                    {comparisonMeta && <Line yAxisId="comparison" type="monotone" dataKey="comparisonValue" name={comparisonMeta.label} stroke="var(--chart-2)" strokeWidth={2.5} strokeDasharray="5 4" connectNulls dot={{ r: 2, fill: "var(--color-bg)", strokeWidth: 2 }} activeDot={{ r: 5 }} />}
+                    <Line type="monotone" dataKey="primaryValue" name={selectedMeta.label} stroke="url(#exercise-line-gradient)" strokeWidth={1.75} connectNulls dot={{ r: 1.75, fill: "var(--color-bg)", strokeWidth: 1.5 }} activeDot={{ r: 3 }} />
+                    {comparisonMeta && <Line yAxisId="comparison" type="monotone" dataKey="comparisonValue" name={comparisonMeta.label} stroke="var(--chart-2)" strokeWidth={1.5} strokeDasharray="5 4" connectNulls dot={{ r: 1.5, fill: "var(--color-bg)", strokeWidth: 1.5 }} activeDot={{ r: 3 }} />}
                   </LineChart>
                 </ResponsiveContainer>
               ) : <div className="empty-state">Only one measurable point is available for this metric.</div>}
