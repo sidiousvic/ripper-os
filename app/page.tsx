@@ -16,6 +16,7 @@ import ImportConflicts from "../components/import/import-conflicts";
 import { ImportController } from "../lib/import/import-controller";
 import ImportReportDialog from "../components/import/import-report";
 import ComparisonContextControls from "../components/dashboard/comparison-context-controls";
+import AmbientWireframe from "../components/ambient-wireframe";
 import { createImportReport, type ImportReport } from "../lib/import/import-report";
 import { TRAINING_SNAPSHOT_KEY } from "../lib/training-snapshot.mjs";
 import { clearTrainingHistory, loadTrainingHistory, saveTrainingHistory } from "../lib/storage/training-store";
@@ -89,6 +90,9 @@ const formatNumber = (value: number, maximumFractionDigits = 1) =>
   new Intl.NumberFormat("en", { maximumFractionDigits }).format(value);
 const metricValue = (record: ProgressRecord, metric: MetricKey) => record[metric];
 const toDisplayLoad = (value: number, unit: "kg" | "lb") => unit === "lb" ? value / 0.45359237 : value;
+const usesDisplayUnit = (metric: MetricKey) => metric === "heaviestKg" || metric === "e1rmKg" || metric === "totalVolumeKg";
+const toDisplayMetric = (value: number, metric: MetricKey, unit: "kg" | "lb") => usesDisplayUnit(metric) ? toDisplayLoad(value, unit) : value;
+const metricDisplayUnit = (metric: MetricKey, unit: "kg" | "lb") => metric === "totalVolumeKg" ? `${unit}·reps` : usesDisplayUnit(metric) ? unit : metricMeta[metric].unit;
 const metricSeries = (exercise: Exercise, metric: MetricKey) => exercise.progress
   .filter((record) => metricValue(record, metric) !== null)
   .map((record) => ({ ...record, value: metricValue(record, metric)! }));
@@ -215,6 +219,7 @@ export default function Home() {
   const datasetRevision = useRef(0);
   const aiController = useRef<AbortController | null>(null);
   const [notice, setNotice] = useState<string>("");
+  const [topbarHidden, setTopbarHidden] = useState(false);
   const [unitPrompt, setUnitPrompt] = useState<{ kind: UnitPromptKind; fileName: string } | null>(null);
   const unitPromptRequest = useRef<UnitPromptRequest | null>(null);
   const [loadedImport, setLoadedImport] = useState<ReadyImport["importData"] | null>(null);
@@ -228,6 +233,18 @@ export default function Home() {
   const [importing, setImporting] = useState(false);
   const importController = useRef(new ImportController());
   useEffect(() => () => { importController.current.cancel(); aiController.current?.abort(); datasetRevision.current += 1; }, []);
+  useEffect(() => {
+    let previousScrollY = window.scrollY;
+    const onScroll = () => {
+      const currentScrollY = window.scrollY;
+      const delta = currentScrollY - previousScrollY;
+      if (currentScrollY <= 24 || delta < -4) setTopbarHidden(false);
+      else if (delta > 4) setTopbarHidden(true);
+      previousScrollY = currentScrollY;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [aiInsight, setAiInsight] = useState<AiInsight | null>(null);
   const [recommendationState, setRecommendationState] = useState<string>("");
@@ -448,6 +465,8 @@ export default function Home() {
 
   const applyExerciseMapping = (override: ExerciseOverride | null) => {
     if (!mappingCandidate) return;
+    const currentIndex = mappingCandidates.findIndex(candidate => candidate.key === mappingCandidate.key);
+    const nextCandidate = mappingCandidates[currentIndex + 1] ?? null;
     const nextOverrides = { ...exerciseOverrides };
     if (override) nextOverrides[mappingCandidate.key] = override;
     else delete nextOverrides[mappingCandidate.key];
@@ -467,8 +486,14 @@ export default function Home() {
     setAiInsight(null);
     setRecommendationState("");
     setRecommendationError("");
-    setMappingCandidate(null);
+    setMappingCandidate(nextCandidate);
     void saveTrainingHistory({ schemaVersion: 1, imports: nextImports, exerciseOverrides: nextOverrides });
+  };
+  const navigateMapping = (direction: -1 | 1) => {
+    if (!mappingCandidate) return;
+    const index = mappingCandidates.findIndex(candidate => candidate.key === mappingCandidate.key);
+    const next = mappingCandidates[index + direction];
+    if (next) setMappingCandidate(next);
   };
 
   const clearUploadedData = () => {
@@ -599,12 +624,18 @@ export default function Home() {
   const comparisonMeta = comparisonMetric ? metricMeta[comparisonMetric] : null;
   const comparisonSeries = comparisonMetric ? metricSeries(selectedExercise, comparisonMetric) : [];
   const comparisonByDate = new Map(comparisonSeries.map((record) => [record.date, record.value]));
-  const selectedChartData = selectedSeries.map((record) => ({ ...record, primaryValue: record.value, comparisonValue: comparisonByDate.get(record.date) ?? null }));
+  const selectedChartData = selectedSeries.map((record) => ({
+    ...record,
+    primaryValue: toDisplayMetric(record.value, selectedMetric, displayUnit),
+    comparisonValue: comparisonByDate.has(record.date) && comparisonMetric ? toDisplayMetric(comparisonByDate.get(record.date)!, comparisonMetric, displayUnit) : null,
+  }));
   const selectedFirst = selectedSeries[0]?.value ?? 0;
   const selectedLatest = selectedSeries.at(-1)?.value ?? 0;
   const selectedPeak = Math.max(...selectedSeries.map((record) => record.value), 0);
   const selectedChange = selectedFirst ? ((selectedLatest / selectedFirst) - 1) * 100 : 0;
   const selectedMeta = metricMeta[selectedMetric];
+  const selectedUnit = metricDisplayUnit(selectedMetric, displayUnit);
+  const comparisonUnit = comparisonMetric ? metricDisplayUnit(comparisonMetric, displayUnit) : "";
   // Recalculate this derived display data on restore as well as on fresh imports.
   // Older snapshots may still contain the previous latest-value percentage.
   const headlineAchievements = useMemo(() => data.achievements.map((achievement) => {
@@ -628,7 +659,8 @@ export default function Home() {
 
   return (
     <main className={data.coverage.totalSessions > 0 ? "" : "empty-dashboard"}>
-      <header className="topbar">
+      <AmbientWireframe />
+      <header className={`topbar${topbarHidden ? " is-hidden" : ""}`}>
         <a className="brand" href="#top" aria-label="Ripper OS home">
           <span>Ripper OS</span>
         </a>
@@ -759,7 +791,13 @@ export default function Home() {
             </div>
             <div className="calendar-scroll">
               <div className="calendar-days"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
-              <div className="attendance-grid" style={{ gridTemplateColumns: `repeat(${attendanceWeeks.length}, minmax(0, 1fr))` }}>
+              <div
+                className="attendance-grid"
+                style={{
+                  gridTemplateColumns: attendanceWeeks.length < 20 ? `repeat(${Math.max(attendanceWeeks.length, 1)}, 18px)` : `repeat(${attendanceWeeks.length}, minmax(0, 1fr))`,
+                  ...(attendanceWeeks.length < 20 ? { width: `${Math.max(attendanceWeeks.length, 1) * 18}px`, minWidth: 0, flex: "0 0 auto" } : {}),
+                }}
+              >
                 {attendanceWeeks.flatMap((week) => week.days.map((day, index) => (
                   <span key={`${week.week}-${index}`} className={day.inYear ? day.active ? `attendance-cell active level-${day.active}` : "attendance-cell" : "attendance-cell outside"} data-tooltip={`${formatDate(day.date)}: ${day.active ? `recorded workload ${day.active}/3` : "rest"}`} title={`${formatDate(day.date)}: ${day.active ? `recorded workload ${day.active}/3` : "rest"}`} aria-label={`${formatDate(day.date)}: ${day.active ? `recorded workload ${day.active}/3` : "rest"}`} />
                 )))}
@@ -803,6 +841,11 @@ export default function Home() {
                 <ComparisonContextControls context={{ exerciseId: selectedExercise.exerciseId, equipmentInstance: null, loadBasis: "unknown", mode: "unknown", comparable: selectedExercise.comparisonKey === selectedExercise.exerciseId }} />
               </div>
               <div className="metric-controls">
+              <div className="unit-toggle" role="group" aria-label="Display units">
+                <span>Units</span>
+                <button type="button" className={displayUnit === "kg" ? "active" : ""} aria-pressed={displayUnit === "kg"} onClick={() => setDisplayUnit("kg")}>kg</button>
+                <button type="button" className={displayUnit === "lb" ? "active" : ""} aria-pressed={displayUnit === "lb"} onClick={() => setDisplayUnit("lb")}>lb</button>
+              </div>
               <label className="metric-select">View metric
                 <select value={selectedMetric} onChange={(event) => {
                   const nextMetric = event.target.value as MetricKey;
@@ -818,15 +861,12 @@ export default function Home() {
                   {selectedExercise.availableMetrics.filter((metric) => metric !== selectedMetric).map((metric) => <option value={metric} key={metric}>{metricMeta[metric].label}</option>)}
                 </select>
               </label>
-              <label className="metric-select">Units
-                <select value={displayUnit} onChange={(event) => setDisplayUnit(event.target.value as "kg" | "lb")}><option value="kg">Kilograms</option><option value="lb">Pounds</option></select>
-              </label>
               </div>
             </div>
             <div className="focus-metrics">
-              <div><span>Starting</span><strong>{formatNumber(selectedMetric === "heaviestKg" || selectedMetric === "e1rmKg" ? toDisplayLoad(selectedFirst, displayUnit) : selectedFirst)} <small>{selectedMetric === "heaviestKg" || selectedMetric === "e1rmKg" ? displayUnit : selectedMeta.unit}</small></strong></div>
-              <div><span>Latest</span><strong>{formatNumber(selectedMetric === "heaviestKg" || selectedMetric === "e1rmKg" ? toDisplayLoad(selectedLatest, displayUnit) : selectedLatest)} <small>{selectedMetric === "heaviestKg" || selectedMetric === "e1rmKg" ? displayUnit : selectedMeta.unit}</small></strong></div>
-              <div><span>All-time peak</span><strong>{formatNumber(selectedMetric === "heaviestKg" || selectedMetric === "e1rmKg" ? toDisplayLoad(selectedPeak, displayUnit) : selectedPeak)} <small>{selectedMetric === "heaviestKg" || selectedMetric === "e1rmKg" ? displayUnit : selectedMeta.unit}</small></strong></div>
+              <div><span>Starting</span><strong>{formatNumber(toDisplayMetric(selectedFirst, selectedMetric, displayUnit))} <small>{selectedUnit}</small></strong></div>
+              <div><span>Latest</span><strong>{formatNumber(toDisplayMetric(selectedLatest, selectedMetric, displayUnit))} <small>{selectedUnit}</small></strong></div>
+              <div><span>All-time peak</span><strong>{formatNumber(toDisplayMetric(selectedPeak, selectedMetric, displayUnit))} <small>{selectedUnit}</small></strong></div>
               <div><span>First → latest</span><strong><Delta value={selectedChange} /></strong></div>
             </div>
             <div className="legend-inline focus-legend"><span><i className="legend-history" /> {selectedMeta.label}</span>{comparisonMeta && <span><i className="legend-latest" /> {comparisonMeta.label}</span>}</div>
@@ -839,7 +879,7 @@ export default function Home() {
                     <XAxis dataKey="date" tickFormatter={(value) => formatDate(value, { month: "short", year: "2-digit" })} tick={{ fill: "var(--color-text-muted)", fontSize: 16 }} axisLine={false} tickLine={false} tickMargin={12} minTickGap={42} />
                     <YAxis tick={{ fill: "var(--color-text-muted)", fontSize: 16 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />
                     {comparisonMeta && <YAxis yAxisId="comparison" orientation="right" tick={{ fill: "var(--chart-2)", fontSize: 14 }} axisLine={false} tickLine={false} domain={["auto", "auto"]} />}
-                    <Tooltip content={<ChartTooltip unit={selectedMeta.unit} comparisonUnit={comparisonMeta?.unit} />} cursor={{ stroke: "var(--color-border-strong)", strokeDasharray: "3 3" }} />
+                    <Tooltip content={<ChartTooltip unit={selectedUnit} comparisonUnit={comparisonUnit} />} cursor={{ stroke: "var(--color-border-strong)", strokeDasharray: "3 3" }} />
                     <Line type="monotone" dataKey="primaryValue" name={selectedMeta.label} stroke="url(#exercise-line-gradient)" strokeWidth={1.75} connectNulls dot={{ r: 1.75, fill: "var(--color-bg)", strokeWidth: 1.5 }} activeDot={{ r: 3 }} />
                     {comparisonMeta && <Line yAxisId="comparison" type="monotone" dataKey="comparisonValue" name={comparisonMeta.label} stroke="var(--chart-2)" strokeWidth={1.5} strokeDasharray="5 4" connectNulls dot={{ r: 1.5, fill: "var(--color-bg)", strokeWidth: 1.5 }} activeDot={{ r: 3 }} />}
                   </LineChart>
@@ -1033,7 +1073,7 @@ export default function Home() {
       <ImportConflicts preview={pendingConflict} onCancel={() => setPendingConflict(null)} onChoice={chooseConflict} />
       <ImportReportDialog report={importReport} onClose={() => setImportReport(null)} />
 
-      <ExerciseMappingDialog candidate={mappingCandidate} onClose={() => setMappingCandidate(null)} onSave={(override) => applyExerciseMapping(override)} onKeepCustom={() => applyExerciseMapping({ keepCustom: true })} onReset={() => applyExerciseMapping(null)} />
+      <ExerciseMappingDialog candidate={mappingCandidate} position={mappingCandidate ? { current: mappingCandidates.findIndex(candidate => candidate.key === mappingCandidate.key) + 1, total: mappingCandidates.length } : undefined} onNavigate={navigateMapping} onClose={() => setMappingCandidate(null)} onSave={(override) => applyExerciseMapping(override)} onKeepCustom={() => applyExerciseMapping({ keepCustom: true })} onReset={() => applyExerciseMapping(null)} />
 
       {aiConsentOpen && <div className="connect-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setAiConsentOpen(false); }}>
         <section className="connect-dialog panel" role="dialog" aria-modal="true" aria-labelledby="ai-consent-title">
