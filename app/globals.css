@@ -81,6 +81,17 @@ body {
   display: none;
 }
 
+.about-standalone-link {
+  display: none;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.empty-dashboard .about-standalone-link {
+  display: inline-flex;
+}
+
 .no-achievements,
 .no-muscles {
   display: none;
@@ -2010,6 +2021,10 @@ button {
 
   .topbar nav {
     display: none;
+  }
+
+  .about-standalone-link {
+    display: inline-flex;
   }
 
   .hero-copy {
