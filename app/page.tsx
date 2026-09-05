@@ -144,10 +144,12 @@ function Sparkline({ values }: { values: number[] }) {
   }).join(" ");
   const [lastX, lastY] = points.split(" ").at(-1)?.split(",") ?? [0, 0];
   return (
-    <svg className="sparkline" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label="Exercise progression sparkline">
-      <polyline points={points} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx={lastX} cy={lastY} r="3.5" fill="currentColor" />
-    </svg>
+    <div className="sparkline-wrap">
+      <svg className="sparkline" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" role="img" aria-label="Exercise progression sparkline">
+        <polyline points={points} fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+      <span className="sparkline-endpoint" style={{ left: `${(Number(lastX) / width) * 100}%`, top: `${(Number(lastY) / height) * 100}%` }} aria-hidden="true" />
+    </div>
   );
 }
 
