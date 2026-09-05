@@ -448,7 +448,8 @@ export default function Home() {
     setLoadedImport(null);
     setLoadedSource("");
     setHistoryImports([]);
-    setExerciseOverrides({});
+    // Keep confirmed exercise mappings when clearing history; they are user preferences.
+    void saveTrainingHistory({ schemaVersion: 1, imports: [], exerciseOverrides });
     setPendingImport(null);
     setRecommendations([]);
     setAiInsight(null);

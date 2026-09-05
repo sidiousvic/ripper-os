@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M5 — Imports become additive and explainable
-Current task: V2-032
-Last completed task: V2-031 — Restore canonical history and retire legacy snapshot restore
-Next task: V2-032
+Current task: V2-033
+Last completed task: V2-032 — Persist user mapping overrides with history
+Next task: V2-033
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
-Tasks complete: 29
-Tasks remaining: 22
+Tasks complete: 30
+Tasks remaining: 21
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -2397,7 +2397,7 @@ Implement V2-031 only. Connect the canonical store to startup, accepted imports 
 ### V2-032 — Persist user mapping overrides with history
 
 Status:
-TODO
+DONE
 
 Milestone:
 M6 — Keep canonical history between visits
