@@ -4281,6 +4281,34 @@ button:hover {
   box-shadow: none;
 }
 
+.leaderboard-head,
+.leaderboard-row {
+  grid-template-columns: 45px minmax(260px, 1fr) 100px 126px 110px;
+}
+
+.leaderboard-head > span {
+  white-space: nowrap;
+}
+
+.leaderboard-row {
+  border-radius: 12px;
+  border-bottom: 0;
+  box-shadow: none;
+}
+
+.leaderboard-row:hover {
+  transform: none;
+  background: var(--color-surface-hover);
+  box-shadow: none;
+}
+
+@media (max-width: 760px) {
+  .leaderboard-head,
+  .leaderboard-row {
+    grid-template-columns: 40px minmax(210px, 1fr) 75px 112px 72px;
+  }
+}
+
 /* Attendance hover copy uses the same quiet, raised treatment as chart tooltips. */
 .attendance-cell[data-tooltip]::after {
   min-width: 155px;
