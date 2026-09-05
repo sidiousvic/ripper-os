@@ -327,14 +327,15 @@ export default function Home() {
     const seen = new Set<string>();
     const result: MappingCandidate[] = [];
     for (const input of historyImports) for (const day of input.exerciseDays) {
-      if (!day.exerciseId.startsWith("custom_")) continue;
       const key = exerciseOverrideKey(day.source, day.rawExerciseName);
+      const hasManualOverride = Boolean(exerciseOverrides[key]);
+      if (!day.exerciseId.startsWith("custom_") && !hasManualOverride) continue;
       if (seen.has(key)) continue;
       seen.add(key);
       result.push({ key, source: day.source, rawName: day.rawExerciseName, currentName: day.displayName });
     }
     return result;
-  }, [historyImports]);
+  }, [historyImports, exerciseOverrides]);
 
   useEffect(() => {
     console.log("%c+----------------------+\n|      RIPPER OS       |\n+----------------------+", "font-family: 'Google Sans Flex', sans-serif; font-size: 22px; font-weight: 700; letter-spacing: 2px; line-height: 1.35; color: #f3f7f1;");

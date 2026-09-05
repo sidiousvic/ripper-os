@@ -3843,6 +3843,7 @@ Date/number validation is the exception to accepting invalid legacy behavior: V2
 - 2026-09-06: Mapping audit found MacroFactor headers can carry a ` ∈ ...` exercise annotation. The adapter now resolves the cleaned display name while retaining the original raw name for provenance, preventing known exercises from falling through to custom identities.
 - 2026-09-06: User preview confirmed the broader issue: a real combined MacroFactor export reports 3 mapped exercises and 67 custom/unresolved. The catalog is too small for practical use; expand deterministic MacroFactor source mappings from the actual export before beta review. Do not ask users to resolve dozens of names manually and do not use fuzzy merging as a shortcut.
 - 2026-09-06: Mapping UX correction: the resolver dialog now supports Previous/Next navigation and automatically advances after save, keep-custom or reset, so users can review the full queue and return to earlier candidates.
+- 2026-09-06: Mapping correction follow-up: manually overridden exercises remain in the mapping queue, allowing a mistaken choice to be reopened and reset to deterministic automatic resolution.
 
 - 2026-09-06: V2-045 is blocked pending an approved anonymized MacroFactor bodyweight export fixture. No bodyweight values will be inferred from workout loads; independent tasks continue with V2-047.
 
