@@ -6,9 +6,11 @@ import { importTrainingFile } from "../lib/import-training-file";
 import type { ImportOutcome } from "../lib/import/parse-import";
 import type { StrongNormalizationOptions } from "../lib/import/adapters/strong";
 import { buildDashboard } from "../lib/analytics/build-dashboard";
-import { combineImports, type HistoryImport } from "../lib/history/combine-imports";
+import type { HistoryImport } from "../lib/history/combine-imports";
 import { exerciseOverrideKey, resolveExercise, type ExerciseOverride, type ExerciseOverrideMap } from "../lib/exercises/resolve";
 import ExerciseMappingDialog, { type MappingCandidate } from "../components/import/exercise-mapping-dialog";
+import ImportPreviewDialog from "../components/import/import-preview";
+import { createImportPreview, type ImportPreview } from "../lib/import/import-preview";
 import { isTrainingSnapshot, saveTrainingSnapshot, TRAINING_SNAPSHOT_KEY } from "../lib/training-snapshot.mjs";
 import { isCurrentRequest } from "../lib/request-guard.mjs";
 import type { DashboardData, Exercise, MetricKey, ProgressRecord } from "../lib/analytics/dashboard-types";
@@ -201,6 +203,7 @@ export default function Home() {
   const [historyImports, setHistoryImports] = useState<HistoryImport[]>([]);
   const [exerciseOverrides, setExerciseOverrides] = useState<ExerciseOverrideMap>({});
   const [mappingCandidate, setMappingCandidate] = useState<MappingCandidate | null>(null);
+  const [pendingImport, setPendingImport] = useState<ImportPreview | null>(null);
   const [importing, setImporting] = useState(false);
   const importController = useRef<AbortController | null>(null);
   useEffect(() => () => { importController.current?.abort(); aiController.current?.abort(); datasetRevision.current += 1; }, []);
@@ -215,7 +218,7 @@ export default function Home() {
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const [loadedExportOpen, setLoadedExportOpen] = useState(false);
   const [recommendationError, setRecommendationError] = useState("");
-  const activeModal = recommendationError ? "recommendation-error" : connectOpen ? "connect" : loadedExportOpen ? "loaded-export" : aiConsentOpen ? "ai-consent" : clearConfirmOpen ? "clear" : mappingCandidate ? "exercise-mapping" : "";
+  const activeModal = recommendationError ? "recommendation-error" : connectOpen ? "connect" : loadedExportOpen ? "loaded-export" : aiConsentOpen ? "ai-consent" : clearConfirmOpen ? "clear" : mappingCandidate ? "exercise-mapping" : pendingImport ? "import-preview" : "";
   const closeActiveModal = useCallback(() => {
     if (recommendationError) setRecommendationError("");
     else if (connectOpen) setConnectOpen(false);
@@ -223,7 +226,8 @@ export default function Home() {
     else if (aiConsentOpen) setAiConsentOpen(false);
     else if (clearConfirmOpen) setClearConfirmOpen(false);
     else if (mappingCandidate) setMappingCandidate(null);
-  }, [recommendationError, connectOpen, loadedExportOpen, aiConsentOpen, clearConfirmOpen, mappingCandidate]);
+    else if (pendingImport) setPendingImport(null);
+  }, [recommendationError, connectOpen, loadedExportOpen, aiConsentOpen, clearConfirmOpen, mappingCandidate, pendingImport]);
   useEffect(() => {
     if (!activeModal) return;
     const previous = document.activeElement as HTMLElement | null;
@@ -288,6 +292,7 @@ export default function Home() {
       setLoadedSource("");
       setHistoryImports([]);
       setExerciseOverrides({});
+      setPendingImport(null);
       setLastExportName(snapshot.fileName ?? ""); setLastExportAt(snapshot.uploadedAt ?? "");
       setRecommendations(snapshot.recommendations ?? []); setAiInsight(snapshot.aiInsight ?? null);
       setSelectedExerciseId(featured ? exerciseSeriesId(featured) : "");
@@ -326,37 +331,13 @@ export default function Home() {
       }
       if (controller.signal.aborted) return;
       if (outcome.status !== "ready") throw new Error("This export needs import choices before it can be loaded.");
-      const combined = mode === "add" ? combineImports(historyImports, outcome.importData) : combineImports([], outcome.importData);
-      if (!combined.ok) {
-        setUploadState(combined.conflict.message);
+      const preview = createImportPreview(outcome, file.name, mode, historyImports);
+      if ("conflict" in preview) {
+        setUploadState(preview.conflict);
         return;
       }
-      const payload = buildDashboard(combined.imports) as UploadPayload;
-      const nextExercises = payload.exercises as Exercise[];
-      const featured = featuredExercise(nextExercises);
-      const uploadedAt = new Date().toISOString();
-      const fileName = mode === "add" && lastExportName ? `${lastExportName} + ${file.name}` : file.name;
-      const snapshot = { data: payload, fileName, uploadedAt, recommendations: [], aiInsight: null };
-      datasetRevision.current += 1;
-      setData(payload);
-      setHistoryImports(combined.imports);
-      setLoadedImport(outcome.importData);
-      setLoadedSource(combined.imports.map((item) => item.source).filter((source, index, all) => all.indexOf(source) === index).join(" + "));
-      setLastExportName(fileName); setLastExportAt(uploadedAt);
-      setSelectedExerciseId(featured ? exerciseSeriesId(featured) : "");
-      setSelectedMetric(featured?.defaultMetric ?? "totalSets");
-      setAttendanceYear(Number(payload.coverage.lastDate.slice(0, 4)));
-      setSearch("");
-      setFamily("All");
-      setComparisonMetric("");
-      setVisibleCount(24);
-      setRecommendations([]);
-      setAiInsight(null);
-      setRecommendationError("");
-      setRecommendationState("");
-      setAiConsentOpen(false);
-      const saved = saveTrainingSnapshot(JSON.stringify(snapshot), () => localStorage);
-      setUploadState(saved === "saved" ? `${mode === "add" ? "Added" : "Loaded"} ${file.name}.` : `${mode === "add" ? "Added" : "Loaded"} ${file.name}. This result could not be saved in this browser; keep this page open or import the file again after refreshing.`);
+      setPendingImport(preview);
+      setUploadState("Review the import preview before changing your dashboard.");
     } catch (error) {
       if (!controller.signal.aborted) setUploadState(error instanceof Error ? error.message : "Could not parse the workbook.");
     } finally {
@@ -365,6 +346,31 @@ export default function Home() {
         setImporting(false);
       }
     }
+  };
+
+  const applyPendingImport = () => {
+    if (!pendingImport) return;
+    const payload = pendingImport.nextDashboard as UploadPayload;
+    const nextExercises = payload.exercises as Exercise[];
+    const featured = featuredExercise(nextExercises);
+    const uploadedAt = new Date().toISOString();
+    const fileName = pendingImport.action === "add" && lastExportName ? `${lastExportName} + ${pendingImport.filename}` : pendingImport.filename;
+    const snapshot = { data: payload, fileName, uploadedAt, recommendations: [], aiInsight: null };
+    datasetRevision.current += 1;
+    setData(payload);
+    setHistoryImports(pendingImport.nextImports);
+    setLoadedImport(null);
+    setLoadedSource(pendingImport.nextImports.map((item) => item.source).filter((source, index, all) => all.indexOf(source) === index).join(" + "));
+    setLastExportName(fileName); setLastExportAt(uploadedAt);
+    setSelectedExerciseId(featured ? exerciseSeriesId(featured) : "");
+    setSelectedMetric(featured?.defaultMetric ?? "totalSets");
+    setAttendanceYear(Number(payload.coverage.lastDate.slice(0, 4)));
+    setSearch(""); setFamily("All"); setComparisonMetric(""); setVisibleCount(24);
+    setRecommendations([]); setAiInsight(null); setRecommendationError(""); setRecommendationState("");
+    setAiConsentOpen(false);
+    const saved = saveTrainingSnapshot(JSON.stringify(snapshot), () => localStorage);
+    setUploadState(saved === "saved" ? `${pendingImport.action === "add" ? "Added" : "Loaded"} ${pendingImport.filename}.` : `${pendingImport.action === "add" ? "Added" : "Loaded"} ${pendingImport.filename}. This result could not be saved in this browser; keep this page open or import the file again after refreshing.`);
+    setPendingImport(null);
   };
 
   const applyExerciseMapping = (override: ExerciseOverride | null) => {
@@ -403,6 +409,7 @@ export default function Home() {
     setLoadedSource("");
     setHistoryImports([]);
     setExerciseOverrides({});
+    setPendingImport(null);
     setRecommendations([]);
     setAiInsight(null);
     setRecommendationError("");
@@ -894,6 +901,8 @@ export default function Home() {
           <div className="connect-actions"><button className="button secondary" onClick={() => setLoadedExportOpen(false)}>Close</button>{mappingCandidates.length > 0 && <button className="button secondary" onClick={() => { setLoadedExportOpen(false); setMappingCandidate(mappingCandidates[0]); }}>Map exercises ({mappingCandidates.length})</button>}{historyImports.length > 0 && <label className="button secondary upload-button">Add data<input type="file" accept=".xlsx,.csv" onChange={(event) => { setLoadedExportOpen(false); handleUpload(event, "add"); }} /></label>}<label className="button primary upload-button">Replace export<input type="file" accept=".xlsx,.csv" onChange={(event) => { setLoadedExportOpen(false); handleUpload(event, "replace"); }} /></label></div>
         </section>
       </div>}
+
+      <ImportPreviewDialog preview={pendingImport} onCancel={() => { setPendingImport(null); setUploadState("Import cancelled; your current dashboard is unchanged."); }} onAccept={applyPendingImport} />
 
       <ExerciseMappingDialog candidate={mappingCandidate} onClose={() => setMappingCandidate(null)} onSave={(override) => applyExerciseMapping(override)} onKeepCustom={() => applyExerciseMapping({ keepCustom: true })} onReset={() => applyExerciseMapping(null)} />
 
