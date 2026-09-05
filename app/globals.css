@@ -35,6 +35,8 @@ body {
   pointer-events: none;
   opacity: .72;
   contain: strict;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 12%, #000 86%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 12%, #000 86%, transparent 100%);
 }
 
 .ambient-wireframe canvas {
@@ -4211,9 +4213,9 @@ button:hover {
 
 /* Let the ambient model pass between sections without a hard horizontal mask. */
 .explorer-section {
-  background: linear-gradient(to bottom, rgba(6, 16, 9, 0), rgba(6, 16, 9, .58) 76px, rgba(6, 16, 9, .86) 164px);
+  background: linear-gradient(to bottom, rgba(6, 16, 9, 0), rgba(6, 16, 9, .58) 76px, rgba(6, 16, 9, .86) calc(100% - 96px), rgba(6, 16, 9, 0));
 }
 
 .next-section {
-  background: linear-gradient(to bottom, rgba(9, 21, 13, 0), rgba(9, 21, 13, .62) 76px, rgba(9, 21, 13, .9) 164px);
+  background: linear-gradient(to bottom, rgba(9, 21, 13, 0), rgba(9, 21, 13, .62) 76px, rgba(9, 21, 13, .9) calc(100% - 96px), rgba(9, 21, 13, 0));
 }
