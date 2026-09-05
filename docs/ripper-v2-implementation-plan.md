@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M5 — Imports become additive and explainable
-Current task: V2-040
-Last completed task: V2-039 — Remove transitional import wrappers and lock adapter parity
-Next task: V2-040
+Current task: V2-041
+Last completed task: V2-040 — Make load comparison contexts explicit
+Next task: V2-041
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
-Tasks complete: 37
-Tasks remaining: 14
+Tasks complete: 38
+Tasks remaining: 13
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -2953,7 +2953,9 @@ Implement V2-039 only. Finish the bounded adapter transition and remove compatib
 ### V2-040 — Make load comparison contexts explicit
 
 Status:
-TODO
+DONE
+
+Implementation note 2026-09-06: introduced the explicit compatibility predicate as a standalone foundation; wiring stored records and chart projections remains V2-041+.
 
 Milestone:
 M8 — Improve meaning after preserving behavior
