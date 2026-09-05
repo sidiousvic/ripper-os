@@ -4302,6 +4302,51 @@ button:hover {
   box-shadow: none;
 }
 
+/* Keep the glass treatment consistent across cards, rows, and transient surfaces. */
+:root {
+  --glass-surface: rgba(10, 14, 11, .78);
+  --glass-surface-hover: rgba(20, 25, 21, .84);
+  --glass-blur: blur(20px) saturate(122%);
+}
+
+.panel,
+.callout,
+.leaderboard-row,
+.rank-row,
+.gap-row,
+.chart-tooltip,
+.ai-loading-toast {
+  background: var(--glass-surface);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .22);
+}
+
+@media (hover: hover) {
+  .panel:hover,
+  .callout:hover,
+  .leaderboard-row:hover,
+  .rank-row:hover,
+  .gap-row:hover {
+    background: var(--glass-surface-hover);
+    box-shadow: 0 14px 34px rgba(0, 0, 0, .26);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .panel,
+  .callout,
+  .leaderboard-row,
+  .rank-row,
+  .gap-row,
+  .chart-tooltip,
+  .ai-loading-toast {
+    background: var(--color-surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
 @media (max-width: 760px) {
   .leaderboard-head,
   .leaderboard-row {
