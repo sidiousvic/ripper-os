@@ -4304,8 +4304,8 @@ button:hover {
 
 /* Keep the glass treatment consistent across cards, rows, and transient surfaces. */
 :root {
-  --glass-surface: rgba(10, 14, 11, .78);
-  --glass-surface-hover: rgba(20, 25, 21, .84);
+  --glass-surface: rgba(18, 23, 19, .92);
+  --glass-surface-hover: rgba(24, 29, 25, .94);
   --glass-blur: blur(20px) saturate(122%);
 }
 
@@ -4322,6 +4322,24 @@ button:hover {
   box-shadow: 0 12px 30px rgba(0, 0, 0, .22);
 }
 
+/* Rows are part of their parent surface until interaction; reserve the lift for hover. */
+.exercise-card,
+.leaderboard-row,
+.rank-row,
+.gap-row {
+  box-shadow: none;
+}
+
+/* Row entries belong to the panel; only reveal a surface while pointing at one. */
+.exercise-card,
+.leaderboard-row,
+.rank-row,
+.gap-row {
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
 @media (hover: hover) {
   .panel:hover,
   .callout:hover,
@@ -4330,6 +4348,16 @@ button:hover {
   .gap-row:hover {
     background: var(--glass-surface-hover);
     box-shadow: 0 14px 34px rgba(0, 0, 0, .26);
+  }
+
+  .exercise-card:hover,
+  .leaderboard-row:hover,
+  .rank-row:hover,
+  .gap-row:hover {
+    background: var(--glass-surface-hover);
+    box-shadow: none;
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
   }
 }
 
