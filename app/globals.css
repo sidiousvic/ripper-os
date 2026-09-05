@@ -3160,8 +3160,24 @@ body * {
   overflow-wrap: anywhere;
 }
 
+.muscle-heatmap-scroll {
+  scrollbar-color: var(--color-border-strong) var(--color-surface);
+}
+
+.heatmap-header i {
+  color: var(--color-text-muted);
+}
+
+.heatmap-row > span {
+  color: var(--color-text-secondary);
+}
+
+.heatmap-row i {
+  border-color: var(--color-border);
+}
+
 .heat-0 { background: var(--color-surface); }
-.heat-1 { background: color-mix(in srgb, var(--accent) 10%, var(--color-surface)); }
-.heat-2 { background: color-mix(in srgb, var(--accent) 22%, var(--color-surface)); }
-.heat-3 { background: color-mix(in srgb, var(--accent) 38%, var(--color-surface)); }
-.heat-4 { background: var(--accent); }
+.heat-1 { background: #1b1e1b; }
+.heat-2 { background: #252a26; }
+.heat-3 { background: #333a34; }
+.heat-4 { background: color-mix(in srgb, var(--accent) 58%, var(--color-surface)); }
