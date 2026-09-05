@@ -2,7 +2,7 @@ import type { DetailedImport, StrengthSession } from "../../domain/strength.ts";
 import type { InspectedInput } from "../inspect-input.ts";
 import { assertValidDetailedImport } from "../validation.ts";
 import { exerciseOverrideKey, resolveExercise, type ExerciseOverrideMap } from "../../exercises/resolve.ts";
-import { parseHevyRows, type HevyRow } from "./hevy-rows.ts";
+import { parseHevyRows } from "./hevy-rows.ts";
 
 export function normalizeHevy(input: InspectedInput, filename: string, exerciseOverrides: ExerciseOverrideMap = {}): DetailedImport {
   const staged = parseHevyRows(input); const importId = `hevy:${globalThis.crypto.randomUUID()}`;

@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M5 — Imports become additive and explainable
-Current task: V2-041
-Last completed task: V2-040 — Make load comparison contexts explicit
-Next task: V2-041
+Current task: V2-042
+Last completed task: V2-041 — Let users inspect and choose comparison contexts
+Next task: V2-042
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
-Tasks complete: 38
-Tasks remaining: 13
+Tasks complete: 39
+Tasks remaining: 12
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -3030,7 +3030,9 @@ Implement V2-040 only. Complete the marked higher-model review before coding; do
 ### V2-041 — Let users inspect and choose comparison contexts
 
 Status:
-TODO
+DONE
+
+Implementation note 2026-09-06: added a read-only context panel showing equipment/setup, load basis, mode and comparability status. Editing/linking contexts remains deferred until stored context overlays are wired.
 
 Milestone:
 M8 — Improve meaning after preserving behavior
@@ -3831,6 +3833,7 @@ Date/number validation is the exception to accepting invalid legacy behavior: V2
 ## Roadmap changes
 
 - 2026-09-06: Reported bug: MacroFactor exercise names are broadly falling through to `custom_*` identities, making manual resolution of roughly 70 exercises impractical. Treat this as a high-priority mapping investigation before asking users to resolve imported names; inspect MacroFactor source mappings, normalization keys and fixture coverage. No automatic fuzzy merge is authorized.
+- 2026-09-06: Added deterministic catalog coverage for the known MacroFactor fixture aliases (pull-up, bench dip, lateral raise and jump rope) with regression assertions. The broader real-export mapping audit remains open.
 
 - 2026-09-06: V2-025 higher-model review completed. Added same-source session/observation reconciliation, retained session evidence through projection, and combined new same-day facts without overwriting prior metrics. Verified real Strong superset/reordering, edited and missing records, two-a-day sessions, alias changes, MacroFactor CSV/XLSX and muscle observations. Cross-source overlaps and projections without session evidence remain conflicts; V2-026 is not started. Local history is scoped to one account per source.
 
