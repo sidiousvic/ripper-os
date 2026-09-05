@@ -68,7 +68,7 @@ const metricMeta: Record<MetricKey, { label: string; short: string; unit: string
   heaviestKg: { label: "Heaviest load", short: "Load", unit: "kg" },
   e1rmKg: { label: "Estimated 1RM", short: "e1RM", unit: "kg" },
   bestSetReps: { label: "Best-set reps", short: "Best reps", unit: "reps" },
-  totalVolumeKg: { label: "Session volume", short: "Volume", unit: "kg" },
+  totalVolumeKg: { label: "Recorded volume", short: "Recorded volume", unit: "kg·reps" },
   totalReps: { label: "Session reps", short: "Reps", unit: "reps" },
   totalSets: { label: "Working sets", short: "Sets", unit: "sets" },
   durationSec: { label: "Session duration", short: "Duration", unit: "sec" },
@@ -728,7 +728,7 @@ export default function Home() {
               <div className="calendar-days"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
               <div className="attendance-grid" style={{ gridTemplateColumns: `repeat(${attendanceWeeks.length}, minmax(0, 1fr))` }}>
                 {attendanceWeeks.flatMap((week) => week.days.map((day, index) => (
-                  <span key={`${week.week}-${index}`} className={day.inYear ? day.active ? `attendance-cell active level-${day.active}` : "attendance-cell" : "attendance-cell outside"} data-tooltip={`${formatDate(day.date)}: ${day.active ? `training load ${day.active}/3` : "rest"}`} title={`${formatDate(day.date)}: ${day.active ? `training load ${day.active}/3` : "rest"}`} aria-label={`${formatDate(day.date)}: ${day.active ? `training load ${day.active}/3` : "rest"}`} />
+                  <span key={`${week.week}-${index}`} className={day.inYear ? day.active ? `attendance-cell active level-${day.active}` : "attendance-cell" : "attendance-cell outside"} data-tooltip={`${formatDate(day.date)}: ${day.active ? `recorded workload ${day.active}/3` : "rest"}`} title={`${formatDate(day.date)}: ${day.active ? `recorded workload ${day.active}/3` : "rest"}`} aria-label={`${formatDate(day.date)}: ${day.active ? `recorded workload ${day.active}/3` : "rest"}`} />
                 )))}
               </div>
             </div>

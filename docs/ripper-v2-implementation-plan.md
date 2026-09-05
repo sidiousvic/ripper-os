@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M5 — Imports become additive and explainable
-Current task: V2-043
-Last completed task: V2-042 — Preserve missing and recorded-zero values in dashboard views
-Next task: V2-043
+Current task: V2-044
+Last completed task: V2-043 — Clarify tonnage and recorded-set semantics
+Next task: V2-044
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
-Tasks complete: 40
-Tasks remaining: 11
+Tasks complete: 41
+Tasks remaining: 10
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -3171,7 +3171,7 @@ Implement V2-042 only. Remove legacy presentation coercions that make unknown me
 ### V2-043 — Clarify tonnage and recorded-set semantics
 
 Status:
-TODO
+DONE
 
 Milestone:
 M8 — Improve meaning after preserving behavior
