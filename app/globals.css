@@ -4255,6 +4255,14 @@ button:hover {
   max-width: 100%;
 }
 
+.muscle-bars-panel .panel-heading > .legend-inline {
+  flex: 0 0 auto;
+  width: max-content;
+  max-width: 100%;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+
 /* Attendance hover copy uses the same quiet, raised treatment as chart tooltips. */
 .attendance-cell[data-tooltip]::after {
   min-width: 155px;
