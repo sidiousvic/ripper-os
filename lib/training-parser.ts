@@ -4,6 +4,7 @@ import { MAX_IMPORT_BYTES } from "./import-limits.mjs";
 import { calculateConsistencySummary } from "./analytics/consistency.ts";
 import { calculateExerciseSummaries } from "./analytics/exercises.ts";
 import { calculateAttendance } from "./analytics/attendance.ts";
+import { calculateSourceMuscles } from "./analytics/muscles.ts";
 
 const DAY = 86400000;
 const epoch = Date.UTC(1899, 11, 30);
@@ -91,38 +92,9 @@ export function parseTrainingFile(fileBytes: Uint8Array, fileName: string) {
       if (!date) return [];
       return [{ date, values: muscleHeaders.slice(1).map((muscle, index) => ({ muscle, sets: n(row[index + 1]) })) }];
     });
-    const firstMs = Date.parse(`${first}T00:00:00Z`);
-    const lastMs = Date.parse(`${last}T00:00:00Z`);
-    // Use up to eight weeks per side, but never overlap the comparison windows.
-    // A short export should compare its first and last portions, not largely the
-    // same days twice.
-    const windowSpan = Math.min(8 * 7 * DAY, Math.max(DAY, Math.floor((lastMs - firstMs + DAY) / 2)));
-    const earlyStart = first;
-    const earlyEnd = new Date(Math.min(lastMs, firstMs + windowSpan - DAY)).toISOString().slice(0, 10);
-    const recentStart = new Date(Math.max(firstMs, lastMs - windowSpan + DAY)).toISOString().slice(0, 10);
-    const recentEnd = last;
-    const weeksIn = (start: string, end: string) => Math.max(1, (Date.parse(`${end}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`) + DAY) / (7 * DAY));
-    const totalFor = (muscle: string, start?: string, end?: string) => muscleRows.reduce((total, row) => {
-      if ((start && row.date < start) || (end && row.date > end)) return total;
-      return total + (row.values.find((value) => value.muscle === muscle)?.sets ?? 0);
-    }, 0);
-    const muscles = muscleHeaders.slice(1).map((muscle) => {
-      const earlyWeekly = r(totalFor(muscle, earlyStart, earlyEnd) / weeksIn(earlyStart, earlyEnd));
-      const recentWeekly = r(totalFor(muscle, recentStart, recentEnd) / weeksIn(recentStart, recentEnd));
-      return { muscle, allTimeSets: r(totalFor(muscle)), earlyWeekly, recentWeekly, change: earlyWeekly ? r(((recentWeekly / earlyWeekly) - 1) * 100, 0) : recentWeekly ? 100 : 0 };
-    }).filter((muscle) => muscle.allTimeSets > 0);
-    const heatmapStart = new Date(Math.max(firstMs, lastMs - 12 * 7 * DAY));
-    heatmapStart.setUTCDate(heatmapStart.getUTCDate() - ((heatmapStart.getUTCDay() + 6) % 7));
-    const heatmapWeeks: string[] = [];
-    for (let cursor = heatmapStart.valueOf(); cursor <= lastMs; cursor += 7 * DAY) heatmapWeeks.push(new Date(cursor).toISOString().slice(0, 10));
-    const muscleHeatmap = {
-      weeks: heatmapWeeks,
-      rows: muscles.map(({ muscle }) => ({
-        muscle,
-        weeks: heatmapWeeks.map((week) => totalFor(muscle, week, new Date(Date.parse(`${week}T00:00:00Z`) + 6 * DAY).toISOString().slice(0, 10))),
-      })),
-    };
+    const muscleDays = muscleRows.flatMap((row) => row.values.map((value) => ({ importId: fileName, source: "macrofactor" as const, date: row.date, rawMuscleName: value.muscle, setEquivalents: value.sets })));
+    const { muscleWindows, muscles, muscleHeatmap } = calculateSourceMuscles(muscleDays, first, last);
     const { attendance, longestActiveWeekStreak } = calculateAttendance(records.map((record) => ({ date: record.date, totalSets: record.totalSets, totalVolumeKg: record.totalVolumeKg })));
-    const complete = months.filter((x) => x.coverage === "complete"); const payload = { generatedAt: new Date().toISOString(), coverage: { firstDate: first, lastDate: last, journeyDays: Math.round((Date.parse(`${last}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) / DAY) + 1, totalSessions: sessions.length, averageSessionsPerMonth: r(sessions.length / months.length), averageSessionsPerWeek: r(sessions.length / (((Date.parse(`${last}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) / DAY + 1) / 7)), exerciseCount: exercises.length, longestActiveWeekStreak: longestActiveWeekStreak }, monthly: months, busiestMonths: [...complete].sort((a, b) => b.sessions - a.sessions).slice(0, 5), quietestMonths: [...complete].sort((a, b) => a.sessions - b.sessions).slice(0, 5), gaps, attendance, exercises, muscleWindows: { early: [earlyStart, earlyEnd], recent: [recentStart, recentEnd] }, muscles, muscleHeatmap, achievements, methodology: { strength: "Weighted exercise progress defaults to the heaviest recorded load.", muscles: "Muscle balance uses muscle-group set equivalents. These are exposure signals, not diagnoses.", caveat: "Confirm sudden load changes against the exercise setup." } };
+    const complete = months.filter((x) => x.coverage === "complete"); const payload = { generatedAt: new Date().toISOString(), coverage: { firstDate: first, lastDate: last, journeyDays: Math.round((Date.parse(`${last}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) / DAY) + 1, totalSessions: sessions.length, averageSessionsPerMonth: r(sessions.length / months.length), averageSessionsPerWeek: r(sessions.length / (((Date.parse(`${last}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) / DAY + 1) / 7)), exerciseCount: exercises.length, longestActiveWeekStreak: longestActiveWeekStreak }, monthly: months, busiestMonths: [...complete].sort((a, b) => b.sessions - a.sessions).slice(0, 5), quietestMonths: [...complete].sort((a, b) => a.sessions - b.sessions).slice(0, 5), gaps, attendance, exercises, muscleWindows, muscles, muscleHeatmap, achievements, methodology: { strength: "Weighted exercise progress defaults to the heaviest recorded load.", muscles: "Muscle balance uses muscle-group set equivalents. These are exposure signals, not diagnoses.", caveat: "Confirm sudden load changes against the exercise setup." } };
     return payload;
 }

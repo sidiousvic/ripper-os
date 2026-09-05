@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M1 — Lock down the behavior worth keeping
-Current task: None; V2-006 completed
-Last completed task: V2-006 — Extract attendance and active-week streak calculations
-Next task: V2-007
+Current task: V2-008 — Route MacroFactor through the canonical import boundary (IN_PROGRESS)
+Last completed task: V2-007 — Extract source-reported muscle summaries
+Next task: V2-008
 Blockers: No verified Strong or Hevy export fixture exists in this checkout. V2-009 and V2-034 require a permission-cleared export with documented units and date interpretation. These do not block V2-001–008.
-Tasks complete: 6
-Tasks remaining: 45
+Tasks complete: 7
+Tasks remaining: 44
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -641,7 +641,7 @@ Implement V2-006 only. Move attendance heatmap bins and week streaks into one pu
 ### V2-007 — Extract source-reported muscle summaries
 
 Status:
-TODO
+DONE
 
 Milestone:
 M2 — MacroFactor through a small shared model
@@ -709,7 +709,7 @@ Implement V2-007 only. Move muscle windows and heatmap calculation behind a pure
 ### V2-008 — Route MacroFactor through the canonical import boundary
 
 Status:
-TODO
+IN_PROGRESS
 
 Milestone:
 M2 — MacroFactor through a small shared model
@@ -3830,3 +3830,4 @@ Date/number validation is the exception to accepting invalid legacy behavior: V2
 - 2026-09-05: V2-004 completed by extracting consistency dates, monthly summaries and gaps into `lib/analytics/consistency.ts`; MacroFactor output remains at baseline parity.
 - 2026-09-05: V2-005 completed by extracting exercise summaries and first-to-peak achievements into `lib/analytics/exercises.ts`; existing formulas and ordering remain unchanged.
 - 2026-09-05: V2-006 completed by extracting attendance bins and active-week streak calculations into `lib/analytics/attendance.ts`; existing thresholds and dashboard output remain unchanged.
+- 2026-09-05: V2-007 completed by extracting source-reported muscle windows and heatmap calculations into `lib/analytics/muscles.ts`; workbook parsing and baseline output remain unchanged.
