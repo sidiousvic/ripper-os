@@ -12,6 +12,24 @@ export type ReconcileResult =
   | { ok: true; imports: HistoryImport[]; status: "added" | "unchanged"; added: number; unchanged: number }
   | { ok: false; conflict: ImportConflict };
 
+export function toHistoryImport(input: AggregateImport | DetailedImport): HistoryImport {
+  return "representation" in input && input.representation === "detailed" ? projectStrengthImport(input) : input as HistoryImport;
+}
+
+export type ConflictChoice = "keep-existing" | "use-incoming" | "keep-both";
+
+export function resolveDateConflict(existing: HistoryImport[], incoming: HistoryImport, dates: string[], choice: ConflictChoice): HistoryImport[] {
+  if (choice === "keep-existing") return [...existing];
+  if (choice === "keep-both") return [...existing, incoming];
+  const affected = new Set(dates);
+  const retained = existing.map(input => ({
+    ...input,
+    exerciseDays: input.exerciseDays.filter(day => !affected.has(day.date)),
+    muscleDays: input.muscleDays.filter(day => !affected.has(day.date)),
+  })).filter(input => input.exerciseDays.length || input.muscleDays.length);
+  return [...retained, incoming];
+}
+
 const datesOf = (input: AggregateImport) => new Set([...input.exerciseDays.map(day => day.date), ...input.muscleDays.map(day => day.date)]);
 function observations(input: AggregateImport) {
   return [
@@ -25,7 +43,7 @@ function observations(input: AggregateImport) {
 export function reconcileImports(existing: HistoryImport[], addition: AggregateImport | DetailedImport): ReconcileResult {
   const detailed = "representation" in addition && addition.representation === "detailed" ? addition : null;
   if (detailed) assertValidDetailedImport(detailed);
-  const next: HistoryImport = detailed ? projectStrengthImport(detailed) : addition as HistoryImport;
+  const next: HistoryImport = toHistoryImport(addition);
   assertValidImport(next);
   const incomingDates = datesOf(next);
   const conflict = (kind: ImportConflict["kind"], dates: string[], message: string): ReconcileResult =>

@@ -5,6 +5,7 @@ import { combineImports } from '../lib/history/combine-imports.ts';
 import { sessionFingerprint } from '../lib/history/fingerprints.ts';
 import { buildDashboard } from '../lib/analytics/build-dashboard.ts';
 import { projectStrengthImport } from '../lib/analytics/project-strength.ts';
+import { resolveDateConflict } from '../lib/history/reconcile-imports.ts';
 
 const options = { weightUnit: 'kg', distanceUnit: 'km' };
 const bytes = await readFile(new URL('../tests/fixtures/strong/original-export.csv', import.meta.url));
@@ -107,4 +108,13 @@ assert.equal(combineImports(start.imports, projected).conflict.kind, 'ambiguous'
 assert.equal(combineImports([projected], firstHalf).conflict.kind, 'ambiguous');
 const foreign = { ...jan, source: 'hevy', exerciseDays: jan.exerciseDays.map(day => ({ ...day, source: 'hevy' })) };
 assert.equal(combineImports(mfStart.imports, foreign).conflict.kind, 'overlap');
+const foreignAggregate = { ...jan, source: 'hevy', exerciseDays: jan.exerciseDays.map(day => ({ ...day, source: 'hevy' })) };
+const kept = resolveDateConflict(mfStart.imports, foreignAggregate, ['2026-01-01'], 'keep-existing');
+assert.deepEqual(summary(kept), summary(mfStart.imports));
+const incoming = resolveDateConflict(mfStart.imports, foreignAggregate, ['2026-01-01'], 'use-incoming');
+assert.equal(incoming.length, 1);
+assert.equal(incoming[0].source, 'hevy');
+const both = resolveDateConflict(mfStart.imports, foreignAggregate, ['2026-01-01'], 'keep-both');
+assert.equal(both.length, 2);
+assert.equal(mfStart.imports.length, 1);
 console.log('Reconciliation: real Strong superset, reordered/missing/edited workouts, aliases, two-a-day, aggregate metrics, muscles and ambiguous projections passed');

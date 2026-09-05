@@ -10,7 +10,8 @@ import type { HistoryImport } from "../lib/history/combine-imports";
 import { exerciseOverrideKey, resolveExercise, type ExerciseOverride, type ExerciseOverrideMap } from "../lib/exercises/resolve";
 import ExerciseMappingDialog, { type MappingCandidate } from "../components/import/exercise-mapping-dialog";
 import ImportPreviewDialog from "../components/import/import-preview";
-import { createImportPreview, type ImportPreview } from "../lib/import/import-preview";
+import { createConflictChoicePreview, createImportPreview, type ImportConflictPreview, type ImportPreview } from "../lib/import/import-preview";
+import ImportConflicts from "../components/import/import-conflicts";
 import { isTrainingSnapshot, saveTrainingSnapshot, TRAINING_SNAPSHOT_KEY } from "../lib/training-snapshot.mjs";
 import { isCurrentRequest } from "../lib/request-guard.mjs";
 import type { DashboardData, Exercise, MetricKey, ProgressRecord } from "../lib/analytics/dashboard-types";
@@ -204,6 +205,7 @@ export default function Home() {
   const [exerciseOverrides, setExerciseOverrides] = useState<ExerciseOverrideMap>({});
   const [mappingCandidate, setMappingCandidate] = useState<MappingCandidate | null>(null);
   const [pendingImport, setPendingImport] = useState<ImportPreview | null>(null);
+  const [pendingConflict, setPendingConflict] = useState<ImportConflictPreview | null>(null);
   const [importing, setImporting] = useState(false);
   const importController = useRef<AbortController | null>(null);
   useEffect(() => () => { importController.current?.abort(); aiController.current?.abort(); datasetRevision.current += 1; }, []);
@@ -218,7 +220,7 @@ export default function Home() {
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const [loadedExportOpen, setLoadedExportOpen] = useState(false);
   const [recommendationError, setRecommendationError] = useState("");
-  const activeModal = recommendationError ? "recommendation-error" : connectOpen ? "connect" : loadedExportOpen ? "loaded-export" : aiConsentOpen ? "ai-consent" : clearConfirmOpen ? "clear" : mappingCandidate ? "exercise-mapping" : pendingImport ? "import-preview" : "";
+  const activeModal = recommendationError ? "recommendation-error" : connectOpen ? "connect" : loadedExportOpen ? "loaded-export" : aiConsentOpen ? "ai-consent" : clearConfirmOpen ? "clear" : mappingCandidate ? "exercise-mapping" : pendingConflict ? "import-conflict" : pendingImport ? "import-preview" : "";
   const closeActiveModal = useCallback(() => {
     if (recommendationError) setRecommendationError("");
     else if (connectOpen) setConnectOpen(false);
@@ -226,8 +228,9 @@ export default function Home() {
     else if (aiConsentOpen) setAiConsentOpen(false);
     else if (clearConfirmOpen) setClearConfirmOpen(false);
     else if (mappingCandidate) setMappingCandidate(null);
+    else if (pendingConflict) setPendingConflict(null);
     else if (pendingImport) setPendingImport(null);
-  }, [recommendationError, connectOpen, loadedExportOpen, aiConsentOpen, clearConfirmOpen, mappingCandidate, pendingImport]);
+  }, [recommendationError, connectOpen, loadedExportOpen, aiConsentOpen, clearConfirmOpen, mappingCandidate, pendingConflict, pendingImport]);
   useEffect(() => {
     if (!activeModal) return;
     const previous = document.activeElement as HTMLElement | null;
@@ -293,6 +296,7 @@ export default function Home() {
       setHistoryImports([]);
       setExerciseOverrides({});
       setPendingImport(null);
+      setPendingConflict(null);
       setLastExportName(snapshot.fileName ?? ""); setLastExportAt(snapshot.uploadedAt ?? "");
       setRecommendations(snapshot.recommendations ?? []); setAiInsight(snapshot.aiInsight ?? null);
       setSelectedExerciseId(featured ? exerciseSeriesId(featured) : "");
@@ -333,7 +337,8 @@ export default function Home() {
       if (outcome.status !== "ready") throw new Error("This export needs import choices before it can be loaded.");
       const preview = createImportPreview(outcome, file.name, mode, historyImports);
       if ("conflict" in preview) {
-        setUploadState(preview.conflict);
+        setPendingConflict(preview);
+        setUploadState("Review the overlapping dates before changing your dashboard.");
         return;
       }
       setPendingImport(preview);
@@ -376,6 +381,19 @@ export default function Home() {
     const saved = saveTrainingSnapshot(JSON.stringify(snapshot), () => localStorage);
     setUploadState(saved === "saved" ? `${pendingImport.action === "add" ? "Added" : "Loaded"} ${pendingImport.filename}.` : `${pendingImport.action === "add" ? "Added" : "Loaded"} ${pendingImport.filename}. This result could not be saved in this browser; keep this page open or import the file again after refreshing.`);
     setPendingImport(null);
+    setPendingConflict(null);
+  };
+
+  const chooseConflict = (choice: import("../lib/history/reconcile-imports").ConflictChoice) => {
+    if (!pendingConflict) return;
+    const preview = createConflictChoicePreview(pendingConflict, choice);
+    setPendingConflict(null);
+    if (choice === "keep-existing") {
+      setUploadState("Existing history kept; the incoming overlap was not imported.");
+      return;
+    }
+    setPendingImport(preview);
+    setUploadState("Review the conflict resolution before changing your dashboard.");
   };
 
   const applyExerciseMapping = (override: ExerciseOverride | null) => {
@@ -908,6 +926,7 @@ export default function Home() {
       </div>}
 
       <ImportPreviewDialog preview={pendingImport} onCancel={() => { setPendingImport(null); setUploadState("Import cancelled; your current dashboard is unchanged."); }} onAccept={applyPendingImport} />
+      <ImportConflicts preview={pendingConflict} onCancel={() => { setPendingConflict(null); setUploadState("Overlap review cancelled; your current dashboard is unchanged."); }} onChoice={chooseConflict} />
 
       <ExerciseMappingDialog candidate={mappingCandidate} onClose={() => setMappingCandidate(null)} onSave={(override) => applyExerciseMapping(override)} onKeepCustom={() => applyExerciseMapping({ keepCustom: true })} onReset={() => applyExerciseMapping(null)} />
 
