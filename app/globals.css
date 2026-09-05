@@ -1,7 +1,7 @@
 /* Keep typography available in production builds without a runtime stylesheet request. */
 @font-face {
   font-family: "Google Sans Flex";
-  src: url("/fonts/GoogleSansFlex-Regular.ttf") format("truetype");
+  src: url("/fonts/GoogleSansFlex-Medium.ttf") format("truetype");
   font-style: normal;
   font-weight: 400;
   font-display: swap;
