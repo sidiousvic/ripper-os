@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M5 — Imports become additive and explainable
-Current task: V2-044
-Last completed task: V2-043 — Clarify tonnage and recorded-set semantics
-Next task: V2-044
+Current task: V2-045
+Last completed task: V2-044 — Add a small versioned derived muscle exposure model
+Next task: V2-045
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
-Tasks complete: 41
-Tasks remaining: 10
+Tasks complete: 42
+Tasks remaining: 9
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -3241,7 +3241,7 @@ Implement V2-043 only. Make volume and attendance labels match what the calculat
 ### V2-044 — Add a small versioned derived muscle exposure model
 
 Status:
-TODO
+DONE
 
 Milestone:
 M8 — Improve meaning after preserving behavior

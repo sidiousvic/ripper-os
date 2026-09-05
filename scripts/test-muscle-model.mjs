@@ -1,0 +1,6 @@
+import assert from "node:assert/strict";
+import { deriveMuscleExposure } from "../lib/analytics/muscle-model.ts";
+const detailed = { schemaVersion: 1, representation: "detailed", importId: "test", source: "strong", filename: "test.csv", adapterVersion: "v1", sessions: [{ id: "s", importId: "test", source: "strong", date: "2026-01-01", timePrecision: "date", boundary: "confirmed", durationSeconds: null, exercises: [{ id: "e", rawExerciseName: "Bench", displayName: "Barbell Bench Press", exerciseId: "barbell_bench_press", comparisonKey: "barbell_bench_press", order: 0, sets: [{ id: "set", index: 0, kind: "normal", completed: null, reps: 8, repsBasis: "unknown", load: null, durationSeconds: null, distanceMeters: null, rpe: null, rir: null, sourceRefs: ["r"] }] }], sourceRefs: ["r"] }], issues: [], sourceSheets: {}, sourceRows: [] };
+const result = deriveMuscleExposure(detailed);
+assert.equal(result.modelVersion, "v1"); assert.equal(result.mappedSets, 1); assert.equal(result.muscleDays.find(row => row.rawMuscleName === "chest").setEquivalents, 1); assert.equal(result.muscleDays.find(row => row.rawMuscleName === "triceps").setEquivalents, 0.5);
+console.log("Derived muscle model checks passed.");
