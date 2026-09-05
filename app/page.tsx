@@ -12,6 +12,7 @@ import ExerciseMappingDialog, { type MappingCandidate } from "../components/impo
 import ImportPreviewDialog from "../components/import/import-preview";
 import { combineImportPreviews, createConflictChoicePreview, createImportPreview, type ImportConflictPreview, type ImportPreview } from "../lib/import/import-preview";
 import ImportConflicts from "../components/import/import-conflicts";
+import { ImportController } from "../lib/import/import-controller";
 import ImportReportDialog from "../components/import/import-report";
 import { createImportReport, type ImportReport } from "../lib/import/import-report";
 import { isTrainingSnapshot, saveTrainingSnapshot, TRAINING_SNAPSHOT_KEY } from "../lib/training-snapshot.mjs";
@@ -210,8 +211,8 @@ export default function Home() {
   const [pendingConflict, setPendingConflict] = useState<ImportConflictPreview | null>(null);
   const [importReport, setImportReport] = useState<ImportReport | null>(null);
   const [importing, setImporting] = useState(false);
-  const importController = useRef<AbortController | null>(null);
-  useEffect(() => () => { importController.current?.abort(); aiController.current?.abort(); datasetRevision.current += 1; }, []);
+  const importController = useRef(new ImportController());
+  useEffect(() => () => { importController.current.cancel(); aiController.current?.abort(); datasetRevision.current += 1; }, []);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [aiInsight, setAiInsight] = useState<AiInsight | null>(null);
   const [recommendationState, setRecommendationState] = useState<string>("");
@@ -316,10 +317,9 @@ export default function Home() {
     const files = Array.from(input.files ?? []);
     if (!files.length) return;
     input.value = "";
-    importController.current?.abort();
+    importController.current.cancel();
     aiController.current?.abort();
-    const controller = new AbortController();
-    importController.current = controller;
+    const operation = importController.current.begin();
     setImporting(true);
     setUploadState("Detecting and processing your export on this device…");
     try {
@@ -329,7 +329,7 @@ export default function Home() {
       for (const [index, file] of files.entries()) {
         let options: StrongNormalizationOptions = { exerciseOverrides };
         try {
-          let outcome = await importTrainingFile(file, controller.signal, options);
+          let outcome = await importTrainingFile(file, operation.signal, options);
           if (outcome.status === "needs-input") {
             if (outcome.needs.includes("weight-unit")) {
               const unit = window.prompt(`Strong does not label the Weight column in ${file.name}. Enter its unit (kg or lb).`, "kg")?.trim().toLowerCase();
@@ -341,16 +341,16 @@ export default function Home() {
               if (unit !== "m" && unit !== "km" && unit !== "mi") { failures.push(`${file.name}: distance unit required`); continue; }
               options = { ...options, distanceUnit: unit };
             }
-            outcome = await importTrainingFile(file, controller.signal, options);
+            outcome = await importTrainingFile(file, operation.signal, options);
           }
-          if (controller.signal.aborted) return;
+          if (!importController.current.isCurrent(operation)) return;
           if (outcome.status !== "ready") { failures.push(`${file.name}: import choices required`); continue; }
           const preview = createImportPreview(outcome, file.name, mode === "replace" && index === 0 ? "replace" : "add", staged);
           if ("conflict" in preview) { failures.push(`${file.name}: ${preview.conflict.message}`); continue; }
           previews.push(preview);
           staged.splice(0, staged.length, ...preview.nextImports);
         } catch (error) {
-          if (controller.signal.aborted) return;
+          if (operation.signal.aborted || !importController.current.isCurrent(operation)) return;
           failures.push(`${file.name}: ${error instanceof Error ? error.message : "could not be parsed"}`);
         }
       }
@@ -358,10 +358,10 @@ export default function Home() {
       setPendingImport(combineImportPreviews(previews, mode, failures));
       setUploadState("Review the import preview before changing your dashboard.");
     } catch (error) {
-      if (!controller.signal.aborted) setUploadState(error instanceof Error ? error.message : "Could not parse the workbook.");
+      if (importController.current.isCurrent(operation)) setUploadState(error instanceof Error ? error.message : "Could not parse the workbook.");
     } finally {
-      if (importController.current === controller) {
-        importController.current = null;
+      if (importController.current.isCurrent(operation)) {
+        importController.current.finish(operation);
         setImporting(false);
       }
     }
@@ -439,7 +439,7 @@ export default function Home() {
   };
 
   const clearUploadedData = () => {
-    importController.current?.abort();
+    importController.current.cancel();
     aiController.current?.abort();
     try { localStorage.removeItem(sessionDataKey); } catch { /* Clearing the visible dashboard must still work. */ }
     datasetRevision.current += 1;
@@ -604,7 +604,7 @@ export default function Home() {
           </div>
           <p className="muted small">Your file stays on this device. AI insights are optional.</p>
           {uploadState && <p className="upload-status" role="status">{uploadState}</p>}
-          {importing && <button className="button secondary" onClick={() => { importController.current?.abort(); setUploadState("Import cancelled."); }}>Cancel import</button>}
+          {importing && <button className="button secondary" onClick={() => { importController.current.cancel(); setImporting(false); setUploadState("Import cancelled."); }}>Cancel import</button>}
         </div>
       </section>
 

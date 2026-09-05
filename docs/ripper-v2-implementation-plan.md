@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M5 — Imports become additive and explainable
-Current task: V2-029
-Last completed task: V2-028 — Accept multiple files in one staged import
-Next task: V2-029
+Current task: V2-030
+Last completed task: V2-029 — Exercise real cancellation and stale-result races
+Next task: V2-030
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
-Tasks complete: 26
-Tasks remaining: 25
+Tasks complete: 27
+Tasks remaining: 24
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -2182,7 +2182,7 @@ Implement V2-028 only. Extend the proven single-file path to a bounded sequentia
 ### V2-029 — Exercise real cancellation and stale-result races
 
 Status:
-TODO
+DONE
 
 Milestone:
 M5 — Imports become additive and explainable
