@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import "@fontsource-variable/figtree";
 import "./globals.css";
 
 const siteDescription = "Ripper OS organizes your training data into progress, consistency, muscle balance, highlights and opportunities. It's like Spotify Wrapped, for training.";

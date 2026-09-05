@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
+import BuildVersion from "../build-version";
 import "../globals.css";
 
 export default function AboutPage() {
@@ -27,9 +29,15 @@ export default function AboutPage() {
       <p>Ripper OS has rate limit safeguards for your OpenAPI Keys. There are two separate limits. There is a small safety limit on uploads, connection checks, and recommendation requests from the same network. It is there to stop accidental loops and abuse. If you hit it, wait a minute or two and try again.</p>
       <p>OpenAI has its own limits for the key or project: request quotas, billing limits, and temporary provider throttling. If OpenAI returns a limit, Ripper OS passes back a friendly error. Ripper OS does not add a country block, although OpenAI availability and network conditions can vary by region. Several people sharing one network, or a key with no remaining quota, can make a first request fail.</p>
       <p>AI is optional, so a rate-limit message does not affect your charts or uploaded analysis. Use one key per person, keep it private, and revoke it immediately if it is exposed.</p>
-      <h2>Privacy</h2><p>The original workbook is processed in the app and is not retained. A rendered summary and generated insights are kept in this browser so you can come back to the last export's result, and we show that as "loaded". Your API key is never stored, so you have to enter it every time you want to render a new AI summary.</p>
+      <h2>Privacy</h2><p>The original workbook is processed in the app and is not retained. A rendered summary and generated insights are kept in this browser so you can come back to the last export&apos;s result, and we show that as &quot;loaded&quot;. Your API key is never stored, so you have to enter it every time you want to render a new AI summary.</p>
       <h2>Limitations</h2><p>Ripper OS is a training-data visualization tool, not medical advice. Uploads are limited to 25 MB, CSV exports cannot provide muscle-group analysis unless that data is included, and comparisons are only as reliable as the exercise names, units, and logging consistency in the export.</p>
     </section>
-    <footer className="shell footer"><p><a href="https://github.com/sidiousvic/ripper-os/issues/new?title=Bug%3A%20&body=%23%23%20What%20happened%3F%0A%0A%23%23%20How%20can%20we%20reproduce%20it%3F%0A%0A%23%23%20Browser%20and%20device%0A" target="_blank" rel="noreferrer">Report a bug</a></p><p className="muted">© All Rights Reserved.</p></footer>
+      <footer className="shell footer">
+        <div className="sidiousware-lockup">
+          <Image src="/brand/sidiousware-logo.png" alt="Sidiousware" width={330} height={191} />
+        </div>
+        <p><a href="https://github.com/sidiousvic/ripper-os/issues/new?title=Bug%3A%20&body=%23%23%20What%20happened%3F%0A%0A%23%23%20How%20can%20we%20reproduce%20it%3F%0A%0A%23%23%20Browser%20and%20device%0A" target="_blank" rel="noreferrer">Report a bug 🪲</a></p>
+        <BuildVersion />
+      </footer>
   </main>;
 }

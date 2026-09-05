@@ -122,3 +122,10 @@ Open a pull request with a focused change and a short description; I will review
 - `scripts/refresh-training-data.mjs` — workbook normalization script
 - `scripts/test-data-shape.mjs` — data-shape check
 - `public/brand/` — local visual assets
+
+### Identifying builds and checking fonts
+
+The dashboard and About footers show `v<package version> · <source fingerprint> · <environment>`.
+The fingerprint is computed from application source, public assets, scripts, dependencies, and build configuration when the server starts or a build runs. Matching fingerprints identify matching source inputs across local and deployed builds; uncommitted source edits change the fingerprint after restarting the dev server. Hover over the version to see the Git commit. Vercel builds show `preview` or `production`; local development shows `local`.
+
+Vercel uses `npx next build` (see `vercel.json`), while `npm run build` uses Vinext. Run the Vercel build when validating production changes. All active fonts are served from `public/fonts/`, including Montaga and its OFL license, so production no longer depends on a Google Fonts stylesheet request.
