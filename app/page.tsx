@@ -402,6 +402,12 @@ export default function Home() {
   const selectedPeak = Math.max(...selectedSeries.map((record) => record.value), 0);
   const selectedChange = selectedFirst ? ((selectedLatest / selectedFirst) - 1) * 100 : 0;
   const selectedMeta = metricMeta[selectedMetric];
+  // Recalculate this derived display data on restore as well as on fresh imports.
+  // Older snapshots may still contain the previous latest-value percentage.
+  const headlineAchievements = useMemo(() => data.achievements.map((achievement) => {
+    const percentChange = achievement.first.value ? Math.round(((achievement.peak.value / achievement.first.value) - 1) * 100) : 0;
+    return { ...achievement, percentChange };
+  }).filter((achievement) => achievement.percentChange > 0).slice(0, 4), [data.achievements]);
 
   const monthlyChart = data.monthly.map((item) => ({ ...item, label: formatMonth(item.month) }));
   const maxRecentMuscle = Math.max(...data.muscles.flatMap((muscle) => [muscle.earlyWeekly, muscle.recentWeekly]), 1);
@@ -459,7 +465,7 @@ export default function Home() {
         <StatCard icon={<Layers3 size={20} />} label="Exercise library" value={`${data.coverage.exerciseCount}`} note="movements available to explore" />
       </section>
 
-      <section className={`section shell data-dependent ${data.achievements.length ? "" : "no-achievements"}`} id="highlights">
+      <section className={`section shell data-dependent ${headlineAchievements.length ? "" : "no-achievements"}`} id="highlights">
         <SectionHeading
           kicker="The headline gains"
           title="Your strongest measurable achievements"
@@ -467,7 +473,7 @@ export default function Home() {
         />
         <SectionInsight text={aiInsight?.sectionInsights.highlights} />
         <div className="achievement-grid">
-          {data.achievements.map((achievement, index) => {
+          {headlineAchievements.map((achievement, index) => {
             const unit = metricMeta[achievement.metric as MetricKey].unit;
             return (
               <article className="achievement-card panel" key={achievement.exercise}>
