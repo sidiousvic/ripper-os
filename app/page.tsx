@@ -37,7 +37,7 @@ import {
   Trash2,
   TrendingUp,
 } from "lucide-react";
-import demoData from "./training-data.json";
+import demoDataJson from "./training-data.json";
 
 type MetricKey = "heaviestKg" | "e1rmKg" | "bestSetReps" | "totalVolumeKg" | "totalReps" | "totalSets" | "durationSec";
 type ProgressRecord = {
@@ -65,7 +65,21 @@ type Exercise = {
 };
 type Recommendation = { title: string; summary: string; evidence: string[]; actions: string[]; priority: "high" | "medium" | "low"; caveat: string };
 type AiInsight = { sustainedPractice: string; nextYearRule: string; sectionInsights: Record<string, string> };
-type UploadPayload = typeof demoData & { error?: string; recommendations?: Recommendation[]; sustainedPractice?: string; nextYearRule?: string; sectionInsights?: Record<string, string> };
+type Achievement = { exercise: string; metric: MetricKey; first: { date: string; value: number }; latest: { date: string; value: number }; peak: { date: string; value: number }; percentChange: number };
+type Monthly = { month: string; sessions: number; cumulative: number; coverage: string };
+type Gap = { from: string; to: string; daysBetween: number; daysOff: number };
+type Attendance = { week: string; days: number[]; sessions: number };
+type Muscle = { muscle: string; allTimeSets: number; earlyWeekly: number; recentWeekly: number; change: number };
+type DashboardData = {
+  generatedAt: string | null;
+  coverage: { firstDate: string; lastDate: string; journeyDays: number; totalSessions: number; averageSessionsPerMonth: number; averageSessionsPerWeek: number; exerciseCount: number; longestActiveWeekStreak: number };
+  monthly: Monthly[]; busiestMonths: Monthly[]; quietestMonths: Monthly[]; gaps: Gap[]; attendance: Attendance[];
+  exercises: Exercise[]; muscleWindows: { early: [string, string]; recent: [string, string] }; muscles: Muscle[];
+  muscleHeatmap: { weeks: string[]; rows: { muscle: string; weeks: number[] }[] };
+  achievements: Achievement[]; methodology: Record<string, string>;
+};
+const demoData = demoDataJson as unknown as DashboardData;
+type UploadPayload = DashboardData & { error?: string; recommendations?: Recommendation[]; sustainedPractice?: string; nextYearRule?: string; sectionInsights?: Record<string, string> };
 
 const emptyExercise: Exercise = { name: "No exercise selected", family: "—", defaultMetric: "totalSets", availableMetrics: ["totalSets"], firstDate: "1970-01-01", lastDate: "1970-01-01", sessions: 0, totalSets: 0, totalReps: 0, totalVolumeKg: 0, progress: [] };
 const sessionDataKey = TRAINING_SNAPSHOT_KEY;
