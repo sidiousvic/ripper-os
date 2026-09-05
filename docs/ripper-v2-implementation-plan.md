@@ -1,7 +1,7 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M1 — Lock down the behavior worth keeping
-Current task: None; V2-001 completed
+Current task: V2-002 — Assert current dashboard analytics against the baseline (IN_PROGRESS)
 Last completed task: V2-001 — Add a representative MacroFactor regression dataset
 Next task: V2-002
 Blockers: No verified Strong or Hevy export fixture exists in this checkout. V2-009 and V2-034 require a permission-cleared export with documented units and date interpretation. These do not block V2-001–008.
@@ -295,7 +295,7 @@ Implement V2-001 only. Commit a deterministic, privacy-safe MF CSV and workbook 
 ### V2-002 — Assert current dashboard analytics against the baseline
 
 Status:
-TODO
+IN_PROGRESS
 
 Milestone:
 M1 — Lock down the behavior worth keeping

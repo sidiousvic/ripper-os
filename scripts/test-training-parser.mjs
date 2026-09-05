@@ -72,6 +72,27 @@ for (const name of ["six-months.csv", ...generatedWorkbooks.keys()]) {
       assert.ok(data.exercises.some((exercise) => exercise.availableMetrics.includes(metric)), `full fixture covers ${metric}`);
     }
     assert.ok(data.muscles.length > 0);
+    assert.deepEqual(data.coverage, {
+      firstDate: "2026-01-05", lastDate: "2026-06-15", journeyDays: 162,
+      totalSessions: 24, averageSessionsPerMonth: 4, averageSessionsPerWeek: 1,
+      exerciseCount: 6, longestActiveWeekStreak: 11,
+    });
+    assert.deepEqual(data.monthly.map(({ month, sessions, cumulative, coverage }) => ({ month, sessions, cumulative, coverage })), [
+      { month: "2026-01", sessions: 5, cumulative: 5, coverage: "partial" },
+      { month: "2026-02", sessions: 5, cumulative: 10, coverage: "complete" },
+      { month: "2026-03", sessions: 0, cumulative: 10, coverage: "complete" },
+      { month: "2026-04", sessions: 5, cumulative: 15, coverage: "complete" },
+      { month: "2026-05", sessions: 5, cumulative: 20, coverage: "complete" },
+      { month: "2026-06", sessions: 4, cumulative: 24, coverage: "partial" },
+    ]);
+    assert.deepEqual(data.gaps[0], { from: "2026-02-23", to: "2026-04-06", daysBetween: 42, daysOff: 41 });
+    const bench = data.exercises.find((exercise) => exercise.name === "Barbell Bench Press");
+    assert.deepEqual({ sessions: bench.sessions, totalSets: bench.totalSets, totalReps: bench.totalReps, totalVolumeKg: bench.totalVolumeKg }, { sessions: 24, totalSets: 72, totalReps: 552, totalVolumeKg: 38640 });
+    assert.deepEqual(data.achievements.find((achievement) => achievement.exercise === "Barbell Bench Press"), {
+      exercise: "Barbell Bench Press", metric: "heaviestKg", first: { date: "2026-01-05", value: 60 },
+      latest: { date: "2026-06-15", value: 75 }, peak: { date: "2026-06-01", value: 85 }, percentChange: 42,
+    });
+    assert.deepEqual(data.muscles.find((muscle) => muscle.muscle === "Chest"), { muscle: "Chest", allTimeSets: 108, earlyWeekly: 5.6, recentWeekly: 5.6, change: 0 });
   } else {
     assert.equal(data.muscles.length, 0, `${name}: absent muscle data is not fabricated`);
   }
