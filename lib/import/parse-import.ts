@@ -6,10 +6,12 @@ import { inspectInput } from "./inspect-input.ts";
 import type { AggregateImport } from "./types.ts";
 import { normalizeMacroFactor } from "./adapters/macrofactor.ts";
 import { normalizeStrong, type StrongNormalizationOptions } from "./adapters/strong.ts";
+import { normalizeHevy } from "./adapters/hevy.ts";
 
 export type ImportOutcome =
   | { status: "ready"; source: "macrofactor"; dashboard: DashboardData; importData: AggregateImport }
   | { status: "ready"; source: "strong"; dashboard: DashboardData; importData: DetailedImport }
+  | { status: "ready"; source: "hevy"; dashboard: DashboardData; importData: DetailedImport }
   | { status: "needs-input"; source: "strong"; needs: string[] };
 
 export function parseImport(fileBytes: Uint8Array, fileName: string, options: StrongNormalizationOptions = {}): ImportOutcome {
@@ -21,6 +23,7 @@ export function parseImport(fileBytes: Uint8Array, fileName: string, options: St
     const importData = normalizeMacroFactor(input, fileName, options);
     return { status: "ready", source: "macrofactor", dashboard: buildDashboard(importData, input.inputKind === "csv" ? "csv" : "workbook"), importData };
   }
+  if (detected.format === "hevy") { const importData = normalizeHevy(input, fileName, options.exerciseOverrides); return { status: "ready", source: "hevy", dashboard: buildDashboard(importData), importData }; }
   const normalized = normalizeStrong(input, fileName, options);
   if (normalized.status === "needs-input") return { status: "needs-input", source: "strong", needs: normalized.needs };
   return { status: "ready", source: "strong", dashboard: buildDashboard(normalized.data), importData: normalized.data };

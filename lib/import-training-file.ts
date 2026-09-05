@@ -10,7 +10,7 @@ type ImportResult = { ok: true; data: ImportOutcome } | { ok: false; error: stri
 // cancels synchronous parsing as well as releasing its workbook memory.
 export function importTrainingFile(file: File, signal: AbortSignal, options?: StrongNormalizationOptions): Promise<ImportOutcome> {
   if (signal.aborted) return Promise.reject(new DOMException("Import cancelled", "AbortError"));
-  if (!/\.(xlsx|csv)$/i.test(file.name)) return Promise.reject(new Error("Choose a MacroFactor .xlsx or .csv export."));
+  if (!/\.(xlsx|csv)$/i.test(file.name)) return Promise.reject(new Error("Choose a MacroFactor, Strong or Hevy .xlsx/.csv export."));
   if (file.size > MAX_IMPORT_BYTES) return Promise.reject(new Error("The export is larger than the 25 MB import limit."));
 
   return new Promise((resolve, reject) => {

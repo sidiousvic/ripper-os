@@ -4,6 +4,7 @@ export type SourceMapping = { source: TrainingSource; rawName: string; exerciseI
 export const sourceMappings: SourceMapping[] = [
   { source: "macrofactor", rawName: "Barbell Bench Press", exerciseId: "barbell_bench_press", comparable: true },
   { source: "strong", rawName: "Bench Press (Barbell)", exerciseId: "barbell_bench_press", comparable: true },
+  { source: "hevy", rawName: "Bench Press (Barbell)", exerciseId: "barbell_bench_press", comparable: true },
 ];
 
 export function sourceMappingKey(source: TrainingSource, rawName: string) {

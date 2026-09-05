@@ -178,6 +178,8 @@ assert.equal(parsedHevyRows.rows.some(row => row.weightKg === null && row.reps !
 const normalizedHevy = normalizeHevy(inspectInput(hevyFixtureBytes, "hevy.csv"), "hevy.csv");
 assert.equal(normalizedHevy.sessions.length > 1, true);
 assert.equal(normalizedHevy.sessions.flatMap(session => session.exercises).flatMap(exercise => exercise.sets).length, 330);
+const hevyImport = parseImport(hevyFixtureBytes, "hevy.csv");
+assert.equal(hevyImport.source, "hevy");
 assert.equal(parsedStrong.status, "ready");
 assert.equal(parsedStrong.source, "strong");
 assert.equal(parsedStrong.dashboard.coverage.totalSessions, 86);
