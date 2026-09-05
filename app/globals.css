@@ -4248,6 +4248,13 @@ button:hover {
   padding-inline: 28px;
 }
 
+/* The pager is a compact control, not a flexible panel-heading column. */
+.calendar-panel .panel-heading > .calendar-pager {
+  flex: 0 0 auto;
+  width: max-content;
+  max-width: 100%;
+}
+
 /* Attendance hover copy uses the same quiet, raised treatment as chart tooltips. */
 .attendance-cell[data-tooltip]::after {
   min-width: 155px;
