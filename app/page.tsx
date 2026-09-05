@@ -5,6 +5,7 @@ import Footer from "./footer";
 import { importTrainingFile } from "../lib/import-training-file";
 import { isTrainingSnapshot, saveTrainingSnapshot, TRAINING_SNAPSHOT_KEY } from "../lib/training-snapshot.mjs";
 import { isCurrentRequest } from "../lib/request-guard.mjs";
+import type { DashboardData, Exercise, MetricKey, ProgressRecord } from "../lib/analytics/dashboard-types";
 import {
   Bar,
   CartesianGrid,
@@ -38,45 +39,8 @@ import {
 } from "lucide-react";
 import demoDataJson from "./training-data.json";
 
-type MetricKey = "heaviestKg" | "e1rmKg" | "bestSetReps" | "totalVolumeKg" | "totalReps" | "totalSets" | "durationSec";
-type ProgressRecord = {
-  date: string;
-  heaviestKg: number | null;
-  e1rmKg: number | null;
-  bestSetReps: number | null;
-  totalVolumeKg: number | null;
-  totalReps: number | null;
-  totalSets: number | null;
-  durationSec: number | null;
-};
-type Exercise = {
-  name: string;
-  family: string;
-  defaultMetric: MetricKey;
-  availableMetrics: MetricKey[];
-  firstDate: string;
-  lastDate: string;
-  sessions: number;
-  totalSets: number;
-  totalReps: number;
-  totalVolumeKg: number;
-  progress: ProgressRecord[];
-};
 type Recommendation = { title: string; summary: string; evidence: string[]; actions: string[]; priority: "high" | "medium" | "low"; caveat: string };
 type AiInsight = { sustainedPractice: string; nextYearRule: string; sectionInsights: Record<string, string> };
-type Achievement = { exercise: string; metric: MetricKey; first: { date: string; value: number }; latest: { date: string; value: number }; peak: { date: string; value: number }; percentChange: number };
-type Monthly = { month: string; sessions: number; cumulative: number; coverage: string };
-type Gap = { from: string; to: string; daysBetween: number; daysOff: number };
-type Attendance = { week: string; days: number[]; sessions: number };
-type Muscle = { muscle: string; allTimeSets: number; earlyWeekly: number; recentWeekly: number; change: number };
-type DashboardData = {
-  generatedAt: string | null;
-  coverage: { firstDate: string; lastDate: string; journeyDays: number; totalSessions: number; averageSessionsPerMonth: number; averageSessionsPerWeek: number; exerciseCount: number; longestActiveWeekStreak: number };
-  monthly: Monthly[]; busiestMonths: Monthly[]; quietestMonths: Monthly[]; gaps: Gap[]; attendance: Attendance[];
-  exercises: Exercise[]; muscleWindows: { early: [string, string]; recent: [string, string] }; muscles: Muscle[];
-  muscleHeatmap: { weeks: string[]; rows: { muscle: string; weeks: number[] }[] };
-  achievements: Achievement[]; methodology: Record<string, string>;
-};
 const demoData = demoDataJson as unknown as DashboardData;
 type UploadPayload = DashboardData & { error?: string; recommendations?: Recommendation[]; sustainedPractice?: string; nextYearRule?: string; sectionInsights?: Record<string, string> };
 

@@ -3,6 +3,9 @@ import { readFile } from "node:fs/promises";
 import * as XLSX from "xlsx";
 import { parseTrainingFile } from "../lib/training-parser.ts";
 import { buildWorkbookFixtures } from "../tests/fixtures/macrofactor/build-workbooks.mjs";
+const nullMetric = { totalSets: 0, totalReps: null, bestSetReps: null, heaviestKg: null, totalVolumeKg: null, e1rmKg: null, durationSec: null };
+assert.equal(nullMetric.totalSets, 0);
+assert.equal(nullMetric.totalReps, null);
 
 const csv = "Date,Exercise,Weight (kg),Reps,Notes\n2026-01-01,Bench Press,100,5,private-note-marker\n2026-01-01,Bench Press,100,5,\n2026-02-01,Bench Press,80,8,\n";
 const fromCsv = parseTrainingFile(new TextEncoder().encode(csv), "training.csv");
