@@ -12,6 +12,8 @@ import ExerciseMappingDialog, { type MappingCandidate } from "../components/impo
 import ImportPreviewDialog from "../components/import/import-preview";
 import { createConflictChoicePreview, createImportPreview, type ImportConflictPreview, type ImportPreview } from "../lib/import/import-preview";
 import ImportConflicts from "../components/import/import-conflicts";
+import ImportReportDialog from "../components/import/import-report";
+import { createImportReport, type ImportReport } from "../lib/import/import-report";
 import { isTrainingSnapshot, saveTrainingSnapshot, TRAINING_SNAPSHOT_KEY } from "../lib/training-snapshot.mjs";
 import { isCurrentRequest } from "../lib/request-guard.mjs";
 import type { DashboardData, Exercise, MetricKey, ProgressRecord } from "../lib/analytics/dashboard-types";
@@ -206,6 +208,7 @@ export default function Home() {
   const [mappingCandidate, setMappingCandidate] = useState<MappingCandidate | null>(null);
   const [pendingImport, setPendingImport] = useState<ImportPreview | null>(null);
   const [pendingConflict, setPendingConflict] = useState<ImportConflictPreview | null>(null);
+  const [importReport, setImportReport] = useState<ImportReport | null>(null);
   const [importing, setImporting] = useState(false);
   const importController = useRef<AbortController | null>(null);
   useEffect(() => () => { importController.current?.abort(); aiController.current?.abort(); datasetRevision.current += 1; }, []);
@@ -220,7 +223,7 @@ export default function Home() {
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
   const [loadedExportOpen, setLoadedExportOpen] = useState(false);
   const [recommendationError, setRecommendationError] = useState("");
-  const activeModal = recommendationError ? "recommendation-error" : connectOpen ? "connect" : loadedExportOpen ? "loaded-export" : aiConsentOpen ? "ai-consent" : clearConfirmOpen ? "clear" : mappingCandidate ? "exercise-mapping" : pendingConflict ? "import-conflict" : pendingImport ? "import-preview" : "";
+  const activeModal = recommendationError ? "recommendation-error" : connectOpen ? "connect" : loadedExportOpen ? "loaded-export" : aiConsentOpen ? "ai-consent" : clearConfirmOpen ? "clear" : mappingCandidate ? "exercise-mapping" : pendingConflict ? "import-conflict" : pendingImport ? "import-preview" : importReport ? "import-report" : "";
   const closeActiveModal = useCallback(() => {
     if (recommendationError) setRecommendationError("");
     else if (connectOpen) setConnectOpen(false);
@@ -230,7 +233,8 @@ export default function Home() {
     else if (mappingCandidate) setMappingCandidate(null);
     else if (pendingConflict) setPendingConflict(null);
     else if (pendingImport) setPendingImport(null);
-  }, [recommendationError, connectOpen, loadedExportOpen, aiConsentOpen, clearConfirmOpen, mappingCandidate, pendingConflict, pendingImport]);
+    else if (importReport) setImportReport(null);
+  }, [recommendationError, connectOpen, loadedExportOpen, aiConsentOpen, clearConfirmOpen, mappingCandidate, pendingConflict, pendingImport, importReport]);
   useEffect(() => {
     if (!activeModal) return;
     const previous = document.activeElement as HTMLElement | null;
@@ -297,6 +301,7 @@ export default function Home() {
       setExerciseOverrides({});
       setPendingImport(null);
       setPendingConflict(null);
+      setImportReport(null);
       setLastExportName(snapshot.fileName ?? ""); setLastExportAt(snapshot.uploadedAt ?? "");
       setRecommendations(snapshot.recommendations ?? []); setAiInsight(snapshot.aiInsight ?? null);
       setSelectedExerciseId(featured ? exerciseSeriesId(featured) : "");
@@ -380,8 +385,10 @@ export default function Home() {
     setAiConsentOpen(false);
     const saved = saveTrainingSnapshot(JSON.stringify(snapshot), () => localStorage);
     setUploadState(saved === "saved" ? `${pendingImport.action === "add" ? "Added" : "Loaded"} ${pendingImport.filename}.` : `${pendingImport.action === "add" ? "Added" : "Loaded"} ${pendingImport.filename}. This result could not be saved in this browser; keep this page open or import the file again after refreshing.`);
+    setImportReport(createImportReport(pendingImport));
     setPendingImport(null);
     setPendingConflict(null);
+    setImportReport(null);
   };
 
   const chooseConflict = (choice: import("../lib/history/reconcile-imports").ConflictChoice) => {
@@ -927,6 +934,7 @@ export default function Home() {
 
       <ImportPreviewDialog preview={pendingImport} onCancel={() => { setPendingImport(null); setUploadState("Import cancelled; your current dashboard is unchanged."); }} onAccept={applyPendingImport} />
       <ImportConflicts preview={pendingConflict} onCancel={() => { setPendingConflict(null); setUploadState("Overlap review cancelled; your current dashboard is unchanged."); }} onChoice={chooseConflict} />
+      <ImportReportDialog report={importReport} onClose={() => setImportReport(null)} />
 
       <ExerciseMappingDialog candidate={mappingCandidate} onClose={() => setMappingCandidate(null)} onSave={(override) => applyExerciseMapping(override)} onKeepCustom={() => applyExerciseMapping({ keepCustom: true })} onReset={() => applyExerciseMapping(null)} />
 

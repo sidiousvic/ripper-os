@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M5 — Imports become additive and explainable
-Current task: V2-027
-Last completed task: V2-026 — Resolve remaining overlaps explicitly in preview
-Next task: V2-027
+Current task: V2-028
+Last completed task: V2-027 — Show a compact local import report
+Next task: V2-028
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
-Tasks complete: 24
-Tasks remaining: 27
+Tasks complete: 25
+Tasks remaining: 26
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -2043,7 +2043,7 @@ Implement V2-026 only. Let users choose a conservative outcome for overlaps that
 ### V2-027 — Show a compact local import report
 
 Status:
-TODO
+DONE
 
 Milestone:
 M5 — Imports become additive and explainable
