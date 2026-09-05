@@ -88,7 +88,7 @@ for (const name of ["six-months.csv", ...generatedWorkbooks.keys()]) {
     assert.deepEqual(data.coverage, {
       firstDate: "2026-01-05", lastDate: "2026-06-15", journeyDays: 162,
       totalSessions: 24, averageSessionsPerMonth: 4, averageSessionsPerWeek: 1,
-      exerciseCount: 6, longestActiveWeekStreak: 11,
+      exerciseCount: 6, longestActiveWeekStreak: 11, knownWorkouts: null, workoutCountBasis: "unknown",
     });
     assert.deepEqual(data.monthly.map(({ month, sessions, cumulative, coverage }) => ({ month, sessions, cumulative, coverage })), [
       { month: "2026-01", sessions: 5, cumulative: 5, coverage: "partial" },
@@ -167,6 +167,8 @@ const parsedStrong = parseImport(strongFixtureBytes, "strong.csv", { weightUnit:
 assert.equal(parsedStrong.status, "ready");
 assert.equal(parsedStrong.source, "strong");
 assert.equal(parsedStrong.dashboard.coverage.totalSessions, 86);
+assert.equal(parsedStrong.dashboard.coverage.knownWorkouts, 86);
+assert.equal(parsedStrong.dashboard.coverage.workoutCountBasis, "known");
 assert.equal(parsedStrong.importData.sessions.flatMap(session => session.exercises).some(exercise => exercise.exerciseId === "barbell_bench_press"), true);
 const stagedStrong = parseStrongRows(strongInput);
 assert.equal(stagedStrong.rows.length, 1903);

@@ -55,10 +55,13 @@ export function buildDashboard(input: AggregateImport | DetailedImport | (Aggreg
   const { exercises, achievements } = calculateExerciseSummaries(records);
   const { attendance, longestActiveWeekStreak } = calculateAttendance(records);
   const { muscleWindows, muscles, muscleHeatmap } = calculateSourceMuscles(imports.flatMap(data => data.muscleDays), first, last);
+  const knownWorkoutCounts = imports.map(data => data.knownWorkoutCount).filter((count): count is number => typeof count === "number");
+  const knownWorkouts = knownWorkoutCounts.length ? knownWorkoutCounts.reduce((sum, count) => sum + count, 0) : null;
+  const workoutCountBasis = knownWorkouts === null ? "unknown" : knownWorkoutCounts.length === imports.length ? "known" : "partial";
   const complete = months.filter(month => month.coverage === "complete");
   return {
     generatedAt: new Date().toISOString(),
-    coverage: { firstDate: first, lastDate: last, journeyDays, totalSessions: dates.length, averageSessionsPerMonth, averageSessionsPerWeek, exerciseCount: exercises.length, longestActiveWeekStreak },
+    coverage: { firstDate: first, lastDate: last, journeyDays, totalSessions: dates.length, averageSessionsPerMonth, averageSessionsPerWeek, exerciseCount: exercises.length, longestActiveWeekStreak, knownWorkouts, workoutCountBasis },
     monthly: months,
     busiestMonths: [...complete].sort((a, b) => b.sessions - a.sessions).slice(0, 5),
     quietestMonths: [...complete].sort((a, b) => a.sessions - b.sessions).slice(0, 5),

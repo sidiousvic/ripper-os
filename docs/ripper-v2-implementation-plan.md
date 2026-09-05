@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M3 — Strong drives the existing dashboard
-Current task: V2-022
-Last completed task: V2-021 — Remove the divergent offline dashboard generator
-Next task: V2-022
+Current task: V2-023
+Last completed task: V2-022 — Label training days separately from known workouts
+Next task: V2-023
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
-Tasks complete: 19
-Tasks remaining: 32
+Tasks complete: 20
+Tasks remaining: 31
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -1692,7 +1692,7 @@ Implement V2-021 only. Make refresh:data use the same parser/normalizer and anal
 ### V2-022 — Label training days separately from known workouts
 
 Status:
-TODO
+DONE
 
 Milestone:
 M5 — Imports become additive and explainable

@@ -563,8 +563,8 @@ export default function Home() {
       </section>
 
       <section className="stats shell data-dependent" aria-label="Key training statistics">
-        <StatCard icon={<CalendarDays size={20} />} label="Average month" value={`${data.coverage.averageSessionsPerMonth}`} note="sessions per observed month" />
-        <StatCard icon={<Gauge size={20} />} label="Weekly rhythm" value={`${data.coverage.averageSessionsPerWeek}×`} note="sessions per week, all time" />
+        <StatCard icon={<CalendarDays size={20} />} label="Average month" value={`${data.coverage.averageSessionsPerMonth}`} note="training days per observed month" />
+        <StatCard icon={<Gauge size={20} />} label="Weekly rhythm" value={`${data.coverage.averageSessionsPerWeek}×`} note="training days per week, all time" />
         <StatCard icon={<Flame size={20} />} label="Longest run" value={`${data.coverage.longestActiveWeekStreak} wk`} note="consecutive active weeks" />
         <StatCard icon={<Layers3 size={20} />} label="Exercise library" value={`${data.coverage.exerciseCount}`} note="movements available to explore" />
       </section>
@@ -614,8 +614,8 @@ export default function Home() {
         <div className="two-column wide-left">
           <article className="panel chart-panel">
             <div className="panel-heading">
-              <div><p className="eyebrow">Session cadence</p><h3>Monthly sessions + cumulative journey</h3></div>
-              <div className="legend-inline"><span><i className="legend-bar" /> Sessions</span><span><i className="legend-line" /> Cumulative</span></div>
+              <div><p className="eyebrow">Training cadence</p><h3>Monthly training days + cumulative journey</h3></div>
+              <div className="legend-inline"><span><i className="legend-bar" /> Training days</span><span><i className="legend-line" /> Cumulative</span></div>
             </div>
             <MeasuredChart className="chart-area tall">
               <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={280} debounce={50}>
@@ -625,7 +625,7 @@ export default function Home() {
                   <YAxis yAxisId="sessions" tick={{ fill: "var(--color-text-muted)", fontSize: 16 }} axisLine={false} tickLine={false} allowDecimals={false} />
                   <YAxis yAxisId="cumulative" orientation="right" tick={{ fill: "var(--color-text-muted)", fontSize: 16 }} axisLine={false} tickLine={false} />
                   <Tooltip content={<ChartTooltip />} cursor={{ fill: "rgba(57, 255, 102, .08)" }} />
-                  <Bar yAxisId="sessions" dataKey="sessions" name="Sessions" fill="var(--chart-1)" radius={[4, 4, 1, 1]} maxBarSize={24} />
+                  <Bar yAxisId="sessions" dataKey="sessions" name="Training days" fill="var(--chart-1)" radius={[4, 4, 1, 1]} maxBarSize={24} />
                   <Line yAxisId="cumulative" type="monotone" dataKey="cumulative" name="Cumulative" stroke="var(--chart-2)" strokeWidth={1.75} dot={false} />
                 </ComposedChart>
               </ResponsiveContainer>

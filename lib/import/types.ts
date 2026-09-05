@@ -20,6 +20,8 @@ export interface AggregateImport {
   source: TrainingSource;
   filename: string;
   adapterVersion: string;
+  /** Number of source workouts when the adapter has session-level fidelity. */
+  knownWorkoutCount?: number;
   exerciseDays: CanonicalExerciseDay[];
   muscleDays: SourceMuscleDay[];
   issues: ImportIssue[];

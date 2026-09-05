@@ -36,7 +36,7 @@ export type Muscle = { muscle: string; allTimeSets: number; earlyWeekly: number;
 
 export type DashboardData = {
   generatedAt: string | null;
-  coverage: { firstDate: string; lastDate: string; journeyDays: number; totalSessions: number; averageSessionsPerMonth: number; averageSessionsPerWeek: number; exerciseCount: number; longestActiveWeekStreak: number };
+  coverage: { firstDate: string; lastDate: string; journeyDays: number; totalSessions: number; averageSessionsPerMonth: number; averageSessionsPerWeek: number; exerciseCount: number; longestActiveWeekStreak: number; knownWorkouts: number | null; workoutCountBasis: "known" | "partial" | "unknown" };
   monthly: Monthly[];
   busiestMonths: Monthly[];
   quietestMonths: Monthly[];
