@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M1 — Lock down the behavior worth keeping
-Current task: V2-006 — Extract attendance and active-week streak calculations (IN_PROGRESS)
-Last completed task: V2-005 — Extract exercise progression and achievement calculations
-Next task: V2-006
+Current task: None; V2-006 completed
+Last completed task: V2-006 — Extract attendance and active-week streak calculations
+Next task: V2-007
 Blockers: No verified Strong or Hevy export fixture exists in this checkout. V2-009 and V2-034 require a permission-cleared export with documented units and date interpretation. These do not block V2-001–008.
-Tasks complete: 5
-Tasks remaining: 46
+Tasks complete: 6
+Tasks remaining: 45
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -573,7 +573,7 @@ Implement V2-005 only. Move exercise summaries, metric selection and achievement
 ### V2-006 — Extract attendance and active-week streak calculations
 
 Status:
-IN_PROGRESS
+DONE
 
 Milestone:
 M2 — MacroFactor through a small shared model
@@ -3829,3 +3829,4 @@ Date/number validation is the exception to accepting invalid legacy behavior: V2
 - 2026-09-05: V2-003 completed with source-neutral exercise-day/domain types and shared dashboard view types. Existing page behavior and parser output remain unchanged.
 - 2026-09-05: V2-004 completed by extracting consistency dates, monthly summaries and gaps into `lib/analytics/consistency.ts`; MacroFactor output remains at baseline parity.
 - 2026-09-05: V2-005 completed by extracting exercise summaries and first-to-peak achievements into `lib/analytics/exercises.ts`; existing formulas and ordering remain unchanged.
+- 2026-09-05: V2-006 completed by extracting attendance bins and active-week streak calculations into `lib/analytics/attendance.ts`; existing thresholds and dashboard output remain unchanged.

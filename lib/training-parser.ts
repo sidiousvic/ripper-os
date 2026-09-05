@@ -1,8 +1,9 @@
-/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import * as XLSX from "xlsx";
 import { MAX_IMPORT_BYTES } from "./import-limits.mjs";
 import { calculateConsistencySummary } from "./analytics/consistency.ts";
 import { calculateExerciseSummaries } from "./analytics/exercises.ts";
+import { calculateAttendance } from "./analytics/attendance.ts";
 
 const DAY = 86400000;
 const epoch = Date.UTC(1899, 11, 30);
@@ -121,12 +122,7 @@ export function parseTrainingFile(fileBytes: Uint8Array, fileName: string) {
         weeks: heatmapWeeks.map((week) => totalFor(muscle, week, new Date(Date.parse(`${week}T00:00:00Z`) + 6 * DAY).toISOString().slice(0, 10))),
       })),
     };
-    const monday = (value: string) => { const d = new Date(`${value}T00:00:00Z`); return new Date(d.valueOf() - ((d.getUTCDay() + 6) % 7) * DAY).toISOString().slice(0, 10); };
-    const weekMap = new Map<string, Set<string>>(); for (const date of dates) { const week = monday(date); if (!weekMap.has(week)) weekMap.set(week, new Set()); weekMap.get(week)!.add(date); }
-    const dailySets = new Map<string, number>(); const dailyLoad = new Map<string, number>(); for (const record of records) { dailySets.set(record.date, (dailySets.get(record.date) ?? 0) + n(record.totalSets)); dailyLoad.set(record.date, (dailyLoad.get(record.date) ?? 0) + n(record.totalVolumeKg)); }
-    const maxDailyLoad = Math.max(...dailyLoad.values(), 0);
-    const attendance: any[] = []; const firstWeek = new Date(`${monday(first)}T00:00:00Z`); const lastWeek = new Date(`${monday(last)}T00:00:00Z`); let currentStreak = 0; let longestStreak = 0;
-    for (let cursor = firstWeek; cursor <= lastWeek; cursor = new Date(cursor.valueOf() + 7 * DAY)) { const week = cursor.toISOString().slice(0, 10); const active = weekMap.get(week) ?? new Set<string>(); const days = Array.from({ length: 7 }, (_, index) => { const date = new Date(cursor.valueOf() + index * DAY).toISOString().slice(0, 10); const sets = dailySets.get(date) ?? 0; const load = dailyLoad.get(date) ?? 0; const ratio = maxDailyLoad ? load / maxDailyLoad : 0; return sets ? maxDailyLoad ? ratio >= .66 ? 3 : ratio >= .33 ? 2 : 1 : sets >= 16 ? 3 : sets >= 8 ? 2 : 1 : 0; }); attendance.push({ week, days, sessions: active.size }); if (active.size) { currentStreak += 1; longestStreak = Math.max(longestStreak, currentStreak); } else currentStreak = 0; }
-    const complete = months.filter((x) => x.coverage === "complete"); const payload = { generatedAt: new Date().toISOString(), coverage: { firstDate: first, lastDate: last, journeyDays: Math.round((Date.parse(`${last}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) / DAY) + 1, totalSessions: sessions.length, averageSessionsPerMonth: r(sessions.length / months.length), averageSessionsPerWeek: r(sessions.length / (((Date.parse(`${last}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) / DAY + 1) / 7)), exerciseCount: exercises.length, longestActiveWeekStreak: longestStreak }, monthly: months, busiestMonths: [...complete].sort((a, b) => b.sessions - a.sessions).slice(0, 5), quietestMonths: [...complete].sort((a, b) => a.sessions - b.sessions).slice(0, 5), gaps, attendance, exercises, muscleWindows: { early: [earlyStart, earlyEnd], recent: [recentStart, recentEnd] }, muscles, muscleHeatmap, achievements, methodology: { strength: "Weighted exercise progress defaults to the heaviest recorded load.", muscles: "Muscle balance uses muscle-group set equivalents. These are exposure signals, not diagnoses.", caveat: "Confirm sudden load changes against the exercise setup." } };
+    const { attendance, longestActiveWeekStreak } = calculateAttendance(records.map((record) => ({ date: record.date, totalSets: record.totalSets, totalVolumeKg: record.totalVolumeKg })));
+    const complete = months.filter((x) => x.coverage === "complete"); const payload = { generatedAt: new Date().toISOString(), coverage: { firstDate: first, lastDate: last, journeyDays: Math.round((Date.parse(`${last}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) / DAY) + 1, totalSessions: sessions.length, averageSessionsPerMonth: r(sessions.length / months.length), averageSessionsPerWeek: r(sessions.length / (((Date.parse(`${last}T00:00:00Z`) - Date.parse(`${first}T00:00:00Z`)) / DAY + 1) / 7)), exerciseCount: exercises.length, longestActiveWeekStreak: longestActiveWeekStreak }, monthly: months, busiestMonths: [...complete].sort((a, b) => b.sessions - a.sessions).slice(0, 5), quietestMonths: [...complete].sort((a, b) => a.sessions - b.sessions).slice(0, 5), gaps, attendance, exercises, muscleWindows: { early: [earlyStart, earlyEnd], recent: [recentStart, recentEnd] }, muscles, muscleHeatmap, achievements, methodology: { strength: "Weighted exercise progress defaults to the heaviest recorded load.", muscles: "Muscle balance uses muscle-group set equivalents. These are exposure signals, not diagnoses.", caveat: "Confirm sudden load changes against the exercise setup." } };
     return payload;
 }
