@@ -21,6 +21,8 @@ export type ImportPreview = {
   errors: number;
   noOp: boolean;
   reconciliation?: { added: number; unchanged: number; unit: "workouts" | "daily observations" };
+  batchFiles?: string[];
+  batchFailures?: string[];
 };
 
 export type ImportConflictPreview = { conflict: ImportConflict; existing: HistoryImport[]; incoming: HistoryImport; source: ImportOutcome["source"]; filename: string };
@@ -49,6 +51,25 @@ export function createImportPreview(outcome: Extract<ImportOutcome, { status: "r
     errors: issues.filter((issue) => issue.severity === "error").length,
     noOp,
     reconciliation: !noOp && "added" in combined ? { added: combined.added, unchanged: combined.unchanged, unit: outcome.source === "strong" ? "workouts" : "daily observations" } : undefined,
+  };
+}
+
+export function combineImportPreviews(previews: ImportPreview[], action: "replace" | "add", failures: string[] = []): ImportPreview {
+  const first = previews[0];
+  const last = previews.at(-1) ?? first;
+  const imports = last?.nextImports ?? [];
+  const dashboard = last?.nextDashboard ?? first?.candidateDashboard;
+  if (!first || !dashboard) throw new Error("No valid imports remain in this batch.");
+  const reconciliation = previews.some(preview => preview.reconciliation) ? {
+    added: previews.reduce((sum, preview) => sum + (preview.reconciliation?.added ?? preview.trainingDays), 0),
+    unchanged: previews.reduce((sum, preview) => sum + (preview.reconciliation?.unchanged ?? 0), 0),
+    unit: "workouts" as const,
+  } : undefined;
+  return {
+    ...last, action, filename: previews.map(preview => preview.filename).join(" + "), candidateDashboard: dashboard, nextDashboard: dashboard, nextImports: imports,
+    trainingDays: previews.reduce((sum, preview) => sum + preview.trainingDays, 0), sets: previews.reduce((sum, preview) => sum + preview.sets, 0),
+    mappedExercises: previews.reduce((sum, preview) => sum + preview.mappedExercises, 0), customExercises: previews.reduce((sum, preview) => sum + preview.customExercises, 0),
+    warnings: previews.reduce((sum, preview) => sum + preview.warnings, 0), errors: previews.reduce((sum, preview) => sum + preview.errors, 0), noOp: previews.every(preview => preview.noOp), reconciliation, batchFiles: previews.map(preview => preview.filename), batchFailures: failures,
   };
 }
 

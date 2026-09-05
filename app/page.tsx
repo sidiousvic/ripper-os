@@ -10,7 +10,7 @@ import type { HistoryImport } from "../lib/history/combine-imports";
 import { exerciseOverrideKey, resolveExercise, type ExerciseOverride, type ExerciseOverrideMap } from "../lib/exercises/resolve";
 import ExerciseMappingDialog, { type MappingCandidate } from "../components/import/exercise-mapping-dialog";
 import ImportPreviewDialog from "../components/import/import-preview";
-import { createConflictChoicePreview, createImportPreview, type ImportConflictPreview, type ImportPreview } from "../lib/import/import-preview";
+import { combineImportPreviews, createConflictChoicePreview, createImportPreview, type ImportConflictPreview, type ImportPreview } from "../lib/import/import-preview";
 import ImportConflicts from "../components/import/import-conflicts";
 import ImportReportDialog from "../components/import/import-report";
 import { createImportReport, type ImportReport } from "../lib/import/import-report";
@@ -313,8 +313,8 @@ export default function Home() {
 
   const handleUpload = async (event: React.ChangeEvent<HTMLInputElement>, mode: "replace" | "add" = "replace") => {
     const input = event.currentTarget;
-    const file = input.files?.[0];
-    if (!file) return;
+    const files = Array.from(input.files ?? []);
+    if (!files.length) return;
     input.value = "";
     importController.current?.abort();
     aiController.current?.abort();
@@ -323,30 +323,39 @@ export default function Home() {
     setImporting(true);
     setUploadState("Detecting and processing your export on this device…");
     try {
-      let options: StrongNormalizationOptions = { exerciseOverrides };
-      let outcome = await importTrainingFile(file, controller.signal, options);
-      if (outcome.status === "needs-input") {
-        if (outcome.needs.includes("weight-unit")) {
-          const unit = window.prompt("Strong does not label its Weight column. Enter the unit used in this export (kg or lb).", "kg")?.trim().toLowerCase();
-          if (unit !== "kg" && unit !== "lb") { setUploadState("Import cancelled: a valid weight unit is required."); return; }
-          options = { ...options, weightUnit: unit };
+      const staged: HistoryImport[] = mode === "add" ? historyImports : [];
+      const previews: ImportPreview[] = [];
+      const failures: string[] = [];
+      for (const [index, file] of files.entries()) {
+        let options: StrongNormalizationOptions = { exerciseOverrides };
+        try {
+          let outcome = await importTrainingFile(file, controller.signal, options);
+          if (outcome.status === "needs-input") {
+            if (outcome.needs.includes("weight-unit")) {
+              const unit = window.prompt(`Strong does not label the Weight column in ${file.name}. Enter its unit (kg or lb).`, "kg")?.trim().toLowerCase();
+              if (unit !== "kg" && unit !== "lb") { failures.push(`${file.name}: weight unit required`); continue; }
+              options = { ...options, weightUnit: unit };
+            }
+            if (outcome.needs.includes("distance-unit")) {
+              const unit = window.prompt(`Strong does not label the Distance column in ${file.name}. Enter its unit (m, km, or mi).`, "km")?.trim().toLowerCase();
+              if (unit !== "m" && unit !== "km" && unit !== "mi") { failures.push(`${file.name}: distance unit required`); continue; }
+              options = { ...options, distanceUnit: unit };
+            }
+            outcome = await importTrainingFile(file, controller.signal, options);
+          }
+          if (controller.signal.aborted) return;
+          if (outcome.status !== "ready") { failures.push(`${file.name}: import choices required`); continue; }
+          const preview = createImportPreview(outcome, file.name, mode === "replace" && index === 0 ? "replace" : "add", staged);
+          if ("conflict" in preview) { failures.push(`${file.name}: ${preview.conflict.message}`); continue; }
+          previews.push(preview);
+          staged.splice(0, staged.length, ...preview.nextImports);
+        } catch (error) {
+          if (controller.signal.aborted) return;
+          failures.push(`${file.name}: ${error instanceof Error ? error.message : "could not be parsed"}`);
         }
-        if (outcome.needs.includes("distance-unit")) {
-          const unit = window.prompt("Strong does not label its Distance column. Enter the unit used in this export (m, km, or mi).", "km")?.trim().toLowerCase();
-          if (unit !== "m" && unit !== "km" && unit !== "mi") { setUploadState("Import cancelled: a valid distance unit is required."); return; }
-          options = { ...options, distanceUnit: unit };
-        }
-        outcome = await importTrainingFile(file, controller.signal, options);
       }
-      if (controller.signal.aborted) return;
-      if (outcome.status !== "ready") throw new Error("This export needs import choices before it can be loaded.");
-      const preview = createImportPreview(outcome, file.name, mode, historyImports);
-      if ("conflict" in preview) {
-        setPendingConflict(preview);
-        setUploadState("Review the overlapping dates before changing your dashboard.");
-        return;
-      }
-      setPendingImport(preview);
+      if (!previews.length) throw new Error(failures[0] ?? "No valid training files remain.");
+      setPendingImport(combineImportPreviews(previews, mode, failures));
       setUploadState("Review the import preview before changing your dashboard.");
     } catch (error) {
       if (!controller.signal.aborted) setUploadState(error instanceof Error ? error.message : "Could not parse the workbook.");
@@ -583,10 +592,10 @@ export default function Home() {
 
       <section className="hero shell" id="top">
         <div className="hero-copy">
-          <h1><b>RIPPER <span>OS</span></b>.<br /><span className="hero-training">Training, <span>Analyzed.</span></span></h1>
+          <h1><b>RIPPER <span>OS</span></b><span className="hero-training">Training, <span>Analyzed.</span></span></h1>
           <p>Upload your training data and Ripper OS organizes it into progress, consistency, muscle balance, highlights, and next opportunities. It&apos;s like Spotify Wrapped for training.</p>
           <div className="hero-actions" aria-label="Dashboard actions">
-            {hasUploadedData ? <button className="button upload-button is-ready" onClick={() => setLoadedExportOpen(true)}><Check size={17} aria-hidden="true" />{loadedSource ? `${loadedSource[0].toUpperCase()}${loadedSource.slice(1)} export uploaded` : "Training export uploaded"}</button> : <label className="button upload-button"><CircleDot size={17} aria-hidden="true" />Upload training data<input type="file" accept=".xlsx,.csv" onChange={handleUpload} /></label>}
+            {hasUploadedData ? <button className="button upload-button is-ready" onClick={() => setLoadedExportOpen(true)}><Check size={17} aria-hidden="true" />{loadedSource ? `${loadedSource[0].toUpperCase()}${loadedSource.slice(1)} export uploaded` : "Training export uploaded"}</button> : <label className="button upload-button"><CircleDot size={17} aria-hidden="true" />Upload training data<input type="file" accept=".xlsx,.csv" multiple onChange={handleUpload} /></label>}
             <button className={`button upload-button ${openAIKey ? "is-ready" : ""}`} onClick={() => { setKeyDraft(openAIKey); setConnectionState(""); setConnectOpen(true); }}><KeyRound size={17} aria-hidden="true" />{openAIKey ? "OpenAI connected" : "Connect OpenAI"}</button>
             {hasUploadedData && <button className="button upload-button" onClick={() => setClearConfirmOpen(true)}><Trash2 size={17} aria-hidden="true" />Clear uploaded data</button>}
             {hasUploadedData && <a className="button primary" href="#progress">Explore all exercises <ChevronRight size={17} /></a>}
@@ -928,7 +937,7 @@ export default function Home() {
           <p className="loaded-export-name">{lastExportName || "Training export"}</p>
           {lastExportAt && <p className="muted small">Loaded {new Date(lastExportAt).toLocaleString()}</p>}
           {historyImports.length > 0 ? <p className="muted small">Sources in this history: {loadedSource || "training exports"}. Add a newer export from the same account to extend your history; unchanged records are skipped.</p> : <p className="muted small">This result was restored from a dashboard snapshot. Reimport the source before adding another file.</p>}
-          <div className="connect-actions"><button className="button secondary" onClick={() => setLoadedExportOpen(false)}>Close</button>{mappingCandidates.length > 0 && <button className="button secondary" onClick={() => { setLoadedExportOpen(false); setMappingCandidate(mappingCandidates[0]); }}>Map exercises ({mappingCandidates.length})</button>}{historyImports.length > 0 && <label className="button secondary upload-button">Add data<input type="file" accept=".xlsx,.csv" onChange={(event) => { setLoadedExportOpen(false); handleUpload(event, "add"); }} /></label>}<label className="button primary upload-button">Replace export<input type="file" accept=".xlsx,.csv" onChange={(event) => { setLoadedExportOpen(false); handleUpload(event, "replace"); }} /></label></div>
+          <div className="connect-actions"><button className="button secondary" onClick={() => setLoadedExportOpen(false)}>Close</button>{mappingCandidates.length > 0 && <button className="button secondary" onClick={() => { setLoadedExportOpen(false); setMappingCandidate(mappingCandidates[0]); }}>Map exercises ({mappingCandidates.length})</button>}{historyImports.length > 0 && <label className="button secondary upload-button">Add data<input type="file" accept=".xlsx,.csv" multiple onChange={(event) => { setLoadedExportOpen(false); handleUpload(event, "add"); }} /></label>}<label className="button primary upload-button">Replace export<input type="file" accept=".xlsx,.csv" multiple onChange={(event) => { setLoadedExportOpen(false); handleUpload(event, "replace"); }} /></label></div>
         </section>
       </div>}
 

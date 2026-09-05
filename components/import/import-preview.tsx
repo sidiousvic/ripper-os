@@ -11,6 +11,7 @@ export default function ImportPreviewDialog({ preview, onCancel, onAccept }: { p
         <p className="eyebrow accent">Review import</p>
         <h2 id="import-preview-title">{preview.action === "add" ? "Add training data" : "Replace training data"}</h2>
         <p className="loaded-export-name">{preview.filename}</p>
+        {preview.batchFailures?.length ? <p className="muted small">{preview.batchFailures.length} file{preview.batchFailures.length === 1 ? "" : "s"} could not be staged; valid files remain ready to import.</p> : null}
         <p className="muted small">{preview.source} detected · {preview.candidateDashboard.coverage.firstDate} → {preview.candidateDashboard.coverage.lastDate}</p>
         <div className="schema-card schema-inline">
           <p><strong>{preview.trainingDays}</strong> training days · <strong>{preview.sets}</strong> recorded sets</p>
