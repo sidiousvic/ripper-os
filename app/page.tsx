@@ -88,6 +88,7 @@ const formatDate = (value: string, options?: Intl.DateTimeFormatOptions) =>
 const formatMonth = (value: string) => formatDate(`${value}-01`, { month: "short", year: "2-digit" });
 const formatNumber = (value: number, maximumFractionDigits = 1) =>
   new Intl.NumberFormat("en", { maximumFractionDigits }).format(value);
+const attendanceWorkloadLabel = (value: number) => value >= 3 ? "High relative workload" : value === 2 ? "Medium relative workload" : "Low relative workload";
 const metricValue = (record: ProgressRecord, metric: MetricKey) => record[metric];
 const toDisplayLoad = (value: number, unit: "kg" | "lb") => unit === "lb" ? value / 0.45359237 : value;
 const usesDisplayUnit = (metric: MetricKey) => metric === "heaviestKg" || metric === "e1rmKg" || metric === "totalVolumeKg";
@@ -799,9 +800,11 @@ export default function Home() {
                   ...(attendanceWeeks.length < 20 ? { width: `${Math.max(attendanceWeeks.length, 1) * 18}px`, minWidth: 0, flex: "0 0 auto" } : {}),
                 }}
               >
-                {attendanceWeeks.flatMap((week) => week.days.map((day, index) => (
-                  <span key={`${week.week}-${index}`} className={day.inYear ? day.active ? `attendance-cell active level-${day.active}` : "attendance-cell" : "attendance-cell outside"} data-tooltip={`${formatDate(day.date)}: ${day.active ? `recorded workload ${day.active}/3` : "rest"}`} title={`${formatDate(day.date)}: ${day.active ? `recorded workload ${day.active}/3` : "rest"}`} aria-label={`${formatDate(day.date)}: ${day.active ? `recorded workload ${day.active}/3` : "rest"}`} />
-                )))}
+                {attendanceWeeks.flatMap((week) => week.days.map((day, index) => {
+                  const workload = day.active ? attendanceWorkloadLabel(day.active) : "Rest day";
+                  const description = `${formatDate(day.date)}: ${workload}`;
+                  return <span key={`${week.week}-${index}`} tabIndex={0} className={day.inYear ? day.active ? `attendance-cell active level-${day.active}` : "attendance-cell" : "attendance-cell outside"} data-tooltip={description} aria-label={description} />;
+                }))}
               </div>
             </div>
             <div className="calendar-legend"><span>Less load</span><i /><i className="mid" /><i className="high" /><span>More load</span></div>

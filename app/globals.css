@@ -4248,6 +4248,20 @@ button:hover {
   padding-inline: 28px;
 }
 
+/* Attendance hover copy uses the same quiet, raised treatment as chart tooltips. */
+.attendance-cell[data-tooltip]::after {
+  min-width: 155px;
+  max-width: 220px;
+  padding: 11px 12px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  color: var(--color-text);
+  background: #1a1a1a;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .28);
+  font: 400 13px/1.35 var(--font-ui);
+  white-space: normal;
+}
+
 @media (max-width: 460px) {
   .unit-option {
     border-radius: 18px;
