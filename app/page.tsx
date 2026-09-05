@@ -18,6 +18,7 @@ import ImportReportDialog from "../components/import/import-report";
 import { createImportReport, type ImportReport } from "../lib/import/import-report";
 import { isTrainingSnapshot, TRAINING_SNAPSHOT_KEY } from "../lib/training-snapshot.mjs";
 import { clearTrainingHistory, loadTrainingHistory, saveTrainingHistory } from "../lib/storage/training-store";
+import { parseBackup, serializeBackup } from "../lib/storage/backup";
 import { isCurrentRequest } from "../lib/request-guard.mjs";
 import type { DashboardData, Exercise, MetricKey, ProgressRecord } from "../lib/analytics/dashboard-types";
 import {
@@ -461,6 +462,26 @@ export default function Home() {
     setSelectedMetric("totalSets");
     setAttendanceYear(Number(demoData.coverage.lastDate.slice(0, 4)));
     setSearch(""); setFamily("All"); setComparisonMetric(""); setVisibleCount(24);
+  };
+
+  const downloadBackup = () => {
+    try {
+      const blob = new Blob([serializeBackup({ schemaVersion: 1, imports: historyImports, exerciseOverrides })], { type: "application/json" });
+      const url = URL.createObjectURL(blob); const anchor = document.createElement("a");
+      anchor.href = url; anchor.download = `ripper-training-backup-${new Date().toISOString().slice(0, 10)}.json`; anchor.click(); URL.revokeObjectURL(url);
+      setUploadState("Private training backup downloaded.");
+    } catch (error) { setUploadState(error instanceof Error ? error.message : "Could not create a backup."); }
+  };
+
+  const restoreBackup = async (file: File) => {
+    try {
+      const backup = parseBackup(await file.text());
+      const count = backup.history.imports.length;
+      if (!window.confirm(`Restore ${count} saved import${count === 1 ? "" : "s"} from this backup? This replaces the current history.`)) return;
+      const saved = await saveTrainingHistory(backup.history);
+      if (!saved.ok) { setUploadState(`Backup is valid but could not be saved: ${saved.error.message}`); return; }
+      window.location.reload();
+    } catch (error) { setUploadState(error instanceof Error ? error.message : "Could not restore this backup."); }
   };
 
   const generateRecommendations = async () => {
@@ -939,7 +960,7 @@ export default function Home() {
           <p className="loaded-export-name">{lastExportName || "Training export"}</p>
           {lastExportAt && <p className="muted small">Loaded {new Date(lastExportAt).toLocaleString()}</p>}
           {historyImports.length > 0 ? <p className="muted small">Sources in this history: {loadedSource || "training exports"}. Add a newer export from the same account to extend your history; unchanged records are skipped.</p> : <p className="muted small">This result was restored from a dashboard snapshot. Reimport the source before adding another file.</p>}
-          <div className="connect-actions"><button className="button secondary" onClick={() => setLoadedExportOpen(false)}>Close</button>{mappingCandidates.length > 0 && <button className="button secondary" onClick={() => { setLoadedExportOpen(false); setMappingCandidate(mappingCandidates[0]); }}>Map exercises ({mappingCandidates.length})</button>}{historyImports.length > 0 && <label className="button secondary upload-button">Add data<input type="file" accept=".xlsx,.csv" multiple onChange={(event) => { setLoadedExportOpen(false); handleUpload(event, "add"); }} /></label>}<label className="button primary upload-button">Replace export<input type="file" accept=".xlsx,.csv" multiple onChange={(event) => { setLoadedExportOpen(false); handleUpload(event, "replace"); }} /></label></div>
+          <div className="connect-actions"><button className="button secondary" onClick={() => setLoadedExportOpen(false)}>Close</button>{historyImports.length > 0 && <button className="button secondary" onClick={downloadBackup}>Download backup</button>}<label className="button secondary upload-button">Restore backup<input type="file" accept="application/json,.json" onChange={(event) => { const file = event.target.files?.[0]; event.target.value = ""; if (file) { setLoadedExportOpen(false); void restoreBackup(file); } }} /></label>{mappingCandidates.length > 0 && <button className="button secondary" onClick={() => { setLoadedExportOpen(false); setMappingCandidate(mappingCandidates[0]); }}>Map exercises ({mappingCandidates.length})</button>}{historyImports.length > 0 && <label className="button secondary upload-button">Add data<input type="file" accept=".xlsx,.csv" multiple onChange={(event) => { setLoadedExportOpen(false); handleUpload(event, "add"); }} /></label>}<label className="button primary upload-button">Replace export<input type="file" accept=".xlsx,.csv" multiple onChange={(event) => { setLoadedExportOpen(false); handleUpload(event, "replace"); }} /></label></div>
         </section>
       </div>}
 

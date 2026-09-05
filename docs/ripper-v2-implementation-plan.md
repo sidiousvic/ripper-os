@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M5 — Imports become additive and explainable
-Current task: V2-033
-Last completed task: V2-032 — Persist user mapping overrides with history
-Next task: V2-033
+Current task: V2-034
+Last completed task: V2-033 — Export and restore a private local backup
+Next task: V2-034
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
-Tasks complete: 30
-Tasks remaining: 21
+Tasks complete: 31
+Tasks remaining: 20
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -2467,7 +2467,7 @@ Implement V2-032 only. Make confirmed mappings and keep-custom choices survive r
 ### V2-033 — Export and restore a private local backup
 
 Status:
-TODO
+DONE
 
 Milestone:
 M6 — Keep canonical history between visits
