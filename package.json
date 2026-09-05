@@ -1,6 +1,6 @@
 {
   "name": "ripper-os",
-  "version": "0.2.81",
+  "version": "0.2.82",
   "private": false,
   "engines": {
     "node": ">=22.13.0"
@@ -10,7 +10,7 @@
     "build": "vinext build",
     "start": "vinext start",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "test": "node scripts/test-data-shape.mjs && node scripts/test-training-snapshot.mjs && node --experimental-strip-types scripts/test-security.mjs && node --experimental-strip-types scripts/test-import-controller.mjs && node --experimental-strip-types scripts/test-training-store.mjs && node --experimental-strip-types scripts/test-exercise-overrides.mjs && node --experimental-strip-types scripts/test-backup.mjs && node --experimental-strip-types scripts/test-comparison-context.mjs && node --experimental-strip-types scripts/test-muscle-model.mjs",
+    "test": "node scripts/test-data-shape.mjs && node scripts/test-training-snapshot.mjs && node --experimental-strip-types scripts/test-security.mjs && node --experimental-strip-types scripts/test-import-controller.mjs && node --experimental-strip-types scripts/test-training-store.mjs && node --experimental-strip-types scripts/test-exercise-overrides.mjs && node --experimental-strip-types scripts/test-backup.mjs && node --experimental-strip-types scripts/test-comparison-context.mjs && node --experimental-strip-types scripts/test-muscle-model.mjs && node --experimental-strip-types scripts/test-estimated-1rm.mjs",
     "test:parser": "node --experimental-strip-types scripts/test-training-parser.mjs",
     "check:release": "node scripts/check-release.mjs",
     "refresh:data": "node --experimental-strip-types scripts/refresh-training-data.mjs"

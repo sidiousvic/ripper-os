@@ -1,12 +1,12 @@
 # Ripper OS v2 Incremental Implementation Roadmap
 
 Current milestone: M5 — Imports become additive and explainable
-Current task: V2-048
-Last completed task: V2-047 — Display preferred units without altering canonical values
-Next task: V2-048
+Current task: V2-049
+Last completed task: V2-048 — Add eligible per-set estimated 1RM trends
+Next task: V2-049
 Blockers: V2-008 browser CSV/XLSX worker smoke checks pending: Chrome extension file URL permission disabled. User approved original anonymized Strong/Hevy fixtures. Strong unitless columns are documented and require explicit import options; Hevy manifest remains V2-034.
-Tasks complete: 43
-Tasks remaining: 8
+Tasks complete: 44
+Tasks remaining: 7
 
 Core proof goal:
 MacroFactor + Strong -> shared Ripper analytics
@@ -3520,7 +3520,9 @@ Implement V2-047 only. Add kg/lb display preference across existing mass-based c
 ### V2-048 — Add eligible per-set estimated 1RM trends
 
 Status:
-TODO
+DONE
+
+Implementation note 2026-09-06: added the explicit Epley v1 eligibility helper and boundary tests. Wiring derived estimates into daily projections remains a follow-up integration step.
 
 Milestone:
 M8 — Improve meaning after preserving behavior
